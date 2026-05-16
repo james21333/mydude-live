@@ -76,9 +76,19 @@ function DemoApp() {
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
+  const activatedRef = useRef(false);
+  const statusRef = useRef('idle');
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+
+  useEffect(() => {
+    activatedRef.current = activated;
+  }, [activated]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop?.();
@@ -88,6 +98,8 @@ function DemoApp() {
   }, []);
 
   async function activate() {
+    activatedRef.current = true;
+    statusRef.current = 'listening';
     setActivated(true);
     setStatus('listening');
     appendLog('Live mode activated. Browser permissions may ask for microphone access.');
@@ -119,6 +131,7 @@ function DemoApp() {
   }
 
   function startListening() {
+    activatedRef.current = true;
     if (!SpeechRecognition) {
       setMessage('This browser does not expose SpeechRecognition. You can still type a description below.');
       setStatus('idle');
@@ -129,7 +142,11 @@ function DemoApp() {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.onstart = () => setStatus('listening');
+    recognition.onstart = () => {
+      statusRef.current = 'listening';
+      setStatus('listening');
+      appendLog('Listening is active.');
+    };
     recognition.onresult = (event) => {
       let finalText = '';
       let interim = '';
@@ -141,14 +158,23 @@ function DemoApp() {
       setTranscript((finalText || interim).trim());
       if (finalText.trim()) handleUserUtterance(finalText.trim());
     };
-    recognition.onerror = () => setStatus('idle');
+    recognition.onerror = (event) => {
+      appendLog(`Speech listener error: ${event.error || 'unknown'}`);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        statusRef.current = 'idle';
+        setStatus('idle');
+      }
+    };
     recognition.onend = () => {
-      if (activated && status !== 'building' && status !== 'speaking') {
-        try { recognition.start(); } catch {}
+      const shouldRestart = activatedRef.current && !['building', 'speaking'].includes(statusRef.current);
+      if (shouldRestart) {
+        window.setTimeout(() => {
+          try { recognition.start(); } catch {}
+        }, 180);
       }
     };
     recognitionRef.current = recognition;
-    try { recognition.start(); } catch {}
+    try { recognition.start(); } catch (error) { appendLog(`Could not start listener: ${error.message || 'unknown'}`); }
   }
 
   function handleUserUtterance(text) {
@@ -158,6 +184,7 @@ function DemoApp() {
   }
 
   function buildAvatar(prompt) {
+    statusRef.current = 'building';
     setStatus('building');
     setMessage('I can build that in under one minute. Starting now.');
     setBuildProgress(4);
@@ -169,6 +196,7 @@ function DemoApp() {
     setTimeout(() => {
       const built = makeAvatar(prompt);
       setAvatar(built);
+      statusRef.current = 'speaking';
       setStatus('speaking');
       setMessage(`Built in ${built.buildTime}s: ${built.summary}`);
       appendLog(`Avatar built: ${built.summary}`);
@@ -182,6 +210,7 @@ function DemoApp() {
       return;
     }
     window.speechSynthesis.cancel();
+    statusRef.current = 'speaking';
     setStatus('speaking');
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = options.rate || 1.08;
@@ -207,6 +236,7 @@ function DemoApp() {
     setAvatar(null);
     setTranscript('');
     setBuildProgress(0);
+    statusRef.current = 'listening';
     setStatus('listening');
     setMessage('Reset complete. What do you want me to look like this time?');
     appendLog('Demo reset. Avatar config cleared.');
