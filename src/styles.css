@@ -43,9 +43,9 @@ h2 { margin: 0; }
 .voice-placeholder { width: 118px; height: 118px; border: 3px solid rgba(255,255,255,.3); border-radius: 999px; position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); animation: pulse 1.4s infinite; }
 .body { display: flex; gap: 18px; margin-top: 22px; }
 .body span { width: clamp(70px, 10vw, 108px); height: clamp(76px, 10vw, 120px); background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.18); border-radius: 24px; }
-.voice-panel { display: flex; flex-direction: column; gap: 16px; justify-content: center; }
-.voice-ring { width: 112px; height: 112px; border-radius: 999px; display: grid; place-items: center; background: radial-gradient(circle, rgba(255,255,255,.22), rgba(147,197,253,.12)); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 0 44px rgba(147,197,253,.35); transition: transform .08s linear; color: var(--accent, #93c5fd); }
-.voice-panel p { color: #dbeafe; font-size: 1.1rem; line-height: 1.7; }
+.voice-panel { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+.voice-panel.top-controls { padding: clamp(16px, 2vw, 24px); }
+.voice-panel p { color: #dbeafe; font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.55; margin: 0; }
 .progress { height: 12px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
 .progress span { display: block; height: 100%; background: linear-gradient(90deg, #93c5fd, #f0abfc, #fef08a); transition: width .28s ease; }
 .transcript { color: #cbd5e1; background: rgba(15,23,42,.46); padding: 14px; border-radius: 16px; min-height: 52px; }

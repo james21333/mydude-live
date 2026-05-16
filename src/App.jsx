@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, RotateCcw, Sparkles, Volume2, Waves } from 'lucide-react';
+import { Mic, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -224,9 +224,7 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
-      <div className="voice-panel">
-        <div className="voice-ring" style={{ transform: `scale(${1 + volume * 0.16})` }}><Waves size={44}/></div>
+      <div className="voice-panel top-controls">
         <p>{message}</p>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
@@ -236,6 +234,7 @@ function DemoApp() {
           <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. Cody is cooking and the pixels are perking.')}><Volume2 size={18}/> Test voice</button>
         </div>
       </div>
+      <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
     </section>
 
     <section className="manual-builder">
