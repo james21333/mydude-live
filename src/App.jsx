@@ -254,7 +254,8 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <div className="voice-panel top-controls">
+      <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
+      <div className="voice-panel controls-below">
         <p>{message}</p>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
@@ -264,7 +265,6 @@ function DemoApp() {
           <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. Cody is cooking and the pixels are perking.')}><Volume2 size={18}/> Test voice</button>
         </div>
       </div>
-      <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
     </section>
 
     <section className="manual-builder">
