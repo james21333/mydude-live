@@ -104,29 +104,12 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
-    setMessage('Opening microphone. After permission, I will say hello.');
-    setTranscript('Waiting for microphone permission…');
-    setDebug('start clicked — requesting microphone permission');
-    appendLog('Live mode activated. Requesting microphone permission before greeting.');
-    const micReady = await startAudioMeter();
-    if (!micReady) {
-      setMessage('I need microphone permission first. Click the lock icon, allow Microphone, then press Start again.');
-      setTranscript('Microphone permission needed.');
-      setDebug('microphone permission unavailable');
-      setActivated(false);
-      activatedRef.current = false;
-      setStatus('idle');
-      return;
-    }
-    setTranscript('Greeting… then I will listen.');
-    setDebug('microphone ready — greeting before listener starts');
-    speak("Hey dude! I'm your dude! What do you want me to look like?", {
-      rate: 1.02,
-      after: () => {
-        setTranscript('Listening… say something now.');
-        startListening();
-      },
-    });
+    setMessage('Listening now. Say what you want the avatar to look like.');
+    setTranscript('Listening… say something now.');
+    setDebug('start clicked — opening microphone/listener');
+    appendLog('Live mode activated. Starting listener from click.');
+    startListening();
+    await startAudioMeter();
   }
 
   async function startAudioMeter() {
@@ -147,10 +130,8 @@ function DemoApp() {
         animationRef.current = requestAnimationFrame(loop);
       };
       loop();
-      return true;
     } catch {
       appendLog('Mic meter unavailable until browser permission is granted.');
-      return false;
     }
   }
 
