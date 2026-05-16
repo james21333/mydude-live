@@ -291,7 +291,15 @@ function CartoonAvatar({ avatar, volume, mouthOpen, status }) {
       <div className={`mouth ${mouthOpen ? 'open' : ''}`} />
       {!isBuilt && <div className="voice-placeholder" style={{ opacity: 0.5 + volume * 0.5 }} />}
     </div>
-    <div className="body"><span/><span/><span/></div>
+    <div className="character-lower">
+      <div className="arm left-arm"><span /></div>
+      <div className="torso"><span/><span/><span/></div>
+      <div className="arm right-arm"><span /></div>
+    </div>
+    <div className="legs">
+      <div className="leg"><span /></div>
+      <div className="leg"><span /></div>
+    </div>
   </div>;
 }
 
