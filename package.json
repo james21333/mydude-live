@@ -1,15 +1,24 @@
 {
   "name": "mydude-live",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Dynamic mydude.live AI ecosystem router for Cloudflare Workers.",
+  "description": "Dynamic mydude.live AI ecosystem router and live avatar demo.",
   "type": "module",
   "scripts": {
-    "build": "node scripts/validate.mjs",
+    "build": "vite build && node scripts/validate.mjs",
     "deploy": "wrangler deploy",
-    "test": "node scripts/validate.mjs"
+    "test": "vite build && node scripts/validate.mjs",
+    "dev": "vite --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "typescript": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest"
   },
   "devDependencies": {
-    "wrangler": "^4.17.0"
+    "wrangler": "^4.92.0"
   }
 }

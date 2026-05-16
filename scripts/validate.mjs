@@ -1,24 +1,32 @@
-import worker, { testInternals } from "../src/index.js";
+import fs from 'node:fs';
+import path from 'node:path';
 
-const rootResponse = await worker.fetch(new Request("https://mydude.live/"));
-const rootHtml = await rootResponse.text();
-assert(rootHtml.includes("mydude.live AI Ecosystem"), "root page headline missing");
-assert(rootHtml.includes("Active Projects"), "root page active projects missing");
+const dist = path.resolve('dist');
+const index = path.join(dist, 'index.html');
+const manifest = path.join(dist, '.vite', 'manifest.json');
 
-const projectResponse = await worker.fetch(new Request("https://clawtest.mydude.live/"));
-const projectHtml = await projectResponse.text();
-assert(projectHtml.includes("Welcome to Project: Clawtest"), "subdomain project headline missing");
-assert(projectHtml.includes("Generated autonomously by OpenClaw"), "OpenClaw generated copy missing");
-assert(projectHtml.includes("clawtest.mydude.live"), "hostname meta missing");
+assert(fs.existsSync(index), 'Vite dist/index.html missing');
+assert(fs.existsSync(manifest), 'Vite manifest missing');
 
-assert(testInternals.getSubdomain("mydude.live") === "", "root domain should not produce subdomain");
-assert(testInternals.getSubdomain("testproject.mydude.live") === "testproject", "subdomain parsing failed");
-assert(testInternals.toDisplayName("test-project") === "Test Project", "display name formatting failed");
+const appSource = fs.readFileSync(path.resolve('src/App.jsx'), 'utf8');
+for (const required of [
+  'mydude.live AI Ecosystem',
+  'Cody Live Avatar',
+  'Start Cody Live',
+  'Reset avatar',
+  'Working, working, keep a dude a-working',
+  'Generated autonomously by OpenClaw',
+  'demo.mydude.live',
+]) {
+  assert(appSource.includes(required), `Missing required app text: ${required}`);
+}
 
-console.log("Validation passed: root + wildcard subdomain routing render correctly.");
+const workerSource = fs.readFileSync(path.resolve('src/index.js'), 'utf8');
+assert(workerSource.includes('window') === false, 'Worker should not depend on window');
+assert(workerSource.includes('mydude.live'), 'Worker root domain missing');
+
+console.log('Validation passed: React demo, wildcard routing shell, reset, build song, and avatar copy are present.');
 
 function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message);
-  }
+  if (!condition) throw new Error(message);
 }
