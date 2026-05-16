@@ -71,14 +71,25 @@ function DemoApp() {
   const [mouthOpen, setMouthOpen] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [log, setLog] = useState(['Ready for one-click live mode.']);
+  const [debug, setDebug] = useState('idle — press Start');
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
+  const activatedRef = useRef(false);
+  const statusRef = useRef('idle');
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+
+  useEffect(() => {
+    activatedRef.current = activated;
+  }, [activated]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop?.();
@@ -88,10 +99,13 @@ function DemoApp() {
   }, []);
 
   async function activate() {
+    activatedRef.current = true;
     setActivated(true);
-    setStatus('listening');
-    appendLog('Live mode activated. Browser permissions may ask for microphone access.');
-    speak('My Dude is on. Tell me what you want my avatar to look like.', { after: startListening });
+    setMessage('Listening now. Say what you want the avatar to look like.');
+    setTranscript('Listening… say something now.');
+    setDebug('start clicked — opening microphone/listener');
+    appendLog('Live mode activated. Starting listener from click.');
+    startListening();
     await startAudioMeter();
   }
 
@@ -119,20 +133,30 @@ function DemoApp() {
   }
 
   function startListening() {
+    window.speechSynthesis?.cancel?.();
+    clearInterval(speakingTimer.current);
+    setMouthOpen(false);
+    activatedRef.current = true;
     if (!SpeechRecognition) {
-      setMessage('This browser does not expose SpeechRecognition. You can still type a description below.');
+      setMessage('This browser does not expose SpeechRecognition. Chrome should support it, so try refreshing and allowing microphone access.');
+      setDebug('SpeechRecognition missing');
       setStatus('idle');
       return;
     }
-    recognitionRef.current?.stop?.();
+    try { recognitionRef.current?.abort?.(); } catch {}
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.onstart = () => {
+      statusRef.current = 'listening';
       setStatus('listening');
       setTranscript('Listening… say something now.');
+      setMessage('Listening now. Say one avatar request out loud.');
+      setDebug('listener started — waiting for speech');
     };
+    recognition.onspeechstart = () => setDebug('speech detected');
+    recognition.onsoundstart = () => setDebug('sound detected');
     recognition.onresult = (event) => {
       let finalText = '';
       let interim = '';
@@ -145,26 +169,50 @@ function DemoApp() {
       if (heard) {
         setTranscript(heard);
         setMessage(`I heard: ${heard}`);
+        setDebug(finalText.trim() ? 'final speech result received' : 'interim speech result received');
       }
       if (finalText.trim()) handleUserUtterance(finalText.trim());
     };
-    recognition.onerror = () => setStatus('idle');
+    recognition.onerror = (event) => {
+      const error = event.error || 'unknown';
+      setDebug(`listener error: ${error}`);
+      appendLog(`Speech listener error: ${error}`);
+      if (error === 'not-allowed' || error === 'service-not-allowed') {
+        setMessage('Chrome is blocking microphone/speech. Click the lock icon in the address bar and allow Microphone, then press Listen.');
+      }
+      setStatus('idle');
+    };
     recognition.onend = () => {
-      if (activated && status !== 'building' && status !== 'speaking') {
-        try { recognition.start(); } catch {}
+      setDebug('listener ended');
+      if (activatedRef.current && !['building', 'speaking'].includes(statusRef.current)) {
+        window.setTimeout(() => {
+          try {
+            recognition.start();
+            setDebug('listener restarted');
+          } catch (error) {
+            setDebug(`restart blocked: ${error.message || 'unknown'}`);
+          }
+        }, 250);
       }
     };
     recognitionRef.current = recognition;
-    try { recognition.start(); } catch {}
+    try {
+      recognition.start();
+    } catch (error) {
+      setDebug(`start failed: ${error.message || 'unknown'}`);
+      setMessage('Chrome did not start the listener. Press Listen again.');
+      setStatus('idle');
+    }
   }
 
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
-    recognitionRef.current?.stop?.();
+    try { recognitionRef.current?.abort?.(); } catch {}
     buildAvatar(text);
   }
 
   function buildAvatar(prompt) {
+    statusRef.current = 'building';
     setStatus('building');
     setMessage('I can build that in under one minute. Starting now.');
     setBuildProgress(4);
@@ -176,10 +224,12 @@ function DemoApp() {
     setTimeout(() => {
       const built = makeAvatar(prompt);
       setAvatar(built);
-      setStatus('speaking');
+      statusRef.current = 'speaking';
+      statusRef.current = 'speaking';
+    setStatus('speaking');
       setMessage(`Built in ${built.buildTime}s: ${built.summary}`);
       appendLog(`Avatar built: ${built.summary}`);
-      speak(`Done. I built ${built.summary}. You can reset me anytime and build a new look.`, { after: () => { setStatus('listening'); startListening(); } });
+      speak(`Done. I built ${built.summary}. You can reset me anytime and build a new look.`, { after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
     }, 3100);
   }
 
@@ -214,8 +264,10 @@ function DemoApp() {
     setAvatar(null);
     setTranscript('');
     setBuildProgress(0);
+    statusRef.current = 'listening';
     setStatus('listening');
     setMessage('Reset complete. What do you want me to look like this time?');
+    setDebug('reset — starting listener');
     appendLog('Demo reset. Avatar config cleared.');
     speak('Reset complete. What do you want me to look like this time?', { after: startListening });
   }
@@ -236,6 +288,7 @@ function DemoApp() {
         <div className="control-copy">
           <p>{message}</p>
           <div className="transcript live-transcript"><strong>I heard:</strong> <span>{transcript || 'waiting for voice...'}</span></div>
+          <div className="listener-debug"><strong>Mic:</strong> {debug}</div>
         </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
