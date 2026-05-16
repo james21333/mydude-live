@@ -12,7 +12,7 @@ const appSource = fs.readFileSync(path.resolve('src/App.jsx'), 'utf8');
 for (const required of [
   'mydude.live AI Ecosystem',
   'Start Cody Live',
-  'Reset avatar',
+  'Reset',
   'Working, working, keep a dude a-working',
   'Generated autonomously by OpenClaw',
   'demo.mydude.live',

@@ -255,14 +255,16 @@ function DemoApp() {
 
     <section className="stage">
       <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
-      <div className="voice-panel controls-below">
-        <p>{message}</p>
+      <div className="voice-panel controls-below compact-controls">
+        <div className="control-copy">
+          <p>{message}</p>
+          <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
+        </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
-        <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
         <div className="actions">
-          {!activated ? <button className="primary" onClick={activate}><Mic size={18}/> Start Cody Live</button> : <button className="primary" onClick={startListening}><Mic size={18}/> Listen again</button>}
-          <button className="secondary" onClick={resetDemo}><RotateCcw size={18}/> Reset avatar</button>
-          <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. Cody is cooking and the pixels are perking.')}><Volume2 size={18}/> Test voice</button>
+          {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={startListening}><Mic size={16}/> Listen</button>}
+          <button className="secondary" onClick={resetDemo}><RotateCcw size={16}/> Reset</button>
+          <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. Cody is cooking and the pixels are perking.')}><Volume2 size={16}/> Test</button>
         </div>
       </div>
     </section>

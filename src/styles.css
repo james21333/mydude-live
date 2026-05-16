@@ -27,7 +27,7 @@ h2 { margin: 0; }
 .status-pill { border: 1px solid rgba(255,255,255,.2); padding: 10px 14px; border-radius: 999px; background: rgba(15,23,42,.55); text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; font-weight: 900; }
 .status-pill.listening { color: #86efac; } .status-pill.speaking { color: #fef08a; } .status-pill.building { color: #f0abfc; }
 .stage { display: flex; flex-direction: column; gap: 14px; margin-top: 0; align-items: stretch; }
-.avatar-card { display: grid; place-items: center; text-align: center; width: 100%; height: min(82vh, 790px); min-height: 520px; background: rgba(2,6,23,.45); overflow: hidden; padding-top: 42px; }
+.avatar-card { display: grid; place-items: center; text-align: center; width: 100%; height: min(74vh, 720px); min-height: 500px; background: rgba(2,6,23,.45); overflow: hidden; padding-top: 42px; }
 .antenna { width: 4px; height: clamp(22px, 3vh, 34px); background: rgba(255,255,255,.45); border-radius: 99px; position: relative; }
 .antenna::before { content: ""; width: 16px; height: 16px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent, #93c5fd); border-radius: 999px; box-shadow: 0 0 30px var(--accent, #93c5fd); }
 .head { width: min(520px, 74vw, 58vh); aspect-ratio: 1.08; border-radius: 34% 34% 42% 42%; background: linear-gradient(135deg, var(--bot, rgba(96,165,250,.68)), rgba(255,255,255,.14)); border: 2px solid rgba(255,255,255,.24); position: relative; box-shadow: inset 0 0 60px rgba(255,255,255,.13), 0 34px 110px rgba(0,0,0,.36); animation: breathe 3s ease-in-out infinite; }
@@ -53,20 +53,22 @@ h2 { margin: 0; }
 .leg { width: clamp(42px, 5.8vw, 68px); height: clamp(58px, 7vh, 86px); border-radius: 18px 18px 26px 26px; background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.08)); border: 1px solid rgba(255,255,255,.16); position: relative; }
 .leg span { position: absolute; left: 50%; bottom: -10px; width: clamp(54px, 7vw, 86px); height: clamp(24px, 3.5vw, 36px); transform: translateX(-50%); border-radius: 999px; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.16); }
 .voice-panel { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
-.voice-panel.top-controls, .voice-panel.controls-below { padding: clamp(16px, 2vw, 24px); }
-.voice-panel p { color: #dbeafe; font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.55; margin: 0; }
-.progress { height: 12px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
+.voice-panel.top-controls, .voice-panel.controls-below { padding: clamp(10px, 1.2vw, 16px); }
+.voice-panel.compact-controls { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px 16px; border-radius: 18px; }
+.control-copy { min-width: 0; display: grid; gap: 6px; }
+.voice-panel p { color: #dbeafe; font-size: clamp(.86rem, 1.25vw, 1rem); line-height: 1.28; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress { grid-column: 1 / -1; height: 8px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
 .progress span { display: block; height: 100%; background: linear-gradient(90deg, #93c5fd, #f0abfc, #fef08a); transition: width .28s ease; }
-.transcript { color: #cbd5e1; background: rgba(15,23,42,.46); padding: 14px; border-radius: 16px; min-height: 52px; }
-.actions, .manual-builder form { display: flex; flex-wrap: wrap; gap: 12px; }
-button { border: 0; border-radius: 999px; padding: 13px 18px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 900; }
+.transcript { color: #cbd5e1; background: rgba(15,23,42,.46); padding: 8px 10px; border-radius: 12px; min-height: 0; font-size: .86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.actions, .manual-builder form { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 900; font-size: .9rem; }
 .primary { background: #f8fafc; color: #0f172a; }
 .secondary, .manual-builder button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.16); }
 .manual-builder { margin-top: 24px; }
 .manual-builder p { margin-top: 0; color: #cbd5e1; }
 .manual-builder input { flex: 1 1 320px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 14px 18px; background: rgba(15,23,42,.58); color: #fff; }
 .log-panel { margin-top: 16px; display: grid; gap: 8px; color: #cbd5e1; font-size: .92rem; }
-@media (max-width: 860px) { .demo-hero { left: 12px; right: 12px; top: 10px; } .demo-hero .eyebrow { font-size: .68rem; letter-spacing: .1em; } .status-pill { font-size: .66rem; padding: 8px 10px; } h1 { font-size: clamp(2.4rem, 15vw, 4.6rem); } .avatar-card { height: min(78svh, 610px); min-height: 430px; padding-top: 38px; } .head { width: min(330px, 72vw, 43vh); } .arm { height: clamp(62px, 9vh, 88px); } .torso span { height: clamp(40px, 6vh, 60px); } .leg { height: clamp(42px, 5.5vh, 64px); } .manual-builder, .log-panel { display: none; } }
+@media (max-width: 860px) { .demo-hero { left: 12px; right: 12px; top: 10px; } .demo-hero .eyebrow { font-size: .68rem; letter-spacing: .1em; } .status-pill { font-size: .66rem; padding: 8px 10px; } h1 { font-size: clamp(2.4rem, 15vw, 4.6rem); } .stage { gap: 8px; } .avatar-card { height: min(69svh, 560px); min-height: 405px; padding-top: 36px; } .head { width: min(310px, 70vw, 40vh); } .arm { height: clamp(58px, 8vh, 78px); } .torso span { height: clamp(36px, 5vh, 54px); } .leg { height: clamp(36px, 4.8vh, 56px); } .voice-panel.compact-controls { grid-template-columns: 1fr; padding: 9px; gap: 7px; } .voice-panel p { font-size: .78rem; } .transcript { font-size: .76rem; padding: 6px 8px; } .actions { justify-content: space-between; flex-wrap: nowrap; gap: 6px; } button { padding: 8px 10px; font-size: .78rem; } .manual-builder, .log-panel { display: none; } }
 @keyframes pulse { 0%,100% { transform: scale(.96); } 50% { transform: scale(1.04); } }
 @keyframes breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
