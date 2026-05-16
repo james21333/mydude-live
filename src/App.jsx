@@ -301,7 +301,7 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
+      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
@@ -328,7 +328,7 @@ function DemoApp() {
   </main>;
 }
 
-function CartoonAvatar({ avatar, volume, mouthOpen, status }) {
+function CartoonAvatar({ avatar, mouthOpen, status }) {
   const isBuilt = Boolean(avatar);
   const style = avatar ? { '--bot': avatar.color, '--eye': avatar.eyeColor } : {};
   return <div className={`avatar-card ${status}`} style={style}>
@@ -338,7 +338,6 @@ function CartoonAvatar({ avatar, volume, mouthOpen, status }) {
       <div className={`eyes ${avatar?.eyes || 'friendly'}`}><span/><span/></div>
       {avatar?.accessory === 'glasses' && <div className="glasses"><i/><i/></div>}
       <div className={`mouth ${mouthOpen ? 'open' : ''}`} />
-      {!isBuilt && <div className="voice-placeholder" style={{ opacity: 0.5 + volume * 0.5 }} />}
     </div>
     <div className="character-lower">
       <div className="arm left-arm"><span /></div>
