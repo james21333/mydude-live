@@ -129,7 +129,10 @@ function DemoApp() {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.onstart = () => setStatus('listening');
+    recognition.onstart = () => {
+      setStatus('listening');
+      setTranscript('Listening… say something now.');
+    };
     recognition.onresult = (event) => {
       let finalText = '';
       let interim = '';
@@ -138,7 +141,11 @@ function DemoApp() {
         if (event.results[i].isFinal) finalText += text;
         else interim += text;
       }
-      setTranscript((finalText || interim).trim());
+      const heard = (finalText || interim).trim();
+      if (heard) {
+        setTranscript(heard);
+        setMessage(`I heard: ${heard}`);
+      }
       if (finalText.trim()) handleUserUtterance(finalText.trim());
     };
     recognition.onerror = () => setStatus('idle');
@@ -228,7 +235,7 @@ function DemoApp() {
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
-          <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
+          <div className="transcript live-transcript"><strong>I heard:</strong> <span>{transcript || 'waiting for voice...'}</span></div>
         </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
