@@ -76,84 +76,60 @@ function DemoApp() {
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
-  const listeningPulseRef = useRef(null);
-  const heardSomethingRef = useRef(false);
-  const heardTimerRef = useRef(null);
-  const lastProcessedRef = useRef('');
-  const activatedRef = useRef(false);
-  const statusRef = useRef('idle');
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
-
-  useEffect(() => {
-    activatedRef.current = activated;
-  }, [activated]);
-
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     cancelAnimationFrame(animationRef.current);
-    clearInterval(listeningPulseRef.current);
     audioRef.current?.getTracks?.().forEach(track => track.stop());
   }, []);
 
-  function activate() {
-    activatedRef.current = true;
+  async function activate() {
     setActivated(true);
-    setMessage('Listening now. Tell me what you want my avatar to look like.');
-    appendLog('Live mode activated. Starting Chrome speech listener.');
-    startListening({ manual: true });
+    setStatus('listening');
+    appendLog('Live mode activated. Browser permissions may ask for microphone access.');
+    speak('My Dude is on. Tell me what you want my avatar to look like.', { after: startListening });
+    await startAudioMeter();
   }
 
-  function startListeningPulse() {
-    clearInterval(listeningPulseRef.current);
-    setVolume(0.28);
-    listeningPulseRef.current = setInterval(() => {
-      setVolume(value => (value > 0.62 ? 0.22 : value + 0.09));
-    }, 180);
+  async function startAudioMeter() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioRef.current = stream;
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const loop = () => {
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((sum, v) => sum + v, 0) / data.length / 255;
+        setVolume(Math.max(0.08, Math.min(1, avg * 2.8)));
+        animationRef.current = requestAnimationFrame(loop);
+      };
+      loop();
+    } catch {
+      appendLog('Mic meter unavailable until browser permission is granted.');
+    }
   }
 
-  function stopListeningPulse() {
-    clearInterval(listeningPulseRef.current);
-    setVolume(0.12);
-  }
-
-  function startListening(options = {}) {
-    activatedRef.current = true;
-    window.speechSynthesis?.cancel?.();
-    clearInterval(speakingTimer.current);
-    setMouthOpen(false);
+  function startListening() {
     if (!SpeechRecognition) {
-      setMessage('This browser does not support built-in speech recognition. Try Chrome/Edge, or type the avatar request below.');
-      appendLog('SpeechRecognition is not available in this browser.');
-      statusRef.current = 'idle';
+      setMessage('This browser does not expose SpeechRecognition. You can still type a description below.');
       setStatus('idle');
       return;
     }
-    clearTimeout(heardTimerRef.current);
-    heardSomethingRef.current = false;
-    try { recognitionRef.current?.abort?.(); } catch {}
+    recognitionRef.current?.stop?.();
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
-    recognition.onstart = () => {
-      statusRef.current = 'listening';
-      setStatus('listening');
-      setMessage('Listening now. Speak one avatar request, then pause.');
-      startListeningPulse();
-      appendLog('Chrome speech listener is active.');
-    };
-    recognition.onspeechstart = () => {
-      heardSomethingRef.current = true;
-      appendLog('Speech detected.');
-    };
+    recognition.onstart = () => setStatus('listening');
     recognition.onresult = (event) => {
       let finalText = '';
       let interim = '';
@@ -162,74 +138,26 @@ function DemoApp() {
         if (event.results[i].isFinal) finalText += text;
         else interim += text;
       }
-      const heard = (finalText || interim).trim();
-      if (!heard) return;
-      heardSomethingRef.current = true;
-      setTranscript(heard);
-      clearTimeout(heardTimerRef.current);
-      if (finalText.trim()) {
-        processHeardText(finalText.trim());
-      } else {
-        heardTimerRef.current = window.setTimeout(() => processHeardText(heard), 850);
-      }
+      setTranscript((finalText || interim).trim());
+      if (finalText.trim()) handleUserUtterance(finalText.trim());
     };
-    recognition.onerror = (event) => {
-      const error = event.error || 'unknown';
-      appendLog(`Speech listener error: ${error}`);
-      if (error === 'no-speech') {
-        setMessage('I did not catch anything. Press Listen and speak after the status says listening.');
-        statusRef.current = 'idle';
-        setStatus('idle');
-        stopListeningPulse();
-        return;
-      }
-      if (error === 'not-allowed' || error === 'service-not-allowed') {
-        setMessage('Microphone/speech permission is blocked. In Chrome, allow microphone for this site, then press Listen.');
-        statusRef.current = 'idle';
-        setStatus('idle');
-        stopListeningPulse();
-        return;
-      }
-      statusRef.current = 'idle';
-      setStatus('idle');
-      stopListeningPulse();
-    };
+    recognition.onerror = () => setStatus('idle');
     recognition.onend = () => {
-      stopListeningPulse();
-      if (statusRef.current === 'listening' && !heardSomethingRef.current) {
-        statusRef.current = 'idle';
-        setStatus('idle');
-        setMessage(options.manual ? 'Listener ended before hearing speech. Press Listen and try one clear sentence.' : 'Press Listen when you are ready to speak again.');
+      if (activated && status !== 'building' && status !== 'speaking') {
+        try { recognition.start(); } catch {}
       }
     };
     recognitionRef.current = recognition;
-    try {
-      recognition.start();
-    } catch (error) {
-      setMessage('Chrome could not start the listener. Press Listen once more.');
-      appendLog(`Could not start listener: ${error.message || 'unknown'}`);
-      statusRef.current = 'idle';
-      setStatus('idle');
-      stopListeningPulse();
-    }
-  }
-
-  function processHeardText(text) {
-    const normalized = text.trim();
-    if (!normalized || normalized === lastProcessedRef.current) return;
-    lastProcessedRef.current = normalized;
-    handleUserUtterance(normalized);
+    try { recognition.start(); } catch {}
   }
 
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
-    try { recognitionRef.current?.abort?.(); } catch {}
-    stopListeningPulse();
+    recognitionRef.current?.stop?.();
     buildAvatar(text);
   }
 
   function buildAvatar(prompt) {
-    statusRef.current = 'building';
     setStatus('building');
     setMessage('I can build that in under one minute. Starting now.');
     setBuildProgress(4);
@@ -241,11 +169,10 @@ function DemoApp() {
     setTimeout(() => {
       const built = makeAvatar(prompt);
       setAvatar(built);
-      statusRef.current = 'speaking';
       setStatus('speaking');
       setMessage(`Built in ${built.buildTime}s: ${built.summary}`);
       appendLog(`Avatar built: ${built.summary}`);
-      speak(`Done. I built ${built.summary}. Press Listen when you want to build another look.`, { after: () => { statusRef.current = 'idle'; setStatus('idle'); setMessage('Press Listen when you want to build another look.'); } });
+      speak(`Done. I built ${built.summary}. You can reset me anytime and build a new look.`, { after: () => { setStatus('listening'); startListening(); } });
     }, 3100);
   }
 
@@ -255,7 +182,6 @@ function DemoApp() {
       return;
     }
     window.speechSynthesis.cancel();
-    statusRef.current = 'speaking';
     setStatus('speaking');
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = options.rate || 1.08;
@@ -275,19 +201,16 @@ function DemoApp() {
   }
 
   function resetDemo() {
-    recognitionRef.current?.abort?.();
+    recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     clearInterval(speakingTimer.current);
-    stopListeningPulse();
-    clearTimeout(heardTimerRef.current);
-    lastProcessedRef.current = '';
     setAvatar(null);
     setTranscript('');
     setBuildProgress(0);
-    statusRef.current = 'idle';
-    setStatus('idle');
-    setMessage('Reset complete. Press Listen, then tell me the new look.');
+    setStatus('listening');
+    setMessage('Reset complete. What do you want me to look like this time?');
     appendLog('Demo reset. Avatar config cleared.');
+    speak('Reset complete. What do you want me to look like this time?', { after: startListening });
   }
 
   function appendLog(item) {
