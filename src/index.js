@@ -18,7 +18,7 @@ export default {
 
 function renderShell(hostname) {
   const subdomain = getSubdomain(hostname);
-  const title = subdomain === 'demo' ? 'Cody Live Avatar | mydude.live' : subdomain ? `${displayName(subdomain)} | mydude.live` : 'mydude.live AI Ecosystem';
+  const title = subdomain === 'demo' ? 'My Dude Demo' : subdomain ? `${displayName(subdomain)} | mydude.live` : 'mydude.live AI Ecosystem';
   const cssTags = CSS_FILES.map(file => `<link rel="stylesheet" href="/${file}">`).join('\n    ');
   return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHtml(title)}</title>${cssTags}</head><body><div id="root"></div><script type="module" src="/${JS_FILE}"></script></body></html>`;
 }

@@ -11,11 +11,11 @@ assert(fs.existsSync(manifest), 'Vite manifest missing');
 const appSource = fs.readFileSync(path.resolve('src/App.jsx'), 'utf8');
 for (const required of [
   'mydude.live AI Ecosystem',
-  'Start Cody Live',
+  'Start',
   'Reset',
   'Working, working, keep a dude a-working',
   'Generated autonomously by OpenClaw',
-  'demo.mydude.live',
+  'My Dude',
 ]) {
   assert(appSource.includes(required), `Missing required app text: ${required}`);
 }

@@ -65,7 +65,7 @@ function DemoApp() {
   const [activated, setActivated] = useState(false);
   const [status, setStatus] = useState('idle');
   const [transcript, setTranscript] = useState('');
-  const [message, setMessage] = useState('Tap Start Cody Live. I will listen, talk, and build my cartoon avatar in under one minute.');
+  const [message, setMessage] = useState('Tap Start. I will listen, talk, and build my cartoon avatar in under one minute.');
   const [avatar, setAvatar] = useState(null);
   const [volume, setVolume] = useState(0.18);
   const [mouthOpen, setMouthOpen] = useState(false);
@@ -180,7 +180,7 @@ function DemoApp() {
         return;
       }
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setMessage('Microphone/speech permission is blocked. Allow mic access for demo.mydude.live, then press Listen.');
+        setMessage('Microphone/speech permission is blocked. Allow mic access for this site, then press Listen.');
         statusRef.current = 'idle';
         setStatus('idle');
       }
@@ -278,7 +278,7 @@ function DemoApp() {
 
   return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
     <section className="demo-hero compact">
-      <p className="eyebrow"><Sparkles size={16}/> demo.mydude.live</p>
+      <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
       <div className={`status-pill ${status}`}>{status}</div>
     </section>
 
@@ -293,7 +293,7 @@ function DemoApp() {
         <div className="actions">
           {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={startListening}><Mic size={16}/> Listen</button>}
           <button className="secondary" onClick={resetDemo}><RotateCcw size={16}/> Reset</button>
-          <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. Cody is cooking and the pixels are perking.')}><Volume2 size={16}/> Test</button>
+          <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. My Dude is building and the pixels are perking.')}><Volume2 size={16}/> Test</button>
         </div>
       </div>
     </section>
@@ -339,7 +339,7 @@ function makeAvatar(prompt) {
   const color = lower.includes('blue') ? '#38bdf8' : lower.includes('green') ? '#34d399' : lower.includes('red') ? '#fb7185' : lower.includes('purple') ? '#a78bfa' : lower.includes('gold') || lower.includes('yellow') ? '#facc15' : '#60a5fa';
   const accessory = lower.includes('glass') ? 'glasses' : lower.includes('hat') ? 'hat' : 'none';
   const eyes = lower.includes('sleep') ? 'sleepy' : lower.includes('angry') ? 'focused' : 'friendly';
-  const name = lower.includes('robot') ? 'Pocket Robot' : lower.includes('cat') ? 'Cartoon Cat' : lower.includes('alien') ? 'Tiny Alien' : 'Cartoon Dude';
+  const name = lower.includes('robot') ? 'Pocket Robot' : lower.includes('cat') ? 'Cartoon Cat' : lower.includes('alien') ? 'Tiny Alien' : 'My Dude';
   return {
     prompt,
     color,
