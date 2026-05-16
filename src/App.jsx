@@ -76,6 +76,8 @@ function DemoApp() {
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
+  const heardTimerRef = useRef(null);
+  const lastProcessedRef = useRef('');
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
 
@@ -102,9 +104,10 @@ function DemoApp() {
     statusRef.current = 'listening';
     setActivated(true);
     setStatus('listening');
-    appendLog('Live mode activated. Browser permissions may ask for microphone access.');
-    speak('Cody Live is on. Tell me what you want my avatar to look like.', { after: startListening });
+    setMessage('Listening now. Tell me what you want my avatar to look like.');
+    appendLog('Live mode activated. Starting listener now.');
     await startAudioMeter();
+    startListening();
   }
 
   async function startAudioMeter() {
@@ -133,11 +136,15 @@ function DemoApp() {
   function startListening() {
     activatedRef.current = true;
     if (!SpeechRecognition) {
-      setMessage('This browser does not expose SpeechRecognition. You can still type a description below.');
+      setMessage('This browser does not support built-in speech recognition. Try Chrome/Edge, or type the avatar request below.');
+      appendLog('SpeechRecognition is not available in this browser.');
+      statusRef.current = 'idle';
       setStatus('idle');
       return;
     }
-    recognitionRef.current?.stop?.();
+    clearTimeout(heardTimerRef.current);
+    try { recognitionRef.current?.abort?.(); } catch {}
+    try { recognitionRef.current?.stop?.(); } catch {}
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -155,12 +162,25 @@ function DemoApp() {
         if (event.results[i].isFinal) finalText += text;
         else interim += text;
       }
-      setTranscript((finalText || interim).trim());
-      if (finalText.trim()) handleUserUtterance(finalText.trim());
+      const heard = (finalText || interim).trim();
+      if (!heard) return;
+      setTranscript(heard);
+      clearTimeout(heardTimerRef.current);
+      if (finalText.trim()) {
+        processHeardText(finalText.trim());
+      } else {
+        heardTimerRef.current = window.setTimeout(() => processHeardText(heard), 1100);
+      }
     };
     recognition.onerror = (event) => {
       appendLog(`Speech listener error: ${event.error || 'unknown'}`);
+      if (event.error === 'no-speech') {
+        statusRef.current = 'listening';
+        setStatus('listening');
+        return;
+      }
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setMessage('Microphone/speech permission is blocked. Allow mic access for demo.mydude.live, then press Listen.');
         statusRef.current = 'idle';
         setStatus('idle');
       }
@@ -177,9 +197,16 @@ function DemoApp() {
     try { recognition.start(); } catch (error) { appendLog(`Could not start listener: ${error.message || 'unknown'}`); }
   }
 
+  function processHeardText(text) {
+    const normalized = text.trim();
+    if (!normalized || normalized === lastProcessedRef.current) return;
+    lastProcessedRef.current = normalized;
+    handleUserUtterance(normalized);
+  }
+
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
-    recognitionRef.current?.stop?.();
+    try { recognitionRef.current?.abort?.(); } catch {}
     buildAvatar(text);
   }
 
@@ -233,6 +260,8 @@ function DemoApp() {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     clearInterval(speakingTimer.current);
+    clearTimeout(heardTimerRef.current);
+    lastProcessedRef.current = '';
     setAvatar(null);
     setTranscript('');
     setBuildProgress(0);
