@@ -77,6 +77,7 @@ function DemoApp() {
   const analyserRef = useRef(null);
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
+  const mouthCloseTimer = useRef(null);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
 
@@ -95,6 +96,8 @@ function DemoApp() {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     cancelAnimationFrame(animationRef.current);
+    clearInterval(speakingTimer.current);
+    clearTimeout(mouthCloseTimer.current);
     audioRef.current?.getTracks?.().forEach(track => track.stop());
   }, []);
 
@@ -239,18 +242,29 @@ function DemoApp() {
       return;
     }
     window.speechSynthesis.cancel();
+    clearInterval(speakingTimer.current);
+    clearTimeout(mouthCloseTimer.current);
     setStatus('speaking');
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = options.rate || 1.08;
     utterance.pitch = 1.08;
     utterance.volume = 1;
-    utterance.onstart = () => {
+    const pulseMouth = () => {
       setMouthOpen(true);
+      clearTimeout(mouthCloseTimer.current);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 70 + Math.random() * 90);
+    };
+    utterance.onstart = () => {
+      pulseMouth();
       clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(() => setMouthOpen(open => !open), 115);
+      speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+    };
+    utterance.onboundary = (event) => {
+      if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
     utterance.onend = () => {
       clearInterval(speakingTimer.current);
+      clearTimeout(mouthCloseTimer.current);
       setMouthOpen(false);
       options.after?.();
     };
@@ -283,7 +297,7 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
+      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} />
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
@@ -306,22 +320,25 @@ function DemoApp() {
 function CartoonAvatar({ avatar, mouthOpen, status }) {
   const isBuilt = Boolean(avatar);
   const style = avatar ? { '--bot': avatar.color, '--eye': avatar.eyeColor } : {};
-  return <div className={`avatar-card ${status}`} style={style}>
-    <div className="antenna" />
-    <div className="head">
-      <div className="shine" />
-      <div className={`eyes ${avatar?.eyes || 'friendly'}`}><span/><span/></div>
-      {avatar?.accessory === 'glasses' && <div className="glasses"><i/><i/></div>}
-      <div className={`mouth ${mouthOpen ? 'open' : ''}`} />
-    </div>
-    <div className="character-lower">
-      <div className="arm left-arm"><span /></div>
-      <div className="torso"><span/><span/><span/></div>
-      <div className="arm right-arm"><span /></div>
-    </div>
-    <div className="legs">
-      <div className="leg"><span /></div>
-      <div className="leg"><span /></div>
+  return <div className={`avatar-card ${status} ${isBuilt ? 'built' : 'unbuilt'}`} style={style}>
+    <div className="character">
+      <div className="antenna" />
+      <div className="head">
+        {avatar?.accessory === 'hat' && <div className="hat" />}
+        <div className="shine" />
+        <div className={`eyes ${avatar?.eyes || 'friendly'}`}><span/><span/></div>
+        {avatar?.accessory === 'glasses' && <div className="glasses"><i/><i/></div>}
+        <div className={`mouth ${mouthOpen ? 'open' : ''}`} />
+      </div>
+      <div className="character-lower">
+        <div className="arm left-arm"><span /></div>
+        <div className="torso"><span/><span/><span/></div>
+        <div className="arm right-arm"><span /></div>
+      </div>
+      <div className="legs">
+        <div className="leg"><span /></div>
+        <div className="leg"><span /></div>
+      </div>
     </div>
   </div>;
 }
