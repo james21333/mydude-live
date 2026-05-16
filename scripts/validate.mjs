@@ -11,7 +11,6 @@ assert(fs.existsSync(manifest), 'Vite manifest missing');
 const appSource = fs.readFileSync(path.resolve('src/App.jsx'), 'utf8');
 for (const required of [
   'mydude.live AI Ecosystem',
-  'Cody Live Avatar',
   'Start Cody Live',
   'Reset avatar',
   'Working, working, keep a dude a-working',

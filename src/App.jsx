@@ -218,12 +218,8 @@ function DemoApp() {
   }
 
   return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
-    <section className="demo-hero">
-      <div>
-        <p className="eyebrow"><Sparkles size={16}/> demo.mydude.live</p>
-        <h1>Cody Live Avatar</h1>
-        <p className="lede">One-click live voice box, under-one-minute avatar builder, singing build mode, reset button, and cartoon mouth motion synced to speech.</p>
-      </div>
+    <section className="demo-hero compact">
+      <p className="eyebrow"><Sparkles size={16}/> demo.mydude.live</p>
       <div className={`status-pill ${status}`}>{status}</div>
     </section>
 
@@ -231,7 +227,6 @@ function DemoApp() {
       <CartoonAvatar avatar={avatar} volume={volume} mouthOpen={mouthOpen || status === 'speaking'} status={status} />
       <div className="voice-panel">
         <div className="voice-ring" style={{ transform: `scale(${1 + volume * 0.16})` }}><Waves size={44}/></div>
-        <h2>{avatar ? avatar.name : 'Voice Box First'}</h2>
         <p>{message}</p>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="transcript"><strong>Latest heard:</strong> {transcript || 'waiting for voice...'}</div>
@@ -268,7 +263,6 @@ function CartoonAvatar({ avatar, volume, mouthOpen, status }) {
       {!isBuilt && <div className="voice-placeholder" style={{ opacity: 0.5 + volume * 0.5 }} />}
     </div>
     <div className="body"><span/><span/><span/></div>
-    <p>{isBuilt ? avatar.summary : 'Tell me what to become.'}</p>
   </div>;
 }
 
