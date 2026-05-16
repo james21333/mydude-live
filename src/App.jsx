@@ -78,7 +78,6 @@ function DemoApp() {
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
   const mouthCloseTimer = useRef(null);
-  const voicesRef = useRef([]);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
 
@@ -100,18 +99,6 @@ function DemoApp() {
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
     audioRef.current?.getTracks?.().forEach(track => track.stop());
-  }, []);
-
-  useEffect(() => {
-    if (!window.speechSynthesis) return undefined;
-    const loadVoices = () => {
-      voicesRef.current = window.speechSynthesis.getVoices?.() || [];
-    };
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    return () => {
-      if (window.speechSynthesis.onvoiceschanged === loadVoices) window.speechSynthesis.onvoiceschanged = null;
-    };
   }, []);
 
   async function activate() {
@@ -232,7 +219,7 @@ function DemoApp() {
     setStatus('building');
     setMessage('I can build that in under one minute. Starting now.');
     setBuildProgress(4);
-    speak('I can build that in under one minute. Working, working, keep a dude a-working. Building up a buddy while the pixels keep twerking.', { rate: 0.98 });
+    speak('I can build that in under one minute. Working, working, keep a dude a-working. Building up a buddy while the pixels keep twerking.', { rate: 1.04 });
     const steps = [18, 34, 52, 71, 88, 100];
     steps.forEach((progress, index) => {
       setTimeout(() => setBuildProgress(progress), 320 + index * 420);
@@ -249,32 +236,18 @@ function DemoApp() {
     }, 3100);
   }
 
-  function bestLocalVoice() {
-    const voices = voicesRef.current.length ? voicesRef.current : (window.speechSynthesis?.getVoices?.() || []);
-    const english = voices.filter(voice => /^en[-_]/i.test(voice.lang || ''));
-    const rankedNames = ['Google US English', 'Microsoft Aria', 'Microsoft Jenny', 'Samantha', 'Alex', 'Daniel', 'Karen'];
-    return rankedNames.map(name => english.find(voice => voice.name?.toLowerCase().includes(name.toLowerCase()))).find(Boolean)
-      || english.find(voice => voice.localService)
-      || english[0]
-      || voices[0]
-      || null;
-  }
-
   function speak(text, options = {}) {
     if (!window.speechSynthesis) {
       options.after?.();
       return;
     }
-    voicesRef.current = window.speechSynthesis.getVoices?.() || voicesRef.current;
     window.speechSynthesis.cancel();
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
     setStatus('speaking');
     const utterance = new SpeechSynthesisUtterance(text);
-    const selectedVoice = bestLocalVoice();
-    if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.rate = options.rate || 0.98;
-    utterance.pitch = options.pitch || 0.96;
+    utterance.rate = options.rate || 1.08;
+    utterance.pitch = 1.08;
     utterance.volume = 1;
     const pulseMouth = () => {
       setMouthOpen(true);
