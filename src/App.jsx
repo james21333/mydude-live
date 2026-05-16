@@ -246,14 +246,6 @@ function DemoApp() {
       </div>
     </section>
 
-    <section className="manual-builder">
-      <p>Fallback: type an avatar request if mic permission is unavailable.</p>
-      <form onSubmit={(event) => { event.preventDefault(); const value = new FormData(event.currentTarget).get('prompt'); if (value) buildAvatar(String(value)); }}>
-        <input name="prompt" placeholder="Example: a blue robot with square glasses and friendly eyes" />
-        <button>Build under 1 minute</button>
-      </form>
-    </section>
-
     <section className="log-panel">{log.map((item, index) => <div key={`${item}-${index}`}>{item}</div>)}</section>
   </main>;
 }
