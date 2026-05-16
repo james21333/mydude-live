@@ -15,7 +15,19 @@
       "zone_name": "mydude.live"
     },
     {
-      "pattern": "*.mydude.live/*",
+      "pattern": "www.mydude.live/*",
+      "zone_name": "mydude.live"
+    },
+    {
+      "pattern": "demo.mydude.live/*",
+      "zone_name": "mydude.live"
+    },
+    {
+      "pattern": "clawtest.mydude.live/*",
+      "zone_name": "mydude.live"
+    },
+    {
+      "pattern": "testproject.mydude.live/*",
       "zone_name": "mydude.live"
     }
   ],
