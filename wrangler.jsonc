@@ -4,6 +4,16 @@
   "main": "src/index.js",
   "compatibility_date": "2026-05-16",
   "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "mydude.live/*",
+      "zone_name": "mydude.live"
+    },
+    {
+      "pattern": "*.mydude.live/*",
+      "zone_name": "mydude.live"
+    }
+  ],
   "observability": {
     "enabled": true
   }
