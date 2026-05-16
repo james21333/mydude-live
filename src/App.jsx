@@ -271,7 +271,7 @@ function makeAvatar(prompt) {
   const color = lower.includes('blue') ? '#38bdf8' : lower.includes('green') ? '#34d399' : lower.includes('red') ? '#fb7185' : lower.includes('purple') ? '#a78bfa' : lower.includes('gold') || lower.includes('yellow') ? '#facc15' : '#60a5fa';
   const accessory = lower.includes('glass') ? 'glasses' : lower.includes('hat') ? 'hat' : 'none';
   const eyes = lower.includes('sleep') ? 'sleepy' : lower.includes('angry') ? 'focused' : 'friendly';
-  const name = lower.includes('robot') ? 'Pocket Robot Cody' : lower.includes('cat') ? 'Cartoon Cat Cody' : lower.includes('alien') ? 'Tiny Alien Cody' : 'Mydude Cody';
+  const name = lower.includes('robot') ? 'Pocket Robot' : lower.includes('cat') ? 'Cartoon Cat' : lower.includes('alien') ? 'Tiny Alien' : 'Cartoon Dude';
   return {
     prompt,
     color,
