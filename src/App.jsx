@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Mic, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
+import { Mic, RotateCcw, Sparkles } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -104,12 +104,18 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
-    setMessage('Listening now. Say what you want the avatar to look like.');
-    setTranscript('Listening… say something now.');
-    setDebug('start clicked — opening microphone/listener');
-    appendLog('Live mode activated. Starting listener from click.');
-    startListening();
-    await startAudioMeter();
+    setMessage("Hey dude! I'm your dude! What do you want me to look like?");
+    setTranscript('Greeting… then I will listen.');
+    setDebug('start clicked — greeting first, listener next');
+    appendLog('Live mode activated. Greeting from the click before listener starts.');
+    speak("Hey dude! I'm your dude! What do you want me to look like?", {
+      rate: 1.02,
+      after: () => {
+        setTranscript('Listening… say something now.');
+        startListening();
+        startAudioMeter();
+      },
+    });
   }
 
   async function startAudioMeter() {
@@ -308,7 +314,6 @@ function DemoApp() {
         <div className="actions">
           {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={startListening}><Mic size={16}/> Listen</button>}
           <button className="secondary" onClick={resetDemo}><RotateCcw size={16}/> Reset</button>
-          <button className="secondary" onClick={() => speak('Working, working, keep a dude a-working. My Dude is building and the pixels are perking.')}><Volume2 size={16}/> Test</button>
         </div>
       </div>
     </section>
