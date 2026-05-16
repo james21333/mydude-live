@@ -11,9 +11,6 @@ const ACTIVE_PROJECTS = [
 ];
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const BRIDGE_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'ws://127.0.0.1:8787/speak'
-  : 'wss://bridge.mydude.live/speak';
 
 function getSubdomain(hostname = window.location.hostname.toLowerCase()) {
   if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}` || hostname === 'localhost' || hostname === '127.0.0.1') return '';
@@ -75,7 +72,6 @@ function DemoApp() {
   const [buildProgress, setBuildProgress] = useState(0);
   const [log, setLog] = useState(['Ready for one-click live mode.']);
   const [debug, setDebug] = useState('idle — press Start');
-  const [brainStatus, setBrainStatus] = useState('speaker agent: standby');
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const analyserRef = useRef(null);
@@ -84,7 +80,6 @@ function DemoApp() {
   const mouthCloseTimer = useRef(null);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
-  const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
@@ -222,76 +217,7 @@ function DemoApp() {
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
     try { recognitionRef.current?.abort?.(); } catch {}
-    talkToSpeakerAgent(text);
-  }
-
-  function askSpeakerAgent(text) {
-    return new Promise((resolve) => {
-      let settled = false;
-      const started = performance.now();
-      const timeout = window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        setBrainStatus('speaker agent: timeout, using local fallback');
-        resolve({ ok: false, text: fallbackBrainReply(text), elapsedMs: Math.round(performance.now() - started) });
-      }, 9000);
-      try {
-        const socket = new WebSocket(BRIDGE_WS_URL);
-        socket.onopen = () => setBrainStatus('speaker agent: connected');
-        socket.onmessage = (event) => {
-          let payload;
-          try { payload = JSON.parse(event.data); } catch { return; }
-          if (payload.type === 'ready') {
-            setBrainStatus(`speaker agent: ready (${payload.model || 'haiku'})`);
-            socket.send(JSON.stringify({ type: 'say', sessionId: sessionIdRef.current, text }));
-          }
-          if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
-          if (payload.type === 'reply' && !settled) {
-            settled = true;
-            window.clearTimeout(timeout);
-            setBrainStatus(`speaker agent: replied in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
-            try { socket.close(); } catch {}
-            resolve(payload);
-          }
-        };
-        socket.onerror = () => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeout);
-          setBrainStatus('speaker agent: connection error, using local fallback');
-          resolve({ ok: false, text: fallbackBrainReply(text), elapsedMs: Math.round(performance.now() - started) });
-        };
-      } catch {
-        if (!settled) {
-          settled = true;
-          window.clearTimeout(timeout);
-          setBrainStatus('speaker agent: unavailable, using local fallback');
-          resolve({ ok: false, text: fallbackBrainReply(text), elapsedMs: Math.round(performance.now() - started) });
-        }
-      }
-    });
-  }
-
-  async function talkToSpeakerAgent(text) {
-    statusRef.current = 'building';
-    setStatus('building');
-    setBuildProgress(18);
-    setMessage('My Dude is thinking with the speaker agent…');
-    setBrainStatus('speaker agent: sending voice request');
-    const progressTimer = window.setInterval(() => {
-      setBuildProgress(progress => Math.min(92, progress + 9));
-    }, 240);
-    const reply = await askSpeakerAgent(text);
-    window.clearInterval(progressTimer);
-    const built = makeAvatar(text);
-    setAvatar(built);
-    setBuildProgress(100);
-    statusRef.current = 'speaking';
-    setStatus('speaking');
-    const spoken = reply.text || fallbackBrainReply(text);
-    setMessage(spoken);
-    appendLog(`Speaker agent: ${spoken}`);
-    speak(spoken, { after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
+    buildAvatar(text);
   }
 
   function buildAvatar(prompt) {
@@ -314,12 +240,6 @@ function DemoApp() {
       appendLog(`Avatar built: ${built.summary}`);
       speak(`Done. I built ${built.summary}. You can reset me anytime and build a new look.`, { after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
     }, 3100);
-  }
-
-  function fallbackBrainReply(text) {
-    if (/blue|robot|glass/i.test(text)) return 'Oh dude, a blue robot with glasses is absolutely the vibe.';
-    if (/reset|start over/i.test(text)) return 'Fresh start, dude—tell me what you want me to become next.';
-    return 'I hear you, dude—let me shape myself around that.';
   }
 
   function speak(text, options = {}) {
@@ -388,7 +308,7 @@ function DemoApp() {
         <div className="control-copy">
           <p>{message}</p>
           <div className="transcript live-transcript"><strong>I heard:</strong> <span>{transcript || 'waiting for voice...'}</span></div>
-          <div className="listener-debug"><strong>Mic:</strong> {debug}<br/><strong>Brain:</strong> {brainStatus}</div>
+          <div className="listener-debug"><strong>Mic:</strong> {debug}</div>
         </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
