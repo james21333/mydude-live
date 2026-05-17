@@ -211,10 +211,7 @@ function isPaulinaVoiceChoice(voice) {
 function colorsForVoice(baseColors, voiceChoice) {
   if (!isPaulinaVoiceChoice(voiceChoice)) return baseColors;
   return {
-    start: '#831843',
-    mid: '#db2777',
-    end: '#500724',
-    accent: '#f9a8d4',
+    ...baseColors,
     bot: '#f472b6',
     eye: '#fff1f2',
     limb: 'rgba(244,114,182,.62)',
