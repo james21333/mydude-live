@@ -13,7 +13,7 @@ for (const required of [
   'mydude.live AI Ecosystem',
   'Start',
   'Reset',
-  'Building your avatar now.',
+  'Thinking…',
   'Generated autonomously by OpenClaw',
   'My Dude',
 ]) {

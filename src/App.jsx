@@ -250,6 +250,9 @@ function DemoApp() {
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const voiceRef = useRef(null);
   const speechRunRef = useRef(0);
+  const streamQueueRef = useRef([]);
+  const streamSpeakingRef = useRef(false);
+  const streamAfterRef = useRef(null);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
@@ -435,84 +438,194 @@ function DemoApp() {
   function buildAvatar(prompt) {
     statusRef.current = 'building';
     setStatus('building');
-    setMessage('Building your avatar now.');
-    setBuildProgress(4);
-    const steps = [18, 34, 52, 71, 88, 100];
-    steps.forEach((progress, index) => {
-      setTimeout(() => setBuildProgress(progress), 320 + index * 420);
+    setMessage('Thinking…');
+    setBuildProgress(8);
+    const built = makeAvatar(prompt);
+    const fallbackReply = 'Done. What else should I change?';
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+
+    if (BRAIN_ENABLED) {
+      startStreamingSpeakerReply(prompt, built, fallbackReply, finish);
+    } else {
+      speak(fallbackReply, { after: finish });
+    }
+
+    [28, 54, 78, 100].forEach((progress, index) => {
+      setTimeout(() => setBuildProgress(progress), 120 + index * 160);
     });
-    setTimeout(async () => {
-      const built = makeAvatar(prompt);
+    setTimeout(() => {
       setAvatar(built);
-      statusRef.current = 'speaking';
-      setStatus('speaking');
-      setMessage(`Built in ${built.buildTime}s: ${built.summary}`);
+      setMessage(current => current === 'Thinking…' ? `Built: ${built.summary}` : current);
       appendLog(`Avatar built: ${built.summary}`);
-      const fallbackReply = 'Done. What else should I change?';
-      const spoken = BRAIN_ENABLED ? await getFinalSpokenReply(prompt, built, fallbackReply) : fallbackReply;
-      const speechPlan = compileSpeechPlan(spoken);
-      setMessage(speechPlan.displayText || fallbackReply);
-      speak(spoken, { speechPlan, after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
-    }, 3100);
+    }, 520);
   }
 
-  async function getFinalSpokenReply(prompt, built, fallback) {
-    setBrainStatus('speaker agent: asking for final line');
-    const reply = await askSpeakerAgent(prompt, built);
-    if (!reply.ok || !reply.text) return fallback;
-    appendLog(`Speaker agent: ${plainSpeechText(reply.text)}`);
-    return reply.text;
-  }
+  function startStreamingSpeakerReply(prompt, built, fallback, after) {
+    setBrainStatus('speaker agent: connecting');
+    statusRef.current = 'speaking';
+    setStatus('speaking');
+    streamQueueRef.current = [];
+    streamSpeakingRef.current = false;
+    streamAfterRef.current = after;
+    window.speechSynthesis?.cancel?.();
+    speechRunRef.current += 1;
+    const speechRun = speechRunRef.current;
+    let settled = false;
+    let fullText = '';
+    let pending = '';
+    let firstSpoken = false;
+    const started = performance.now();
+    const instruction = `Reply as My Dude in one short friendly follow-up question. Use natural speech-director tags only if useful. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look. Ask what to change next.`;
 
-  function askSpeakerAgent(prompt, built) {
-    return new Promise((resolve) => {
-      let settled = false;
-      const started = performance.now();
-      const timeout = window.setTimeout(() => {
+    const flushPending = (force = false) => {
+      const match = pending.match(/^([\s\S]*?[.!?…—]|[\s\S]{80,}?[ ,;:])/);
+      if (!force && !match) return;
+      const chunk = (force ? pending : match[0]).trim();
+      pending = force ? '' : pending.slice(match[0].length);
+      if (!chunk) return;
+      if (!firstSpoken) {
+        firstSpoken = true;
+        setBrainStatus(`speaker agent: first speech in ${Math.round(performance.now() - started)}ms`);
+      }
+      enqueueSpeech(chunk, speechRun);
+    };
+
+    const timeout = window.setTimeout(() => {
+      if (settled || firstSpoken) return;
+      settled = true;
+      setBrainStatus('speaker agent: timeout, using instant fallback');
+      setMessage(fallback);
+      speak(fallback, { after });
+    }, 4500);
+
+    try {
+      const socket = new WebSocket(BRIDGE_WS_URL);
+      socket.onopen = () => setBrainStatus('speaker agent: connected');
+      socket.onmessage = (event) => {
+        let payload;
+        try { payload = JSON.parse(event.data); } catch { return; }
+        if (payload.type === 'ready') {
+          setBrainStatus(`speaker agent: ready (${payload.model || 'haiku'})`);
+          socket.send(JSON.stringify({
+            type: 'say',
+            sessionId: sessionIdRef.current,
+            text: prompt,
+            instruction,
+            avatar: { name: built.name, summary: built.summary },
+          }));
+        }
+        if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
+        if (payload.type === 'delta' && typeof payload.text === 'string') {
+          fullText += payload.text;
+          pending += payload.text;
+          const display = plainSpeechText(fullText);
+          if (display) setMessage(display);
+          flushPending(false);
+        }
+        if (payload.type === 'reply' && !settled) {
+          settled = true;
+          window.clearTimeout(timeout);
+          if (payload.text && !fullText.trim()) {
+            fullText = payload.text;
+            pending = payload.text;
+          }
+          flushPending(true);
+          const display = plainSpeechText(fullText || payload.text || fallback) || fallback;
+          setMessage(display);
+          appendLog(`Speaker agent: ${display}`);
+          setBrainStatus(`speaker agent: streamed in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
+          if (!firstSpoken && !(fullText || payload.text)) speak(fallback, { after });
+          else finishStreamWhenQuiet(speechRun);
+          try { socket.close(); } catch {}
+        }
+      };
+      socket.onerror = () => {
         if (settled) return;
         settled = true;
-        setBrainStatus('speaker agent: timeout, using Phase 1 line');
-        resolve({ ok: false });
-      }, 5000);
-      try {
-        const socket = new WebSocket(BRIDGE_WS_URL);
-        socket.onopen = () => setBrainStatus('speaker agent: connected');
-        socket.onmessage = (event) => {
-          let payload;
-          try { payload = JSON.parse(event.data); } catch { return; }
-          if (payload.type === 'ready') {
-            setBrainStatus(`speaker agent: ready (${payload.model || 'haiku'})`);
-            socket.send(JSON.stringify({
-              type: 'say',
-              sessionId: sessionIdRef.current,
-              text: `User asked for: ${prompt}. Reply as My Dude in one short friendly follow-up question, with natural speech-director tags for browser speech. Allowed tags only: [warm], [happy], [excited], [curious], [thinking], [calm], [whisper], [emphasis], [slow], [fast], [normal], [pause:250], [beat], [breath]. Pause numbers can be 120-900 milliseconds. Use 1-4 tags max, mostly before phrases. Use punctuation naturally: commas, ellipses, em dashes, questions. If pronunciation needs help, rewrite words phonetically in normal text; do not use SSML/XML. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look. Example style: [warm] Done — [pause:180] want me to make it a little weirder?`,
-            }));
-          }
-          if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
-          if (payload.type === 'reply' && !settled) {
-            settled = true;
-            window.clearTimeout(timeout);
-            setBrainStatus(`speaker agent: replied in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
-            try { socket.close(); } catch {}
-            resolve({ ok: true, text: payload.text });
-          }
-        };
-        socket.onerror = () => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeout);
-          setBrainStatus('speaker agent: connection error, using Phase 1 line');
-          resolve({ ok: false });
-        };
-      } catch {
-        if (!settled) {
-          settled = true;
-          window.clearTimeout(timeout);
-          setBrainStatus('speaker agent: unavailable, using Phase 1 line');
-          resolve({ ok: false });
-        }
+        window.clearTimeout(timeout);
+        setBrainStatus('speaker agent: connection error, using Phase 1 line');
+        speak(fallback, { after });
+      };
+    } catch {
+      if (!settled) {
+        settled = true;
+        window.clearTimeout(timeout);
+        setBrainStatus('speaker agent: unavailable, using Phase 1 line');
+        speak(fallback, { after });
       }
-    });
+    }
+  }
+
+  function enqueueSpeech(text, speechRun) {
+    const speechPlan = compileSpeechPlan(text);
+    const chunks = speechPlan.chunks.length ? speechPlan.chunks : [{ type: 'speak', text: plainSpeechText(text), ...DEFAULT_PROSODY }];
+    streamQueueRef.current.push(...chunks);
+    drainSpeechQueue(speechRun);
+  }
+
+  function finishStreamWhenQuiet(speechRun) {
+    const check = () => {
+      if (speechRun !== speechRunRef.current) return;
+      if (!streamSpeakingRef.current && streamQueueRef.current.length === 0) {
+        const after = streamAfterRef.current;
+        streamAfterRef.current = null;
+        after?.();
+        return;
+      }
+      window.setTimeout(check, 120);
+    };
+    check();
+  }
+
+  function drainSpeechQueue(speechRun) {
+    if (streamSpeakingRef.current || speechRun !== speechRunRef.current || !window.speechSynthesis) return;
+    const chunk = streamQueueRef.current.shift();
+    if (!chunk) return;
+    streamSpeakingRef.current = true;
+    if (chunk.type === 'pause') {
+      setMouthOpen(false);
+      window.setTimeout(() => {
+        streamSpeakingRef.current = false;
+        drainSpeechQueue(speechRun);
+      }, chunk.duration);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(chunk.text);
+    utterance.rate = chunk.rate || 1.08;
+    utterance.pitch = chunk.pitch || 1.08;
+    utterance.volume = chunk.volume ?? 1;
+    if (voiceRef.current) {
+      utterance.voice = voiceRef.current;
+      utterance.lang = voiceRef.current.lang || 'en-US';
+    } else {
+      utterance.lang = 'en-US';
+    }
+    const pulseMouth = () => {
+      setMouthOpen(true);
+      clearTimeout(mouthCloseTimer.current);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 70 + Math.random() * 90);
+    };
+    utterance.onstart = () => {
+      pulseMouth();
+      clearInterval(speakingTimer.current);
+      speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+    };
+    utterance.onboundary = (event) => {
+      if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
+    };
+    const done = () => {
+      if (speechRun !== speechRunRef.current) return;
+      clearInterval(speakingTimer.current);
+      clearTimeout(mouthCloseTimer.current);
+      setMouthOpen(false);
+      window.setTimeout(() => {
+        streamSpeakingRef.current = false;
+        drainSpeechQueue(speechRun);
+      }, chunk.pauseAfter || 40);
+    };
+    utterance.onend = done;
+    utterance.onerror = done;
+    window.speechSynthesis.speak(utterance);
   }
 
 

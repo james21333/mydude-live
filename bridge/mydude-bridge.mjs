@@ -6,7 +6,7 @@ import path from 'node:path';
 
 const PORT = Number(process.env.PORT || 8787);
 const ALLOWED_ORIGIN = process.env.MYDUDE_ALLOWED_ORIGIN || 'https://demo.mydude.live';
-const MODEL = 'claude-haiku-4.5';
+const MODEL = 'gpt-4o-mini';
 const AGENT_DIR = '/home/josh/.openclaw/bridge/mydude-speaker-agent';
 const AUTH_PROFILE = '/home/josh/.openclaw/agents/main/agent/auth-profiles.json';
 
@@ -118,13 +118,19 @@ function fallbackReply(text) {
   return 'I hear you, dude—let me shape myself around that.';
 }
 
-async function askBrain(userText, sessionId = 'demo') {
-  const personality = await persistPersonalityFromUser(userText);
+async function askBrain(userText, sessionId = 'demo', options = {}) {
+  const cleanUserText = userText.trim().slice(0, 1200);
+  const personality = await persistPersonalityFromUser(cleanUserText);
   const token = await getCopilotToken();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8_000);
   try {
-    const system = `${basePersona}\n\nCurrent self file:\n${JSON.stringify(personality, null, 2)}`;
+    const system = `${basePersona}\n\nYou may use these speech-director tags only when helpful: [warm], [happy], [excited], [curious], [thinking], [calm], [whisper], [emphasis], [slow], [fast], [normal], [pause:250], [beat], [breath]. Use 1-4 tags max.\n\nCurrent self file:\n${JSON.stringify(personality, null, 2)}`;
+    const instruction = typeof options.instruction === 'string' ? options.instruction.trim().slice(0, 1000) : '';
+    const messages = [
+      { role: 'system', content: system },
+      { role: 'user', content: instruction ? `${cleanUserText}\n\nResponse guidance: ${instruction}` : cleanUserText },
+    ];
     const res = await fetch('https://api.individual.githubcopilot.com/chat/completions', {
       method: 'POST',
       signal: controller.signal,
@@ -135,22 +141,49 @@ async function askBrain(userText, sessionId = 'demo') {
       },
       body: JSON.stringify({
         model: MODEL,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: userText },
-        ],
+        messages,
         max_tokens: 60,
         temperature: 0.78,
-        stream: false,
+        stream: Boolean(options.onDelta),
         user: `mydude-${String(sessionId).slice(0, 64)}`,
       }),
     });
-    const elapsedMs = Date.now() - (Date.now() - 0); // overwritten below would be noisy; client sees its own latency
-    const raw = await res.text();
-    if (!res.ok) throw new Error(`Copilot chat failed: HTTP ${res.status}: ${raw.slice(0, 180)}`);
-    const json = JSON.parse(raw);
-    const text = (json.choices?.[0]?.message?.content || fallbackReply(userText)).trim().replace(/\s+/g, ' ');
-    return { ok: true, model: `github-copilot/${MODEL}`, text, personality, elapsedMs };
+    if (!res.ok) {
+      const raw = await res.text();
+      throw new Error(`Copilot chat failed: HTTP ${res.status}: ${raw.slice(0, 180)}`);
+    }
+    let text = '';
+    if (options.onDelta && res.body) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (!data || data === '[DONE]') continue;
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              text += delta;
+              options.onDelta(delta);
+            }
+          } catch {}
+        }
+      }
+    } else {
+      const raw = await res.text();
+      const json = JSON.parse(raw);
+      text = json.choices?.[0]?.message?.content || '';
+    }
+    text = (text || fallbackReply(cleanUserText)).trim().replace(/\s+/g, ' ');
+    return { ok: true, model: `github-copilot/${MODEL}`, text, personality };
   } finally {
     clearTimeout(timer);
   }
@@ -199,7 +232,10 @@ async function handleWsMessage(socket, raw) {
   const started = Date.now();
   sendWs(socket, { type: 'thinking', model: `github-copilot/${MODEL}` });
   try {
-    const reply = await askBrain(msg.text.trim().slice(0, 1200), msg.sessionId);
+    const reply = await askBrain(msg.text.trim().slice(0, 1200), msg.sessionId, {
+      instruction: msg.instruction,
+      onDelta: (delta) => sendWs(socket, { type: 'delta', text: delta, elapsedMs: Date.now() - started }),
+    });
     sendWs(socket, { type: 'reply', ...reply, elapsedMs: Date.now() - started });
   } catch (error) {
     sendWs(socket, { type: 'reply', ok: false, model: `github-copilot/${MODEL}`, text: fallbackReply(msg.text), elapsedMs: Date.now() - started, error: String(error.message || error) });
@@ -217,7 +253,7 @@ const server = http.createServer(async (req, res) => {
     const body = JSON.stringify({
       ok: true,
       service: 'mydude-openclaw-bridge',
-      status: 'phase-2-bridge-online',
+      status: 'phase-3-streaming-fast-path-online',
       brain: `github-copilot/${MODEL}`,
       agentDir: AGENT_DIR,
       ws: '/speak',
