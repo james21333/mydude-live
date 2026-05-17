@@ -90,6 +90,100 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
     .sort((a, b) => b.score - a.score)[0]?.voice || null;
 }
 
+const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
+const DIRECTOR_PRESETS = Object.freeze({
+  normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
+  warm: { rate: 1.04, pitch: 1.06, volume: 1, pauseAfter: 80 },
+  happy: { rate: 1.1, pitch: 1.13, volume: 1, pauseAfter: 60 },
+  excited: { rate: 1.16, pitch: 1.18, volume: 1, pauseAfter: 50 },
+  curious: { rate: 1.04, pitch: 1.14, volume: 1, pauseAfter: 120 },
+  thinking: { rate: 0.94, pitch: 1.0, volume: 0.96, pauseAfter: 240 },
+  calm: { rate: 0.96, pitch: 0.98, volume: 0.98, pauseAfter: 150 },
+  whisper: { rate: 0.9, pitch: 0.94, volume: 0.72, pauseAfter: 160 },
+  emphasis: { rate: 0.98, pitch: 1.16, volume: 1, pauseAfter: 90 },
+  slow: { rate: 0.88, pitch: 1.02, volume: 1, pauseAfter: 160 },
+  fast: { rate: 1.2, pitch: 1.08, volume: 1, pauseAfter: 40 },
+});
+
+function clampNumber(value, min, max, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+}
+
+function normalizeDirectorSyntax(text = '') {
+  return String(text)
+    .replace(/\{\{\s*([a-z][a-z-]*)(?::\s*(\d+))?\s*\}\}/gi, (_, tag, value) => `[${tag.toLowerCase()}${value ? `:${value}` : ''}]`)
+    .replace(/\{\s*([a-z][a-z-]*)(?::\s*(\d+))?\s*\}/gi, (_, tag, value) => `[${tag.toLowerCase()}${value ? `:${value}` : ''}]`);
+}
+
+function plainSpeechText(text = '') {
+  return normalizeDirectorSyntax(text)
+    .replace(/\[(?:pause|beat|breath)(?::\d{1,4})?\]/gi, ' ')
+    .replace(/\[(?:normal|warm|happy|excited|curious|thinking|calm|whisper|emphasis|slow|fast)\]/gi, ' ')
+    .replace(/\s+([,.!?;:])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function splitSpeechTextIntoPhrases(text, prosody) {
+  const chunks = [];
+  const phrasePattern = /[^,.!?;:—–]+[,.!?;:—–]?/g;
+  const phrases = text.match(phrasePattern) || [text];
+  for (const phrase of phrases) {
+    const clean = phrase.replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    const punctuation = clean.match(/[,.!?;:—–]$/)?.[0] || '';
+    const punctuationPause = punctuation === ',' ? 130
+      : punctuation === ';' || punctuation === ':' || punctuation === '—' || punctuation === '–' ? 220
+      : punctuation === '.' ? 260
+      : punctuation === '?' ? 300
+      : punctuation === '!' ? 180
+      : 60;
+    const punctuationBoost = punctuation === '!' ? { pitch: 0.05, rate: 0.03 }
+      : punctuation === '?' ? { pitch: 0.04, rate: -0.02 }
+      : { pitch: 0, rate: 0 };
+    chunks.push({
+      type: 'speak',
+      text: clean,
+      rate: clampNumber(prosody.rate + punctuationBoost.rate, 0.65, 1.35, 1.08),
+      pitch: clampNumber(prosody.pitch + punctuationBoost.pitch, 0.65, 1.45, 1.08),
+      volume: clampNumber(prosody.volume, 0.45, 1, 1),
+      pauseAfter: Math.max(prosody.pauseAfter || 0, punctuationPause),
+    });
+  }
+  return chunks;
+}
+
+function compileSpeechPlan(text = '', options = {}) {
+  const normalized = normalizeDirectorSyntax(text);
+  const tokens = normalized.split(/(\[(?:[a-z][a-z-]*)(?::\d{1,4})?\])/gi).filter(Boolean);
+  const chunks = [];
+  let prosody = { ...DEFAULT_PROSODY, rate: options.rate || DEFAULT_PROSODY.rate };
+
+  for (const token of tokens) {
+    const directive = token.match(/^\[([a-z][a-z-]*)(?::(\d{1,4}))?\]$/i);
+    if (directive) {
+      const tag = directive[1].toLowerCase();
+      const value = directive[2];
+      if (tag === 'pause' || tag === 'beat' || tag === 'breath') {
+        const fallback = tag === 'breath' ? 320 : tag === 'beat' ? 180 : 240;
+        chunks.push({ type: 'pause', duration: clampNumber(value, 80, 1400, fallback) });
+      } else if (DIRECTOR_PRESETS[tag]) {
+        prosody = { ...prosody, ...DIRECTOR_PRESETS[tag] };
+      }
+      continue;
+    }
+    chunks.push(...splitSpeechTextIntoPhrases(token, prosody));
+  }
+
+  const speakChunks = chunks.filter(chunk => chunk.type === 'speak' && chunk.text.trim());
+  return {
+    displayText: plainSpeechText(normalized),
+    chunks: chunks.length ? chunks : splitSpeechTextIntoPhrases(normalized, prosody),
+    usedDirectives: normalized !== plainSpeechText(normalized) || speakChunks.length > 1,
+  };
+}
+
 function colorsFromName(name) {
   let hash = 0;
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -155,6 +249,7 @@ function DemoApp() {
   const listenTokenRef = useRef(0);
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const voiceRef = useRef(null);
+  const speechRunRef = useRef(0);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
@@ -251,6 +346,7 @@ function DemoApp() {
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
     window.speechSynthesis?.cancel?.();
+    speechRunRef.current += 1;
     clearInterval(speakingTimer.current);
     setMouthOpen(false);
     activatedRef.current = true;
@@ -354,8 +450,9 @@ function DemoApp() {
       appendLog(`Avatar built: ${built.summary}`);
       const fallbackReply = 'Done. What else should I change?';
       const spoken = BRAIN_ENABLED ? await getFinalSpokenReply(prompt, built, fallbackReply) : fallbackReply;
-      setMessage(spoken);
-      speak(spoken, { after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
+      const speechPlan = compileSpeechPlan(spoken);
+      setMessage(speechPlan.displayText || fallbackReply);
+      speak(spoken, { speechPlan, after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
     }, 3100);
   }
 
@@ -363,7 +460,7 @@ function DemoApp() {
     setBrainStatus('speaker agent: asking for final line');
     const reply = await askSpeakerAgent(prompt, built);
     if (!reply.ok || !reply.text) return fallback;
-    appendLog(`Speaker agent: ${reply.text}`);
+    appendLog(`Speaker agent: ${plainSpeechText(reply.text)}`);
     return reply.text;
   }
 
@@ -388,7 +485,7 @@ function DemoApp() {
             socket.send(JSON.stringify({
               type: 'say',
               sessionId: sessionIdRef.current,
-              text: `User asked for: ${prompt}. Reply as My Dude in one short friendly follow-up question. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look.`,
+              text: `User asked for: ${prompt}. Reply as My Dude in one short friendly follow-up question, with natural speech-director tags for browser speech. Allowed tags only: [warm], [happy], [excited], [curious], [thinking], [calm], [whisper], [emphasis], [slow], [fast], [normal], [pause:250], [beat], [breath]. Pause numbers can be 120-900 milliseconds. Use 1-4 tags max, mostly before phrases. Use punctuation naturally: commas, ellipses, em dashes, questions. If pronunciation needs help, rewrite words phonetically in normal text; do not use SSML/XML. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look. Example style: [warm] Done — [pause:180] want me to make it a little weirder?`,
             }));
           }
           if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
@@ -428,6 +525,7 @@ function DemoApp() {
     appendLog(`Voice selected: ${voice.name} (${voice.lang || 'unknown'})`);
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
+      speechRunRef.current += 1;
       const preview = new SpeechSynthesisUtterance('Voice selected.');
       preview.voice = voice;
       preview.lang = voice.lang || 'en-US';
@@ -445,42 +543,72 @@ function DemoApp() {
     window.speechSynthesis.cancel();
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
+    const speechRun = speechRunRef.current + 1;
+    speechRunRef.current = speechRun;
+    const speechPlan = options.speechPlan || compileSpeechPlan(text, options);
+    const chunks = speechPlan.chunks.length ? speechPlan.chunks : [{ type: 'speak', text: plainSpeechText(text), ...DEFAULT_PROSODY }];
     setStatus('speaking');
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = options.rate || 1.08;
-    utterance.pitch = 1.08;
-    utterance.volume = 1;
-    if (voiceRef.current) {
-      utterance.voice = voiceRef.current;
-      utterance.lang = voiceRef.current.lang || 'en-US';
-    } else {
-      utterance.lang = 'en-US';
-    }
+    if (speechPlan.displayText && speechPlan.displayText !== text) appendLog(`Speech directed: ${speechPlan.displayText}`);
+
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
       mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 70 + Math.random() * 90);
     };
-    utterance.onstart = () => {
-      pulseMouth();
-      clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+
+    const speakChunk = (index = 0) => {
+      if (speechRun !== speechRunRef.current) return;
+      const chunk = chunks[index];
+      if (!chunk) {
+        clearInterval(speakingTimer.current);
+        clearTimeout(mouthCloseTimer.current);
+        setMouthOpen(false);
+        options.after?.();
+        return;
+      }
+      if (chunk.type === 'pause') {
+        setMouthOpen(false);
+        window.setTimeout(() => speakChunk(index + 1), chunk.duration);
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(chunk.text);
+      utterance.rate = chunk.rate || options.rate || 1.08;
+      utterance.pitch = chunk.pitch || 1.08;
+      utterance.volume = chunk.volume ?? 1;
+      if (voiceRef.current) {
+        utterance.voice = voiceRef.current;
+        utterance.lang = voiceRef.current.lang || 'en-US';
+      } else {
+        utterance.lang = 'en-US';
+      }
+      utterance.onstart = () => {
+        pulseMouth();
+        clearInterval(speakingTimer.current);
+        speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+      };
+      utterance.onboundary = (event) => {
+        if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
+      };
+      utterance.onend = () => {
+        if (speechRun !== speechRunRef.current) return;
+        clearInterval(speakingTimer.current);
+        clearTimeout(mouthCloseTimer.current);
+        setMouthOpen(false);
+        window.setTimeout(() => speakChunk(index + 1), chunk.pauseAfter || 40);
+      };
+      utterance.onerror = () => {
+        if (speechRun === speechRunRef.current) window.setTimeout(() => speakChunk(index + 1), 80);
+      };
+      window.speechSynthesis.speak(utterance);
     };
-    utterance.onboundary = (event) => {
-      if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
-    };
-    utterance.onend = () => {
-      clearInterval(speakingTimer.current);
-      clearTimeout(mouthCloseTimer.current);
-      setMouthOpen(false);
-      options.after?.();
-    };
-    window.speechSynthesis.speak(utterance);
+
+    speakChunk();
   }
 
   function resetDemo() {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
+    speechRunRef.current += 1;
     clearInterval(speakingTimer.current);
     setAvatar(null);
     setTranscript('');
