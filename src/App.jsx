@@ -12,6 +12,7 @@ const ACTIVE_PROJECTS = [
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const BRAIN_ENABLED = new URLSearchParams(window.location.search).get('brain') === '1';
+const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(new URLSearchParams(window.location.search).get('voices'));
 const BRIDGE_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'ws://127.0.0.1:8787/speak'
   : 'wss://bridge.mydude.live/speak';
@@ -24,6 +25,63 @@ function getSubdomain(hostname = window.location.hostname.toLowerCase()) {
 
 function displayName(value) {
   return (value || 'unknown').split('-').filter(Boolean).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
+
+
+function detectVoicePlatform() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  if (/iPhone|iPad|iPod/i.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/i.test(ua)) return 'android';
+  if (/Mac/i.test(platform)) return 'mac';
+  if (/Win/i.test(platform)) return 'windows';
+  return 'other';
+}
+
+function scoreVoiceForPlatform(voice, platform) {
+  const name = voice.name || '';
+  const lang = voice.lang || '';
+  const id = `${name} ${lang}`.toLowerCase();
+  const isEnglish = /^en([-_]|$)/i.test(lang) || /english|samantha|alex|daniel|karen|zira|david|aria|jenny|guy|michelle/.test(id);
+  if (!isEnglish) return -1000;
+
+  let score = 0;
+  if (/en[-_]us/i.test(lang)) score += 24;
+  if (/en[-_]gb/i.test(lang)) score += 16;
+  if (/en[-_]au/i.test(lang)) score += 10;
+  if (voice.default) score += 6;
+  if (voice.localService) score += 4;
+  if (/natural|neural|premium|enhanced|google|microsoft|apple/.test(id)) score += 18;
+
+  if (platform === 'mac') {
+    if (/google.*(us|english)|google us english/.test(id)) score += 90;
+    if (/samantha|alex/.test(id)) score += 80;
+    if (/daniel|karen/.test(id)) score += 62;
+  } else if (platform === 'ios') {
+    if (/samantha/.test(id)) score += 90;
+    if (/daniel/.test(id)) score += 78;
+    if (/karen/.test(id)) score += 72;
+    if (/moira|tessa|rishi/.test(id)) score += 55;
+  } else if (platform === 'android') {
+    if (/google/.test(id)) score += 100;
+    if (/english.*united states|us english/.test(id)) score += 38;
+  } else if (platform === 'windows') {
+    if (/google/.test(id)) score += 100;
+    if (/microsoft/.test(id)) score += 78;
+    if (/aria|jenny|michelle|guy|zira|mark|david/.test(id)) score += 44;
+  } else {
+    if (/google|microsoft|samantha|alex|daniel|karen/.test(id)) score += 60;
+  }
+
+  if (/compact|novelty|whisper|zarvox|bells|boing|bubbles|cellos|hysterical|trinoids|pipe organ|bad news|good news/.test(id)) score -= 120;
+  return score;
+}
+
+function pickBestVoice(voices, platform = detectVoicePlatform()) {
+  return voices
+    .filter(Boolean)
+    .map(voice => ({ voice, score: scoreVoiceForPlatform(voice, platform) }))
+    .sort((a, b) => b.score - a.score)[0]?.voice || null;
 }
 
 function colorsFromName(name) {
@@ -77,6 +135,9 @@ function DemoApp() {
   const [log, setLog] = useState(['Ready for one-click live mode.']);
   const [debug, setDebug] = useState('idle — press Start');
   const [brainStatus, setBrainStatus] = useState(BRAIN_ENABLED ? 'speaker agent: standby' : 'speaker agent: off');
+  const [voiceInventory, setVoiceInventory] = useState([]);
+  const [voiceChoice, setVoiceChoice] = useState(null);
+  const [voiceStatus, setVoiceStatus] = useState('voice: loading browser voices');
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const analyserRef = useRef(null);
@@ -87,9 +148,41 @@ function DemoApp() {
   const statusRef = useRef('idle');
   const listenTokenRef = useRef(0);
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const voiceRef = useRef(null);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadVoices = () => {
+      if (!window.speechSynthesis) {
+        setVoiceStatus('voice: browser speech unavailable');
+        return;
+      }
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (!voices.length) {
+        setVoiceStatus('voice: waiting for browser voices');
+        return;
+      }
+      const platform = detectVoicePlatform();
+      const picked = pickBestVoice(voices, platform);
+      if (cancelled) return;
+      voiceRef.current = picked;
+      setVoiceInventory(voices);
+      setVoiceChoice(picked ? { name: picked.name, lang: picked.lang, localService: picked.localService, default: picked.default, platform } : null);
+      setVoiceStatus(picked ? `voice: ${picked.name} (${picked.lang || 'unknown'})` : 'voice: default browser voice');
+    };
+    loadVoices();
+    const timer = window.setTimeout(loadVoices, 350);
+    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      if (window.speechSynthesis?.onvoiceschanged === loadVoices) window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   useEffect(() => {
     activatedRef.current = activated;
@@ -332,6 +425,12 @@ function DemoApp() {
     utterance.rate = options.rate || 1.08;
     utterance.pitch = 1.08;
     utterance.volume = 1;
+    if (voiceRef.current) {
+      utterance.voice = voiceRef.current;
+      utterance.lang = voiceRef.current.lang || 'en-US';
+    } else {
+      utterance.lang = 'en-US';
+    }
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
@@ -385,7 +484,7 @@ function DemoApp() {
         <div className="control-copy">
           <p>{message}</p>
           <div className="transcript live-transcript"><strong>I heard:</strong> <span>{transcript || 'waiting for voice...'}</span></div>
-          <div className="listener-debug"><strong>Mic:</strong> {debug}{BRAIN_ENABLED && <><br/><strong>Brain:</strong> {brainStatus}</>}</div>
+          <div className="listener-debug"><strong>Mic:</strong> {debug}<br/><strong>Voice:</strong> {voiceStatus}{BRAIN_ENABLED && <><br/><strong>Brain:</strong> {brainStatus}</>}</div>
         </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
@@ -395,9 +494,24 @@ function DemoApp() {
       </div>
     </section>
 
+    {VOICE_DEBUG_ENABLED && <section className="voice-inventory-panel">
+      <div className="voice-inventory-header">
+        <strong>Voice inventory</strong>
+        <span>{voiceInventory.length} browser voices exposed on {voiceChoice?.platform || detectVoicePlatform()}</span>
+      </div>
+      <div className="voice-choice">Auto-picked: {voiceChoice ? `${voiceChoice.name} (${voiceChoice.lang || 'unknown'})` : 'browser default fallback'}</div>
+      <div className="voice-list">
+        {voiceInventory.map((voice, index) => <div className={voice.name === voiceChoice?.name && voice.lang === voiceChoice?.lang ? 'selected' : ''} key={`${voice.name}-${voice.lang}-${index}`}>
+          <span>{voice.name || 'Unnamed voice'}</span>
+          <small>{voice.lang || 'unknown'} · {voice.localService ? 'local' : 'network/unknown'}{voice.default ? ' · default' : ''}</small>
+        </div>)}
+      </div>
+    </section>}
+
     <section className="log-panel">{log.map((item, index) => <div key={`${item}-${index}`}>{item}</div>)}</section>
   </main>;
 }
+
 
 function CartoonAvatar({ avatar, mouthOpen, status }) {
   const isBuilt = Boolean(avatar);

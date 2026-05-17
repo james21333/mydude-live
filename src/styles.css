@@ -98,3 +98,13 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 @keyframes breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
 @keyframes drift { to { transform: translate3d(10%,8%,0) rotate(8deg); } }
+.voice-inventory-panel { margin-top: 12px; border: 1px solid rgba(147,197,253,.28); border-radius: 18px; background: rgba(2,6,23,.58); color: #dbeafe; padding: 14px; }
+.voice-inventory-header { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; color: #f8fafc; }
+.voice-inventory-header span, .voice-choice { color: #bfdbfe; font-size: .82rem; }
+.voice-choice { margin-top: 6px; }
+.voice-list { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; max-height: 260px; overflow: auto; }
+.voice-list div { border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(15,23,42,.54); padding: 8px 10px; display: grid; gap: 2px; }
+.voice-list div.selected { border-color: rgba(134,239,172,.8); background: rgba(20,83,45,.36); }
+.voice-list span { font-size: .84rem; font-weight: 800; color: #f8fafc; }
+.voice-list small { color: #cbd5e1; font-size: .72rem; }
+@media (max-width: 860px) { .voice-inventory-panel { font-size: .8rem; padding: 10px; } .voice-inventory-header { display: grid; } .voice-list { grid-template-columns: 1fr; max-height: 220px; } }
