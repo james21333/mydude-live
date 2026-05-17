@@ -9,16 +9,31 @@ const ALLOWED_ORIGIN = process.env.MYDUDE_ALLOWED_ORIGIN || 'https://demo.mydude
 const MODEL = 'gpt-4o-mini';
 const AGENT_DIR = '/home/josh/.openclaw/bridge/mydude-speaker-agent';
 const AUTH_PROFILE = '/home/josh/.openclaw/agents/main/agent/auth-profiles.json';
+const SERVER_CONFIG_PATH = path.join(AGENT_DIR, 'server-config.json');
 
 let copilotTokenCache = null;
+const sessionProfiles = new Map();
 
-const basePersona = `You are My Dude, a live cartoon avatar speaker.
-You are warm, buddy-like, funny, relaxed, and concise.
-You speak out loud, so use one natural sentence unless the user clearly asks for more.
-No markdown. No bullets. No stage directions. No code.
-Keep most replies under 18 words.
-If the user describes what the avatar should be, enthusiastically acknowledge and reflect the new identity.
-If the user says how they want you to act, adopt that style immediately.`;
+const defaultServerConfig = Object.freeze({
+  basePersona: `You are My Dude, a live cartoon avatar speaker.
+You are warm, buddy-like, funny, relaxed, and conversational.
+You speak out loud, so be natural and easy to listen to.
+No markdown unless the user asks. No stage directions. No code unless the user asks.
+Do not ask what you should look like unless the user is already talking about changing the avatar.
+Do not force follow-up questions. Do not end with a question unless the user explicitly asks you to ask one or a clarification is required. Never add rhetorical tag questions like 'right?', 'eh?', 'what now?', or 'what shall we do?'. If the user says not to ask follow-up questions, obey that as a hard rule.
+If the user asks how you should act, talk, or vibe, adopt that style immediately and keep it until Reset.`,
+  defaultProfile: {
+    name: 'My Dude',
+    voice: 'warm buddy',
+    style: ['spoken', 'playful', 'encouraging'],
+    appearancePrompt: '',
+    userWants: '',
+  },
+  maxTokens: 220,
+  temperature: 0.78,
+});
+
+let basePersona = defaultServerConfig.basePersona;
 
 const ideHeaders = {
   Accept: 'application/json',
@@ -39,7 +54,21 @@ function corsHeaders() {
   };
 }
 
+async function loadServerConfig() {
+  try {
+    const config = JSON.parse(await fs.readFile(SERVER_CONFIG_PATH, 'utf8'));
+    basePersona = config.basePersona || defaultServerConfig.basePersona;
+    return { ...defaultServerConfig, ...config, basePersona };
+  } catch {
+    await fs.mkdir(AGENT_DIR, { recursive: true });
+    await fs.writeFile(SERVER_CONFIG_PATH, JSON.stringify(defaultServerConfig, null, 2), 'utf8');
+    basePersona = defaultServerConfig.basePersona;
+    return defaultServerConfig;
+  }
+}
+
 async function ensureAgentFiles() {
+  const serverConfig = await loadServerConfig();
   await fs.mkdir(AGENT_DIR, { recursive: true });
   const soulPath = path.join(AGENT_DIR, 'SOUL.md');
   const personalityPath = path.join(AGENT_DIR, 'PERSONALITY.json');
@@ -48,10 +77,7 @@ async function ensureAgentFiles() {
     await fs.writeFile(personalityPath, JSON.stringify({
       name: 'My Dude',
       model: `github-copilot/${MODEL}`,
-      voice: 'warm buddy',
-      style: ['short', 'spoken', 'playful', 'encouraging'],
-      appearancePrompt: '',
-      userWants: '',
+      ...(serverConfig.defaultProfile || defaultServerConfig.defaultProfile),
       updatedAt: new Date().toISOString(),
     }, null, 2), 'utf8');
   }
@@ -62,13 +88,13 @@ async function loadPersonality() {
   try {
     return JSON.parse(await fs.readFile(path.join(AGENT_DIR, 'PERSONALITY.json'), 'utf8'));
   } catch {
-    return { name: 'My Dude', voice: 'warm buddy', style: ['short', 'spoken', 'playful'], appearancePrompt: '', userWants: '' };
+    return { ...defaultServerConfig.defaultProfile };
   }
 }
 
-function inferPersonalityUpdate(text, current) {
+function inferPersonalityUpdate(text, current = {}) {
   const lower = text.toLowerCase();
-  const next = { ...current, updatedAt: new Date().toISOString() };
+  const next = { ...defaultServerConfig.defaultProfile, ...current, updatedAt: new Date().toISOString() };
   next.lastUserUtterance = text;
   if (/look like|make (you|him|it)|avatar|robot|cat|alien|glasses|hat|blue|green|red|purple|gold|yellow/i.test(text)) {
     next.appearancePrompt = text;
@@ -84,9 +110,10 @@ function inferPersonalityUpdate(text, current) {
   return next;
 }
 
-async function persistPersonalityFromUser(text) {
-  const current = await loadPersonality();
+async function persistPersonalityFromUser(text, sessionId = 'demo', clientProfile = null) {
+  const current = sessionProfiles.get(sessionId) || clientProfile || { ...defaultServerConfig.defaultProfile };
   const next = inferPersonalityUpdate(text, current);
+  sessionProfiles.set(sessionId, next);
   await fs.writeFile(path.join(AGENT_DIR, 'PERSONALITY.json'), JSON.stringify(next, null, 2), 'utf8');
   await fs.writeFile(path.join(AGENT_DIR, 'SOUL.md'), `# My Dude Speaker Soul\n\n${basePersona}\n\n## Current user-shaped identity\n- Voice: ${next.voice || 'warm buddy'}\n- Style: ${(next.style || []).join(', ')}\n- Appearance request: ${next.appearancePrompt || 'not set yet'}\n- Personality request: ${next.userWants || 'not set yet'}\n- Last updated: ${next.updatedAt}\n`, 'utf8');
   await fs.writeFile(path.join(AGENT_DIR, 'last-user-request.txt'), `${new Date().toISOString()}\n${text}\n`, 'utf8');
@@ -114,18 +141,40 @@ async function getCopilotToken() {
 
 function fallbackReply(text) {
   if (/blue|robot|glass/i.test(text)) return 'Oh dude, a blue robot with glasses is absolutely the vibe.';
-  if (/reset|start over/i.test(text)) return 'Totally, fresh start—tell me what you want me to become next.';
-  return 'I hear you, dude—let me shape myself around that.';
+  if (/reset|start over/i.test(text)) return 'Fresh start, dude. I am listening.';
+  return 'I hear you, dude.';
+}
+
+function canAskQuestion(userText = '', personality = {}) {
+  const combined = `${userText} ${personality.userWants || ''}`.toLowerCase();
+  if (/do not ask|don't ask|no follow[- ]?up|no questions/.test(combined)) return false;
+  return /ask me|ask a question|question me|clarify|interview me/.test(combined);
+}
+
+function sanitizeReply(text = '', userText = '', personality = {}) {
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  if (!clean) return clean;
+  if (canAskQuestion(userText, personality)) return clean;
+  const parts = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+  const kept = parts.filter(part => {
+    const trimmed = part.trim();
+    if (trimmed.endsWith('?')) return false;
+    if (/\b(shall we|right|eh|yeah|okay|savvy)\b[.!?]?$/i.test(trimmed)) return false;
+    if (/^(what|who|when|where|why|how|which|tell me|share)\b/i.test(trimmed)) return false;
+    return true;
+  });
+  return (kept.length ? kept : parts.map(part => part.replace(/\?+$/g, '.'))).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 async function askBrain(userText, sessionId = 'demo', options = {}) {
+  const serverConfig = await loadServerConfig();
   const cleanUserText = userText.trim().slice(0, 1200);
-  const personality = await persistPersonalityFromUser(cleanUserText);
+  const personality = await persistPersonalityFromUser(cleanUserText, sessionId, options.clientProfile);
   const token = await getCopilotToken();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8_000);
   try {
-    const system = `${basePersona}\n\nYou may use these speech-director tags only when helpful: [warm], [happy], [excited], [curious], [thinking], [calm], [whisper], [emphasis], [slow], [fast], [normal], [pause:250], [beat], [breath]. Use 1-4 tags max.\n\nCurrent self file:\n${JSON.stringify(personality, null, 2)}`;
+    const system = `${basePersona}\n\nYou may use these speech-director tags only when helpful: [warm], [happy], [excited], [curious], [thinking], [calm], [whisper], [emphasis], [slow], [fast], [normal], [pause:250], [beat], [breath]. Use 1-4 tags max.\n\nCurrent sticky conversation profile:\n${JSON.stringify(personality, null, 2)}`;
     const instruction = typeof options.instruction === 'string' ? options.instruction.trim().slice(0, 1000) : '';
     const messages = [
       { role: 'system', content: system },
@@ -142,8 +191,8 @@ async function askBrain(userText, sessionId = 'demo', options = {}) {
       body: JSON.stringify({
         model: MODEL,
         messages,
-        max_tokens: 60,
-        temperature: 0.78,
+        max_tokens: serverConfig.maxTokens || 220,
+        temperature: serverConfig.temperature ?? 0.78,
         stream: Boolean(options.onDelta),
         user: `mydude-${String(sessionId).slice(0, 64)}`,
       }),
@@ -157,6 +206,18 @@ async function askBrain(userText, sessionId = 'demo', options = {}) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let streamBuffer = '';
+      const flushStream = (force = false) => {
+        const sentencePattern = /^([\s\S]*?[.!?]+)(\s+|$)/;
+        let match;
+        while ((match = streamBuffer.match(sentencePattern)) || (force && streamBuffer.trim())) {
+          const rawChunk = match ? match[1] : streamBuffer;
+          streamBuffer = match ? streamBuffer.slice(match[0].length) : '';
+          const safeChunk = sanitizeReply(rawChunk, cleanUserText, personality);
+          if (safeChunk) options.onDelta(`${safeChunk} `);
+          if (!match) break;
+        }
+      };
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -172,17 +233,19 @@ async function askBrain(userText, sessionId = 'demo', options = {}) {
             const delta = json.choices?.[0]?.delta?.content || '';
             if (delta) {
               text += delta;
-              options.onDelta(delta);
+              streamBuffer += delta;
+              flushStream(false);
             }
           } catch {}
         }
       }
+      flushStream(true);
     } else {
       const raw = await res.text();
       const json = JSON.parse(raw);
       text = json.choices?.[0]?.message?.content || '';
     }
-    text = (text || fallbackReply(cleanUserText)).trim().replace(/\s+/g, ' ');
+    text = sanitizeReply((text || fallbackReply(cleanUserText)).trim().replace(/\s+/g, ' '), cleanUserText, personality);
     return { ok: true, model: `github-copilot/${MODEL}`, text, personality };
   } finally {
     clearTimeout(timer);
@@ -228,12 +291,17 @@ async function handleWsMessage(socket, raw) {
   let msg;
   try { msg = JSON.parse(raw); } catch { return sendWs(socket, { type: 'error', error: 'bad_json' }); }
   if (msg.type === 'ping') return sendWs(socket, { type: 'pong', time: new Date().toISOString() });
+  if (msg.type === 'reset') {
+    sessionProfiles.delete(msg.sessionId || 'demo');
+    return sendWs(socket, { type: 'reset', ok: true });
+  }
   if (msg.type !== 'say' || typeof msg.text !== 'string' || !msg.text.trim()) return sendWs(socket, { type: 'error', error: 'expected_say_text' });
   const started = Date.now();
   sendWs(socket, { type: 'thinking', model: `github-copilot/${MODEL}` });
   try {
     const reply = await askBrain(msg.text.trim().slice(0, 1200), msg.sessionId, {
       instruction: msg.instruction,
+      clientProfile: msg.personality && typeof msg.personality === 'object' ? msg.personality : null,
       onDelta: (delta) => sendWs(socket, { type: 'delta', text: delta, elapsedMs: Date.now() - started }),
     });
     sendWs(socket, { type: 'reply', ...reply, elapsedMs: Date.now() - started });
@@ -253,7 +321,7 @@ const server = http.createServer(async (req, res) => {
     const body = JSON.stringify({
       ok: true,
       service: 'mydude-openclaw-bridge',
-      status: 'phase-3-streaming-fast-path-online',
+      status: 'phase-4-open-conversation-online',
       brain: `github-copilot/${MODEL}`,
       agentDir: AGENT_DIR,
       ws: '/speak',

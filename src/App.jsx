@@ -253,6 +253,7 @@ function DemoApp() {
   const streamQueueRef = useRef([]);
   const streamSpeakingRef = useRef(false);
   const streamAfterRef = useRef(null);
+  const personalityRef = useRef(null);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
@@ -308,11 +309,11 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
-    setMessage("Hey dude! I'm your dude! What do you want me to look like?");
+    setMessage("Hey dude! I'm here. What's up?");
     setTranscript('Greeting… then I will listen.');
     setDebug('start clicked — greeting first, listener next');
     appendLog('Live mode activated. Greeting from the click before listener starts.');
-    speak("Hey dude! I'm your dude! What do you want me to look like?", {
+    speak("Hey dude! I'm here. What's up?", {
       rate: 1.02,
       after: () => {
         setTranscript('Listening… say something now.');
@@ -368,7 +369,7 @@ function DemoApp() {
       statusRef.current = 'listening';
       setStatus('listening');
       setTranscript('Listening… say something now.');
-      setMessage('Listening now. Say one avatar request out loud.');
+      setMessage('Listening now. Say anything.');
       setDebug('listener started — waiting for speech');
     };
     recognition.onspeechstart = () => setDebug('speech detected');
@@ -429,10 +430,25 @@ function DemoApp() {
 
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
-    statusRef.current = 'building';
     listenTokenRef.current += 1;
     try { recognitionRef.current?.abort?.(); } catch {}
-    buildAvatar(text);
+    if (shouldUpdateAvatar(text)) buildAvatar(text);
+    else talkWithBrain(text);
+  }
+
+  function shouldUpdateAvatar(text) {
+    return /\b(look like|make (you|him|it)|avatar|turn into|become|robot|cat|alien|glasses|hat|blue|green|red|purple|gold|yellow|eyes?)\b/i.test(text);
+  }
+
+  function talkWithBrain(prompt) {
+    statusRef.current = 'speaking';
+    setStatus('speaking');
+    setMessage('Thinking…');
+    setBuildProgress(0);
+    const fallbackReply = 'I hear you.';
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
+    else speak(fallbackReply, { after: finish });
   }
 
   function buildAvatar(prompt) {
@@ -441,7 +457,7 @@ function DemoApp() {
     setMessage('Thinking…');
     setBuildProgress(8);
     const built = makeAvatar(prompt);
-    const fallbackReply = 'Done. What else should I change?';
+    const fallbackReply = 'Done.';
     const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
 
     if (BRAIN_ENABLED) {
@@ -475,7 +491,7 @@ function DemoApp() {
     let pending = '';
     let firstSpoken = false;
     const started = performance.now();
-    const instruction = `Reply as My Dude in one short friendly follow-up question. Use natural speech-director tags only if useful. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look. Ask what to change next.`;
+    const instruction = `Answer naturally as My Dude. Do not force avatar-appearance questions or ask what you should look like. If the user asks you to change personality, vibe, or way of talking, adopt it and keep it until Reset. Use speech-director tags only when useful.`;
 
     const flushPending = (force = false) => {
       const match = pending.match(/^([\s\S]*?[.!?…—]|[\s\S]{80,}?[ ,;:])/);
@@ -511,7 +527,8 @@ function DemoApp() {
             sessionId: sessionIdRef.current,
             text: prompt,
             instruction,
-            avatar: { name: built.name, summary: built.summary },
+            avatar: built ? { name: built.name, summary: built.summary } : null,
+            personality: personalityRef.current,
           }));
         }
         if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
@@ -530,6 +547,7 @@ function DemoApp() {
             pending = payload.text;
           }
           flushPending(true);
+          if (payload.personality) personalityRef.current = payload.personality;
           const display = plainSpeechText(fullText || payload.text || fallback) || fallback;
           setMessage(display);
           appendLog(`Speaker agent: ${display}`);
@@ -724,14 +742,29 @@ function DemoApp() {
     speechRunRef.current += 1;
     clearInterval(speakingTimer.current);
     setAvatar(null);
+    personalityRef.current = null;
+    const previousSessionId = sessionIdRef.current;
+    sessionIdRef.current = window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    resetSpeakerSession(previousSessionId);
     setTranscript('');
     setBuildProgress(0);
     statusRef.current = 'listening';
     setStatus('listening');
-    setMessage('Reset complete. What do you want me to look like this time?');
+    setMessage('Reset complete. I am listening.');
     setDebug('reset — starting listener');
-    appendLog('Demo reset. Avatar config cleared.');
-    speak('Reset complete. What do you want me to look like this time?', { after: startListening });
+    appendLog('Demo reset. Avatar and conversation vibe cleared.');
+    speak('Reset complete. I am listening.', { after: startListening });
+  }
+
+  function resetSpeakerSession(sessionId) {
+    if (!BRAIN_ENABLED) return;
+    try {
+      const socket = new WebSocket(BRIDGE_WS_URL);
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'reset', sessionId }));
+        window.setTimeout(() => socket.close(), 120);
+      };
+    } catch {}
   }
 
   function appendLog(item) {
