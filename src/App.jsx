@@ -47,12 +47,6 @@ function scoreVoiceForPlatform(voice, platform) {
   const name = voice.name || '';
   const lang = voice.lang || '';
   const id = `${name} ${lang}`.toLowerCase();
-  const isGoogleEnglishUk = /google/.test(id) && (/en[-_]gb/i.test(lang) || /english.*(united kingdom|uk)|uk english|english uk/i.test(id));
-  const isPaulinaEsMx = /paulina/.test(id) && (/es[-_]mx/i.test(lang) || /spanish.*mexico|mexico.*spanish|mexican spanish/i.test(id));
-
-  if (isGoogleEnglishUk) return 10000;
-  if (isPaulinaEsMx) return 9000;
-
   const isEnglish = /^en([-_]|$)/i.test(lang) || /english|samantha|alex|daniel|karen|zira|david|aria|jenny|guy|michelle/.test(id);
   if (!isEnglish) return -1000;
 
