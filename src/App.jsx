@@ -240,9 +240,8 @@ function DemoApp() {
   function buildAvatar(prompt) {
     statusRef.current = 'building';
     setStatus('building');
-    setMessage('I can build that in under one minute. Starting now.');
+    setMessage('Building your avatar now.');
     setBuildProgress(4);
-    speak('I can build that in under one minute. Working, working, keep a dude a-working. Building up a buddy while the pixels keep twerking.', { rate: 1.04 });
     const steps = [18, 34, 52, 71, 88, 100];
     steps.forEach((progress, index) => {
       setTimeout(() => setBuildProgress(progress), 320 + index * 420);
@@ -254,8 +253,8 @@ function DemoApp() {
       setStatus('speaking');
       setMessage(`Built in ${built.buildTime}s: ${built.summary}`);
       appendLog(`Avatar built: ${built.summary}`);
-      const localReply = `Done. I built ${built.summary}. You can reset me anytime and build a new look.`;
-      const spoken = BRAIN_ENABLED ? await getFinalSpokenReply(prompt, built, localReply) : localReply;
+      const fallbackReply = 'Done. What else should I change?';
+      const spoken = BRAIN_ENABLED ? await getFinalSpokenReply(prompt, built, fallbackReply) : fallbackReply;
       setMessage(spoken);
       speak(spoken, { after: () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); } });
     }, 3100);
@@ -290,7 +289,7 @@ function DemoApp() {
             socket.send(JSON.stringify({
               type: 'say',
               sessionId: sessionIdRef.current,
-              text: `User asked for: ${prompt}. Built avatar: ${built.summary}. Reply as My Dude in one short friendly sentence.`,
+              text: `User asked for: ${prompt}. Reply as My Dude in one short friendly follow-up question. Do not describe avatar colors, eyes, hats, or the built result. Do not say you are digging or loving the look.`,
             }));
           }
           if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);

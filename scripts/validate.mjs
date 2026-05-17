@@ -13,7 +13,7 @@ for (const required of [
   'mydude.live AI Ecosystem',
   'Start',
   'Reset',
-  'Working, working, keep a dude a-working',
+  'Building your avatar now.',
   'Generated autonomously by OpenClaw',
   'My Dude',
 ]) {
@@ -24,7 +24,7 @@ const workerSource = fs.readFileSync(path.resolve('src/index.js'), 'utf8');
 assert(workerSource.includes('window') === false, 'Worker should not depend on window');
 assert(workerSource.includes('mydude.live'), 'Worker root domain missing');
 
-console.log('Validation passed: React demo, wildcard routing shell, reset, build song, and avatar copy are present.');
+console.log('Validation passed: React demo, wildcard routing shell, reset, listener-safe build state, and avatar copy are present.');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
