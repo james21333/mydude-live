@@ -281,6 +281,7 @@ function DemoApp() {
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const baseColors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
   const colors = useMemo(() => colorsForVoice(baseColors, voiceChoice), [baseColors, voiceChoice]);
+  const isPaulinaVoice = isPaulinaVoiceChoice(voiceChoice);
 
 
   useEffect(() => {
@@ -797,7 +798,7 @@ function DemoApp() {
 
   return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent, '--bot': colors.bot, '--eye': colors.eye, '--limb': colors.limb, '--panel': colors.panel }}>
     <section className="demo-hero compact">
-      <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
+      <p className="eyebrow"><Sparkles size={16}/> {isPaulinaVoice ? 'My Dudette' : 'My Dude'}</p>
       <div className={`status-pill ${status}`}>{status}</div>
     </section>
 
