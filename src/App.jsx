@@ -85,6 +85,7 @@ function DemoApp() {
   const mouthCloseTimer = useRef(null);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
+  const listenTokenRef = useRef(0);
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
@@ -148,6 +149,8 @@ function DemoApp() {
   }
 
   function startListening() {
+    const listenToken = listenTokenRef.current + 1;
+    listenTokenRef.current = listenToken;
     window.speechSynthesis?.cancel?.();
     clearInterval(speakingTimer.current);
     setMouthOpen(false);
@@ -190,6 +193,10 @@ function DemoApp() {
     };
     recognition.onerror = (event) => {
       const error = event.error || 'unknown';
+      if (error === 'aborted') {
+        setDebug('listener reset internally');
+        return;
+      }
       setDebug(`listener error: ${error}`);
       appendLog(`Speech listener error: ${error}`);
       if (error === 'not-allowed' || error === 'service-not-allowed') {
@@ -199,8 +206,10 @@ function DemoApp() {
     };
     recognition.onend = () => {
       setDebug('listener ended');
+      if (listenToken !== listenTokenRef.current || recognitionRef.current !== recognition) return;
       if (activatedRef.current && !['building', 'speaking'].includes(statusRef.current)) {
         window.setTimeout(() => {
+          if (listenToken !== listenTokenRef.current || recognitionRef.current !== recognition) return;
           try {
             recognition.start();
             setDebug('listener restarted');
@@ -222,6 +231,8 @@ function DemoApp() {
 
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
+    statusRef.current = 'building';
+    listenTokenRef.current += 1;
     try { recognitionRef.current?.abort?.(); } catch {}
     buildAvatar(text);
   }
