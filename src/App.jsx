@@ -177,7 +177,7 @@ function DemoApp() {
       if (cancelled) return;
       voiceRef.current = picked;
       setVoiceInventory(voices);
-      setVoiceChoice(picked ? { name: picked.name, lang: picked.lang, localService: picked.localService, default: picked.default, platform } : null);
+      setVoiceChoice(picked ? { name: picked.name, lang: picked.lang, localService: picked.localService, default: picked.default, platform, manual: false } : null);
       setVoiceStatus(picked ? `voice: ${picked.name} (${picked.lang || 'unknown'})` : 'voice: default browser voice');
     };
     loadVoices();
@@ -418,6 +418,25 @@ function DemoApp() {
     });
   }
 
+
+  function selectVoice(voice) {
+    if (!voice) return;
+    const platform = detectVoicePlatform();
+    voiceRef.current = voice;
+    setVoiceChoice({ name: voice.name, lang: voice.lang, localService: voice.localService, default: voice.default, platform, manual: true });
+    setVoiceStatus(`voice: ${voice.name} (${voice.lang || 'unknown'}) selected`);
+    appendLog(`Voice selected: ${voice.name} (${voice.lang || 'unknown'})`);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const preview = new SpeechSynthesisUtterance('Voice selected.');
+      preview.voice = voice;
+      preview.lang = voice.lang || 'en-US';
+      preview.rate = 1.08;
+      preview.pitch = 1.08;
+      window.speechSynthesis.speak(preview);
+    }
+  }
+
   function speak(text, options = {}) {
     if (!window.speechSynthesis) {
       options.after?.();
@@ -505,12 +524,12 @@ function DemoApp() {
         <strong>Voice inventory</strong>
         <span>{voiceInventory.length} browser voices exposed on {voiceChoice?.platform || detectVoicePlatform()}</span>
       </div>
-      <div className="voice-choice">Auto-picked: {voiceChoice ? `${voiceChoice.name} (${voiceChoice.lang || 'unknown'})` : 'browser default fallback'}</div>
+      <div className="voice-choice">{voiceChoice?.manual ? 'Selected' : 'Auto-picked'}: {voiceChoice ? `${voiceChoice.name} (${voiceChoice.lang || 'unknown'})` : 'browser default fallback'}</div>
       <div className="voice-list">
-        {voiceInventory.map((voice, index) => <div className={voice.name === voiceChoice?.name && voice.lang === voiceChoice?.lang ? 'selected' : ''} key={`${voice.name}-${voice.lang}-${index}`}>
+        {voiceInventory.map((voice, index) => <button type="button" className={voice.name === voiceChoice?.name && voice.lang === voiceChoice?.lang ? 'selected' : ''} onClick={() => selectVoice(voice)} key={`${voice.name}-${voice.lang}-${index}`}>
           <span>{voice.name || 'Unnamed voice'}</span>
           <small>{voice.lang || 'unknown'} · {voice.localService ? 'local' : 'network/unknown'}{voice.default ? ' · default' : ''}</small>
-        </div>)}
+        </button>)}
       </div>
     </section>}
 
