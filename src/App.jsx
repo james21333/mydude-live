@@ -160,10 +160,6 @@ function splitSpeechTextIntoPhrases(text, prosody) {
   return chunks;
 }
 
-function speechWatchdogMs(text = '') {
-  return Math.max(1200, Math.min(9000, 900 + String(text).length * 75));
-}
-
 function compileSpeechPlan(text = '', options = {}) {
   const normalized = normalizeDirectorSyntax(text);
   const tokens = normalized.split(/(\[(?:[a-z][a-z-]*)(?::\d{1,4})?\])/gi).filter(Boolean);
@@ -660,11 +656,8 @@ function DemoApp() {
     utterance.onboundary = (event) => {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
-    let finished = false;
     const done = () => {
-      if (finished || speechRun !== speechRunRef.current) return;
-      finished = true;
-      clearTimeout(watchdog);
+      if (speechRun !== speechRunRef.current) return;
       clearInterval(speakingTimer.current);
       clearTimeout(mouthCloseTimer.current);
       setMouthOpen(false);
@@ -673,7 +666,6 @@ function DemoApp() {
         drainSpeechQueue(speechRun);
       }, chunk.pauseAfter || 40);
     };
-    const watchdog = window.setTimeout(done, speechWatchdogMs(chunk.text));
     utterance.onend = done;
     utterance.onerror = done;
     window.speechSynthesis.speak(utterance);
@@ -753,19 +745,16 @@ function DemoApp() {
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
       };
-      let finished = false;
-      const done = (delay = chunk.pauseAfter || 40) => {
-        if (finished || speechRun !== speechRunRef.current) return;
-        finished = true;
-        clearTimeout(watchdog);
+      utterance.onend = () => {
+        if (speechRun !== speechRunRef.current) return;
         clearInterval(speakingTimer.current);
         clearTimeout(mouthCloseTimer.current);
         setMouthOpen(false);
-        window.setTimeout(() => speakChunk(index + 1), delay);
+        window.setTimeout(() => speakChunk(index + 1), chunk.pauseAfter || 40);
       };
-      const watchdog = window.setTimeout(() => done(40), speechWatchdogMs(chunk.text));
-      utterance.onend = () => done();
-      utterance.onerror = () => done(80);
+      utterance.onerror = () => {
+        if (speechRun === speechRunRef.current) window.setTimeout(() => speakChunk(index + 1), 80);
+      };
       window.speechSynthesis.speak(utterance);
     };
 
