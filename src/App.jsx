@@ -202,6 +202,26 @@ function colorsFromName(name) {
   };
 }
 
+function isPaulinaVoiceChoice(voice) {
+  if (!voice) return false;
+  const id = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
+  return /paulina/.test(id) && (/es[-_]mx/i.test(voice.lang || '') || /es-mx|spanish.*mexico|mexico.*spanish|mexican spanish/i.test(id));
+}
+
+function colorsForVoice(baseColors, voiceChoice) {
+  if (!isPaulinaVoiceChoice(voiceChoice)) return baseColors;
+  return {
+    start: '#831843',
+    mid: '#db2777',
+    end: '#500724',
+    accent: '#f9a8d4',
+    bot: '#f472b6',
+    eye: '#fff1f2',
+    limb: 'rgba(244,114,182,.62)',
+    panel: 'rgba(249,168,212,.28)',
+  };
+}
+
 function App() {
   const subdomain = getSubdomain();
   if (subdomain === 'demo' || window.location.search.includes('demo=1')) return <DemoApp />;
@@ -262,7 +282,8 @@ function DemoApp() {
   const personalityRef = useRef(null);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
-  const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+  const baseColors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+  const colors = useMemo(() => colorsForVoice(baseColors, voiceChoice), [baseColors, voiceChoice]);
 
 
   useEffect(() => {
@@ -777,14 +798,14 @@ function DemoApp() {
     setLog(items => [item, ...items].slice(0, 5));
   }
 
-  return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
+  return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent, '--bot': colors.bot, '--eye': colors.eye, '--limb': colors.limb, '--panel': colors.panel }}>
     <section className="demo-hero compact">
       <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
       <div className={`status-pill ${status}`}>{status}</div>
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} />
+      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} voiceTheme={colors} />
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
@@ -818,9 +839,14 @@ function DemoApp() {
 }
 
 
-function CartoonAvatar({ avatar, mouthOpen, status }) {
+function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
   const isBuilt = Boolean(avatar);
-  const style = avatar ? { '--bot': avatar.color, '--eye': avatar.eyeColor } : {};
+  const style = {
+    '--bot': voiceTheme.bot || avatar?.color,
+    '--eye': voiceTheme.eye || avatar?.eyeColor,
+    '--limb': voiceTheme.limb,
+    '--panel': voiceTheme.panel,
+  };
   return <div className={`avatar-card ${status} ${isBuilt ? 'built' : 'unbuilt'}`} style={style}>
     <div className="character">
       <div className="antenna" />
