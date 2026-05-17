@@ -38,6 +38,11 @@ function detectVoicePlatform() {
   return 'other';
 }
 
+function isChromeBrowser() {
+  const ua = navigator.userAgent || '';
+  return /Chrome|CriOS/i.test(ua) && !/Edg|OPR|Opera|SamsungBrowser/i.test(ua);
+}
+
 function scoreVoiceForPlatform(voice, platform) {
   const name = voice.name || '';
   const lang = voice.lang || '';
@@ -52,6 +57,7 @@ function scoreVoiceForPlatform(voice, platform) {
   if (voice.default) score += 6;
   if (voice.localService) score += 4;
   if (/natural|neural|premium|enhanced|google|microsoft|apple/.test(id)) score += 18;
+  if (isChromeBrowser() && /eddy/.test(id) && /en[-_]gb|english.*united kingdom|united kingdom|uk/i.test(id)) score += 220;
 
   if (platform === 'mac') {
     if (/google.*(us|english)|google us english/.test(id)) score += 90;
