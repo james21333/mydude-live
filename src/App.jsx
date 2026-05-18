@@ -245,6 +245,41 @@ const ANCHOR_POINTS = Object.freeze({
   top: [0, -230], back: [0, 135], front: [0, 32], left: [-190, 80], right: [190, 80], ground: [0, 265], orbit: [0, 0], free: [0, 0],
 });
 
+const MASCOT_RIG = Object.freeze({
+  body: { cx: 0, cy: 92, rx: 86, ry: 118 },
+  head: { cx: 0, cy: 20, rx: 78, ry: 70 },
+});
+
+const ATTACHMENT_SOCKETS = Object.freeze({
+  'body.center': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy],
+  'body.front': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy + 2],
+  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.72, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.05],
+  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.72, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.05],
+  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.62, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.46],
+  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.62, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.46],
+  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.82],
+  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.82],
+  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.02],
+  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.02],
+  'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.26],
+  'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.36, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.22],
+  'head.center': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy],
+  'head.leftEar': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.86, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.06],
+  'head.rightEar': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.86, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.06],
+  'head.leftHorn': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
+  'head.rightHorn': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
+  'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.38, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.1],
+  'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.38, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.1],
+  'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.38],
+  'head.patchLeft': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.42, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.18],
+});
+
+function rigPoint(item) {
+  const socket = item?.attach?.socket;
+  if (socket && ATTACHMENT_SOCKETS[socket]) return ATTACHMENT_SOCKETS[socket]();
+  return ANCHOR_POINTS[item.anchor] || ANCHOR_POINTS.free;
+}
+
 function clampDrawingNumber(value, min, max, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
@@ -336,6 +371,7 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
       opacity: clampDrawingNumber(raw?.opacity, 0.08, 1, 1),
       role: raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part',
       z: clampDrawingNumber(raw?.z, -20, 20, index),
+      attach: raw?.attach && typeof raw.attach === 'object' && typeof raw.attach.socket === 'string' ? { socket: String(raw.attach.socket).slice(0, 40) } : null,
     };
   }).sort((a, b) => a.z - b.z);
   if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(layer('mouthSmile', 'mouth', 0, 0, 0.78, 0.36, 'charcoalRubber', { role: 'mouth', z: 30 }));
@@ -1084,7 +1120,7 @@ function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
 }
 
 function DrawingLayer({ item, mouthOpen }) {
-  const [ax, ay] = ANCHOR_POINTS[item.anchor] || ANCHOR_POINTS.free;
+  const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
   const mouthScale = item.role === 'mouth' && mouthOpen ? 1.45 : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;

@@ -22,7 +22,7 @@ const QUALITY_PRESET_HINTS = (QUALITY_PRESETS.presets || []).map(p => `${p.id}: 
 const DRAWING_SHAPES = new Set(DRAWING_GRAMMAR.shapes || []);
 const DRAWING_MATERIALS = new Set(DRAWING_GRAMMAR.materials || []);
 const DRAWING_ANCHORS = new Set(DRAWING_GRAMMAR.anchors || []);
-const DRAWING_PROMPT = `Use these polished house-style presets when relevant: ${QUALITY_PRESET_HINTS}. 3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z}. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Follow the house-style process: build one connected mascot silhouette first (body, overlapping head, attached limbs), then face, then details; never leave core limbs/hooves/ears/spots/patches floating like stickers; details should be embedded into or overlapping their parent surfaces. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
+const DRAWING_PROMPT = `Use these polished house-style presets when relevant: ${QUALITY_PRESET_HINTS}. 3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z, attach:{socket}}. For mascot pieces prefer attach.socket and use x/y as small local offsets. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Follow the house-style process: build one connected mascot silhouette first (body, overlapping head, attached limbs), then face, then details; never leave core limbs/hooves/ears/spots/patches floating like stickers; details should be embedded into or overlapping their parent surfaces. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
 
 function clampSceneNumber(value, min, max, fallback = 0) {
   const parsed = Number(value);
@@ -85,6 +85,7 @@ function sanitizeDrawingLayers(rawLayers, text = '') {
       opacity: clampSceneNumber(raw?.opacity, .08, 1, 1),
       role: raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part',
       z: clampSceneNumber(raw?.z, -20, 40, index),
+      attach: raw?.attach && typeof raw.attach === 'object' && typeof raw.attach.socket === 'string' ? { socket: String(raw.attach.socket).slice(0, 40) } : null,
     };
   });
   if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','mouth',0,0,.78,.36,'charcoalRubber',{role:'mouth',z:30}));

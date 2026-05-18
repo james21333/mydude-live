@@ -224,6 +224,35 @@
       "Use My Dude plush/toy proportions: rounded compact body, oversized friendly face, stubby limbs, glossy highlights.",
       "For animal avatars, use mascotBody + mascotHead + stubbyArm/stubbyLeg + hoof/cuteEye/bodyPatch before decorative horns/ears/details.",
       "For abstract shapes/forms/ideas/colors, still construct them as a mascot: readable core silhouette, face attached to core, details integrated into surfaces."
-    ]
+    ],
+    "attachmentMath": {
+      "enabled": true,
+      "field": "attach.socket",
+      "description": "Client can place parts on proportional mascot rig sockets instead of absolute coordinates.",
+      "sockets": [
+        "body.center",
+        "body.front",
+        "body.leftShoulder",
+        "body.rightShoulder",
+        "body.leftHand",
+        "body.rightHand",
+        "body.leftHip",
+        "body.rightHip",
+        "body.leftFoot",
+        "body.rightFoot",
+        "body.patchLeft",
+        "body.patchRight",
+        "head.center",
+        "head.leftEar",
+        "head.rightEar",
+        "head.leftHorn",
+        "head.rightHorn",
+        "head.leftEye",
+        "head.rightEye",
+        "head.mouth",
+        "head.patchLeft"
+      ],
+      "rule": "Prefer attach.socket for mascot pieces; use x/y only as small local offsets from the socket."
+    }
   }
 }
