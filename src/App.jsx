@@ -13,8 +13,9 @@ const ACTIVE_PROJECTS = [
 ];
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const BRAIN_ENABLED = new URLSearchParams(window.location.search).get('brain') === '1';
-const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(new URLSearchParams(window.location.search).get('voices'));
+const params = new URLSearchParams(window.location.search);
+const BRAIN_ENABLED = params.get('brain') === '1';
+const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(params.get('voices')) || ['1', 'true'].includes(params.get('voice'));
 const BRIDGE_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'ws://127.0.0.1:8787/speak'
   : 'wss://bridge.mydude.live/speak';
@@ -1154,7 +1155,7 @@ function DemoApp() {
     setLog(items => [item, ...items].slice(0, 5));
   }
 
-  return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
+  return <main className={`demo-page ${VOICE_DEBUG_ENABLED ? 'debug-mode' : ''}`} style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
     <section className="demo-hero compact">
       <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
       <div className={`status-pill ${status}`}>{status}</div>

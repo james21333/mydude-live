@@ -145,3 +145,15 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
   .voice-panel.compact-controls { left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); max-width: none; }
   .voice-inventory-panel, .manual-builder, .log-panel { display: none !important; }
 }
+/* Normal mobile mode is clean: only avatar + bottom Start/Listen button. Debug panels return with ?voice=1 or ?voices=1. */
+@media (max-width: 860px) {
+  .demo-page:not(.debug-mode) .control-copy,
+  .demo-page:not(.debug-mode) .progress,
+  .demo-page:not(.debug-mode) .voice-inventory-panel,
+  .demo-page:not(.debug-mode) .manual-builder,
+  .demo-page:not(.debug-mode) .log-panel { display: none !important; }
+  .demo-page:not(.debug-mode) .voice-panel.compact-controls { padding: 10px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; }
+  .demo-page:not(.debug-mode) .actions { margin: 0; }
+  .demo-page:not(.debug-mode) .actions .primary { width: 100%; min-height: 58px; font-size: 1rem; box-shadow: 0 14px 40px rgba(0,0,0,.34); }
+  .demo-page.debug-mode .voice-inventory-panel { display: block !important; }
+}
