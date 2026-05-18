@@ -95,6 +95,7 @@
     "boot",
     "leg",
     "robotJoint",
+    "cuteEye",
     "eyeBall",
     "eyePupil",
     "googlyEye",
@@ -114,6 +115,10 @@
     "cheek",
     "brow",
     "stripe",
+    "bodyPatch",
+    "softEar",
+    "softHorn",
+    "attachedSpot",
     "spot",
     "panel",
     "button",
@@ -214,9 +219,11 @@
     "mouthLayerAnimated": true,
     "houseStyleProcess": [
       "Build one connected mascot silhouette first: shadow, body, overlapping head, attached limbs, face, then details.",
-      "Never make core limbs/hooves/ears read as floating stickers; attach or overlap them with the body/head.",
+      "Every detail must be anchored to the surface it belongs to: spots/patches to bodyFront or face, ears/horns to the head, hooves to limbs/feet.",
+      "Never make core limbs/hooves/ears/spots read as floating stickers; attach, overlap, or embed them into the parent surface.",
       "Use My Dude plush/toy proportions: rounded compact body, oversized friendly face, stubby limbs, glossy highlights.",
-      "For animal avatars, use mascotBody + mascotHead + stubbyArm/stubbyLeg + hoof before decorative spots/horns/ears."
+      "For animal avatars, use mascotBody + mascotHead + stubbyArm/stubbyLeg + hoof/cuteEye/bodyPatch before decorative horns/ears/details.",
+      "For abstract shapes/forms/ideas/colors, still construct them as a mascot: readable core silhouette, face attached to core, details integrated into surfaces."
     ]
   }
 }
