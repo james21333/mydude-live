@@ -14,7 +14,7 @@ const ACTIVE_PROJECTS = [
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const params = new URLSearchParams(window.location.search);
-const BRAIN_ENABLED = params.get('brain') === '1';
+const BRAIN_ENABLED = params.get('brain') !== '0';
 const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(params.get('voices')) || ['1', 'true'].includes(params.get('voice'));
 const BRIDGE_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'ws://127.0.0.1:8787/speak'
@@ -51,12 +51,10 @@ function scoreVoiceForPlatform(voice, platform) {
   const lang = voice.lang || '';
   const id = `${name} ${lang}`.toLowerCase();
   const isGoogleEnglishUk = /google/.test(id) && (/en[-_]gb/i.test(lang) || /english.*(united kingdom|uk)|uk english|english uk/i.test(id));
-  const isPaulinaEsMx = /paulina/.test(id) && (/es[-_]mx/i.test(lang) || /spanish.*mexico|mexico.*spanish|mexican spanish/i.test(id));
 
   if (isGoogleEnglishUk) return 10000;
-  if (isPaulinaEsMx) return 9000;
 
-  const isEnglish = /^en([-_]|$)/i.test(lang) || /english|samantha|alex|daniel|karen|zira|david|aria|jenny|guy|michelle/.test(id);
+  const isEnglish = isEnglishVoice(voice);
   if (!isEnglish) return -1000;
 
   let score = 0;
@@ -92,6 +90,12 @@ function scoreVoiceForPlatform(voice, platform) {
   return score;
 }
 
+function isEnglishVoice(voice) {
+  if (!voice) return false;
+  const id = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
+  return /^en([-_]|$)/i.test(voice.lang || '') || /english|samantha|alex|daniel|karen|zira|david|aria|jenny|guy|michelle/.test(id);
+}
+
 function isPaulinaVoiceChoice(voice) {
   if (!voice) return false;
   const id = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
@@ -106,9 +110,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
-const MOUTH_PULSE_MS = 18;
-const MOUTH_CLOSE_MS = 10;
-const MOUTH_SEQUENCE = Object.freeze([2, 0, 2, 1, 2, 0, 2, 1, 2]);
+const MOUTH_PULSE_MS = 150;
+const MOUTH_CLOSE_MS = 130;
+const MOUTH_SEQUENCE = Object.freeze([2, 1, 0, 1, 2, 1, 0, 0]);
 const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
@@ -610,6 +614,7 @@ function DemoApp() {
   const speakingTimer = useRef(null);
   const mouthCloseTimer = useRef(null);
   const mouthStepRef = useRef(0);
+  const lastMouthPulseRef = useRef(0);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
   const listenTokenRef = useRef(0);
@@ -673,8 +678,29 @@ function DemoApp() {
     audioRef.current?.getTracks?.().forEach(track => track.stop());
   }, []);
 
-  function pulseMouthFrame(forceOpen = false) {
-    mouthStepRef.current = forceOpen ? 1 : (mouthStepRef.current + 1) % MOUTH_SEQUENCE.length;
+  function estimateSyllables(text = '') {
+    const words = String(text).toLowerCase().match(/[a-z]+/g) || [];
+    return Math.max(1, words.reduce((total, word) => {
+      const compact = word.replace(/(?:e|ed|es)$/i, '');
+      const groups = compact.match(/[aeiouy]+/g)?.length || 1;
+      return total + Math.max(1, groups);
+    }, 0));
+  }
+
+  function mouthPulseMsForText(text = '', rate = 1) {
+    const words = Math.max(1, (String(text).match(/\S+/g) || []).length);
+    const syllables = estimateSyllables(text);
+    const safeRate = Math.max(0.72, Math.min(1.35, Number(rate) || 1));
+    const estimatedSpeechMs = Math.max(800, (words / 2.45) * 1000 / safeRate);
+    const syllableMs = estimatedSpeechMs / Math.max(1, syllables);
+    return Math.max(105, Math.min(210, syllableMs));
+  }
+
+  function pulseMouthFrame(forceOpen = false, minGap = 65) {
+    const now = performance.now();
+    if (!forceOpen && now - lastMouthPulseRef.current < minGap) return;
+    lastMouthPulseRef.current = now;
+    mouthStepRef.current = forceOpen ? 0 : (mouthStepRef.current + 1) % MOUTH_SEQUENCE.length;
     setMouthPhase(forceOpen ? 2 : MOUTH_SEQUENCE[mouthStepRef.current]);
     clearTimeout(mouthCloseTimer.current);
     mouthCloseTimer.current = setTimeout(() => setMouthPhase(0), MOUTH_CLOSE_MS);
@@ -1017,17 +1043,18 @@ function DemoApp() {
     utterance.rate = chunk.rate || 1.08;
     utterance.pitch = chunk.pitch || 1.08;
     utterance.volume = chunk.volume ?? 1;
-    if (voiceRef.current) {
+    if (voiceRef.current && isEnglishVoice(voiceRef.current)) {
       utterance.voice = voiceRef.current;
       utterance.lang = voiceRef.current.lang || 'en-US';
     } else {
       utterance.lang = 'en-US';
     }
-    const pulseMouth = () => pulseMouthFrame();
+    const pulseMouth = () => pulseMouthFrame(false, 90);
     const startMouthPulse = () => {
+      const pulseMs = mouthPulseMsForText(chunk.text, utterance.rate || 1);
       pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
+      speakingTimer.current = setInterval(pulseMouth, Math.max(MOUTH_PULSE_MS, pulseMs));
     };
     utterance.onstart = startMouthPulse;
     utterance.onboundary = (event) => {
@@ -1087,11 +1114,12 @@ function DemoApp() {
     setStatus('speaking');
     if (speechPlan.displayText && speechPlan.displayText !== text) appendLog(`Speech directed: ${speechPlan.displayText}`);
 
-    const pulseMouth = () => pulseMouthFrame();
-    const startMouthPulse = () => {
+    const pulseMouth = () => pulseMouthFrame(false, 90);
+    const startMouthPulse = (text = '', rate = 1) => {
+      const pulseMs = mouthPulseMsForText(text, rate);
       pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
+      speakingTimer.current = setInterval(pulseMouth, Math.max(MOUTH_PULSE_MS, pulseMs));
     };
 
     const speakChunk = (index = 0) => {
@@ -1113,13 +1141,13 @@ function DemoApp() {
       utterance.rate = chunk.rate || options.rate || 1.08;
       utterance.pitch = chunk.pitch || 1.08;
       utterance.volume = chunk.volume ?? 1;
-      if (voiceRef.current) {
+      if (voiceRef.current && isEnglishVoice(voiceRef.current)) {
         utterance.voice = voiceRef.current;
         utterance.lang = voiceRef.current.lang || 'en-US';
       } else {
         utterance.lang = 'en-US';
       }
-      utterance.onstart = startMouthPulse;
+      utterance.onstart = () => startMouthPulse(chunk.text, utterance.rate || 1);
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
       };
@@ -1133,7 +1161,7 @@ function DemoApp() {
       utterance.onerror = () => {
         if (speechRun === speechRunRef.current) window.setTimeout(() => speakChunk(index + 1), 80);
       };
-      startMouthPulse();
+      startMouthPulse(chunk.text, utterance.rate || 1);
       window.speechSynthesis.speak(utterance);
     };
 
