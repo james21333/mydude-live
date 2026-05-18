@@ -804,8 +804,16 @@ function DemoApp() {
     appendLog(`Heard: ${text}`);
     listenTokenRef.current += 1;
     try { recognitionRef.current?.abort?.(); } catch {}
+    if (wantsReset(text)) {
+      resetDemo();
+      return;
+    }
     if (shouldUpdateAvatar(text)) buildAvatar(text);
     else talkWithBrain(text);
+  }
+
+  function wantsReset(text = '') {
+    return /(reset|start over|clear (it|this|avatar|everything)|new session|go back to default)/i.test(text);
   }
 
   function shouldUpdateAvatar(text) {
@@ -1163,7 +1171,6 @@ function DemoApp() {
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
           {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={startListening}><Mic size={16}/> Listen</button>}
-          <button className="secondary" onClick={resetDemo}><RotateCcw size={16}/> Reset</button>
         </div>
       </div>
     </section>
