@@ -231,7 +231,10 @@
       "Surface marks must be visibly inside or overlapping the parent body/head, not merely near it.",
       "Face features must be proportional to the head: snouts/noses should be small secondary forms, eyes medium, and the talking mouth should remain readable but scaled from the face socket.",
       "Limb details require a visible chain: if a hoof/paw/hand is present, render the corresponding arm/leg segment or omit the end detail.",
-      "Use one reusable mouth primitive for all mascot creations so lip-sync size/shape remains consistent across prompts while scaling by head/face size."
+      "Use one reusable mouth primitive for all mascot creations so lip-sync size/shape remains consistent across prompts while scaling by head/face size.",
+      "Animal mouths should use animal-appropriate materials/colors; cow mouths should read as warm brown/pink, not generic black UI holes.",
+      "Body spots/patches should sit inside the body mass and be visually centered enough to read as surface markings, not stray side objects.",
+      "Walking-ready mascots need legs long enough to visually connect hips to ground/feet; do not leave feet/hooves isolated below a body."
     ],
     "attachmentMath": {
       "enabled": true,

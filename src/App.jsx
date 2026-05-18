@@ -262,12 +262,12 @@ const ATTACHMENT_SOCKETS = Object.freeze({
   'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.08],
   'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
   'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
-  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
-  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
-  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.92],
-  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.92],
-  'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.26],
-  'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.36, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.22],
+  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.58],
+  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.58],
+  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.04],
+  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.04],
+  'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.04],
+  'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.18],
   'head.center': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy],
   'head.leftEar': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.78, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.02],
   'head.rightEar': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.78, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.02],
@@ -475,7 +475,7 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
     const scale = role === 'mouth' && !['beak', 'mouthScreen', 'mouthGrille'].includes(shape)
       ? [Math.max(Number(rawScale?.[0]) || 0, STANDARD_MOUTH_SCALE.x), Math.max(Number(rawScale?.[1]) || 0, STANDARD_MOUTH_SCALE.y)]
       : shape === 'snout'
-        ? [Math.min(Number(rawScale?.[0]) || 0.34, 0.38), Math.min(Number(rawScale?.[1]) || 0.18, 0.2)]
+        ? [Math.min(Number(rawScale?.[0]) || 0.28, 0.32), Math.min(Number(rawScale?.[1]) || 0.15, 0.17)]
         : rawScale;
     const material = DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForPrompt(prompt);
     return {
@@ -1270,7 +1270,7 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'stubbyLeg') return <g><path d="M-24 -30 C6 -42 30 -16 28 20 C26 48 -10 58 -30 34 C-44 12 -42 -18 -24 -30 Z" {...common}/></g>;
   if (shape === 'hoof') return <g><ellipse rx="42" ry="28" fill="url(#shine-charcoalRubber)" stroke="#020617" strokeWidth="4"/><ellipse cx="-10" cy="-10" rx="13" ry="8" fill="#fff" opacity=".26" stroke="none"/><path d="M0 -20 V16" stroke="#94a3b8" strokeWidth="3" opacity=".45"/></g>;
   if (shape === 'cuteEye') return <g><ellipse cx="0" cy="2" rx="44" ry="42" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="6" cy="8" r="15" fill="#020617" stroke="none"/><circle cx="0" cy="0" r="6" fill="#fff" opacity=".95" stroke="none"/><path d="M-30 -34 Q0 -52 30 -34" fill="none" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" opacity=".75"/></g>;
-  if (shape === 'bodyPatch' || shape === 'attachedSpot') return <path d="M-48 -18 C-36 -42 8 -46 40 -22 C58 -8 48 28 10 36 C-28 44 -62 12 -48 -18 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" opacity=".86"/>;
+  if (shape === 'bodyPatch' || shape === 'attachedSpot') return <path d="M-48 -18 C-36 -42 8 -46 40 -22 C58 -8 48 28 10 36 C-28 44 -62 12 -48 -18 Z" fill={material === 'charcoalRubber' ? '#111827' : '#334155'} stroke={material === 'charcoalRubber' ? '#020617' : '#1e293b'} strokeWidth="3" opacity=".9"/>;
   if (shape === 'stripe') return <path d="M-64 -24 C-36 -36 28 -34 64 -18 L56 4 C20 -10 -26 -8 -56 8 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" opacity=".82"/>;
   if (shape === 'softEar') return <g><path d="M-44 18 C-60 -20 -18 -58 30 -38 C54 -18 28 26 -24 42 Z" fill="url(#shine-warmCream)" stroke="#fdba74" strokeWidth="5"/><path d="M-32 12 C-34 -14 -10 -36 20 -28 C30 -8 10 18 -22 30 Z" fill="#fed7aa" opacity=".55" stroke="none"/></g>;
   if (shape === 'softHorn') return <path d="M-12 40 C-8 -8 2 -44 20 -74 C18 -28 28 18 -12 40 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;
@@ -1281,9 +1281,12 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'sail' || shape === 'curvedSail') return <path d="M-28 92 C35 38 58 -36 30 -112 C92 -40 126 50 72 112 Z" {...common}/>;
   if (shape === 'lightbulb') return <g><path d="M-64 -18 C-64 -88 -12 -126 34 -102 C90 -72 72 2 38 34 C24 48 18 60 18 82 H-24 C-24 58 -34 48 -48 32 C-58 20 -64 2 -64 -18 Z" {...common}/><rect x="-28" y="78" width="58" height="42" rx="12" fill="url(#shine-brushedMetal)" stroke="#64748b" strokeWidth="4"/></g>;
   if (shape === 'rocket') return <g><path d="M0 -120 C74 -42 68 68 0 132 C-68 68 -74 -42 0 -120 Z" {...common}/><circle cx="0" cy="-26" r="32" fill="url(#shine-screenGlow)" stroke="#e0f2fe" strokeWidth="5"/></g>;
-  if (shape === 'mouthSmile') return mouthOpen
-    ? <g><ellipse cx="0" cy="8" rx="58" ry="38" fill="#0f172a" stroke="#0f172a" strokeWidth="8"/><path d="M-34 24 Q0 42 34 24" fill="none" stroke="#f472b6" strokeWidth="10" strokeLinecap="round" opacity=".7"/><ellipse cx="-18" cy="-4" rx="20" ry="8" fill="#fff" opacity=".12" stroke="none"/></g>
-    : <path d="M-58 0 Q0 34 58 0" fill="none" stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
+  if (shape === 'mouthSmile') {
+    const cowMouth = material === 'warmCream';
+    return mouthOpen
+      ? <g><ellipse cx="0" cy="8" rx="50" ry="32" fill={cowMouth ? '#3b1f16' : '#0f172a'} stroke={cowMouth ? '#7c2d12' : '#0f172a'} strokeWidth="8"/><path d="M-28 22 Q0 36 28 22" fill="none" stroke={cowMouth ? '#f9a8a8' : '#f472b6'} strokeWidth="9" strokeLinecap="round" opacity=".82"/><ellipse cx="-16" cy="-4" rx="16" ry="7" fill="#fff" opacity=".12" stroke="none"/></g>
+      : <path d="M-50 0 Q0 28 50 0" fill="none" stroke={cowMouth ? '#4a2418' : '#0f172a'} strokeWidth="11" strokeLinecap="round"/>;
+  }
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
   if (shape === 'mouthO') return <ellipse rx="34" ry={mouthOpen ? 42 : 22} fill="#0f172a"/>;
   if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthOpen ? 48 : 28} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;

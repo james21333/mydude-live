@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A plush cow mascot with proportional face features, visible attached arms/front hooves, foot hooves, small snout, and a reusable My Dude-style talking mouth.",
+      "summary": "A plush cow mascot with cow-colored proportional mouth, centered black belly spots, visible attached arms/front hooves, and longer walking-ready legs to the ground.",
       "palette": "green",
       "layers": [
         {
@@ -744,10 +744,10 @@
           "shape": "stubbyLeg",
           "anchor": "free",
           "x": 0,
-          "y": -2,
+          "y": 8,
           "scale": [
-            0.2,
-            0.23
+            0.24,
+            0.46
           ],
           "material": "softWhite",
           "z": 4,
@@ -759,10 +759,10 @@
           "shape": "stubbyLeg",
           "anchor": "free",
           "x": 0,
-          "y": -2,
+          "y": 8,
           "scale": [
-            0.2,
-            0.23
+            0.24,
+            0.46
           ],
           "material": "softWhite",
           "z": 4,
@@ -774,10 +774,10 @@
           "shape": "hoof",
           "anchor": "free",
           "x": 0,
-          "y": -4,
+          "y": 0,
           "scale": [
-            0.2,
-            0.13
+            0.22,
+            0.14
           ],
           "material": "charcoalRubber",
           "z": 6,
@@ -789,10 +789,10 @@
           "shape": "hoof",
           "anchor": "free",
           "x": 0,
-          "y": -4,
+          "y": 0,
           "scale": [
-            0.2,
-            0.13
+            0.22,
+            0.14
           ],
           "material": "charcoalRubber",
           "z": 6,
@@ -804,14 +804,14 @@
           "shape": "bodyPatch",
           "anchor": "free",
           "x": 0,
-          "y": 2,
+          "y": 0,
           "scale": [
-            0.34,
-            0.24
+            0.28,
+            0.2
           ],
           "material": "charcoalRubber",
-          "rotate": -12,
-          "opacity": 0.76,
+          "rotate": -8,
+          "opacity": 0.9,
           "z": 7,
           "attach": {
             "socket": "body.patchLeft"
@@ -820,15 +820,15 @@
         {
           "shape": "bodyPatch",
           "anchor": "free",
-          "x": -2,
+          "x": 0,
           "y": 0,
           "scale": [
-            0.24,
-            0.17
+            0.26,
+            0.18
           ],
           "material": "charcoalRubber",
-          "rotate": 10,
-          "opacity": 0.7,
+          "rotate": 8,
+          "opacity": 0.9,
           "z": 7,
           "attach": {
             "socket": "body.patchRight"
@@ -949,10 +949,10 @@
           "shape": "snout",
           "anchor": "free",
           "x": 0,
-          "y": -2,
+          "y": -4,
           "scale": [
-            0.34,
-            0.18
+            0.28,
+            0.15
           ],
           "material": "warmCream",
           "z": 29,
@@ -964,12 +964,12 @@
           "shape": "mouthSmile",
           "anchor": "free",
           "x": 0,
-          "y": 18,
+          "y": 14,
           "scale": [
-            0.38,
-            0.2
+            0.26,
+            0.14
           ],
-          "material": "charcoalRubber",
+          "material": "warmCream",
           "role": "mouth",
           "z": 31,
           "attach": {
