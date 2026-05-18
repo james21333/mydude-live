@@ -246,8 +246,8 @@ const ANCHOR_POINTS = Object.freeze({
 });
 
 const MASCOT_RIG = Object.freeze({
-  body: { cx: 0, cy: 108, rx: 88, ry: 100 },
-  head: { cx: 0, cy: 48, rx: 78, ry: 64 },
+  body: { cx: 0, cy: 118, rx: 92, ry: 108 },
+  head: { cx: 0, cy: 38, rx: 84, ry: 70 },
 });
 
 const ATTACHMENT_SOCKET_NAMES = new Set(drawingGrammar.rules?.attachmentMath?.sockets || []);
@@ -255,10 +255,10 @@ const ATTACHMENT_SOCKET_NAMES = new Set(drawingGrammar.rules?.attachmentMath?.so
 const ATTACHMENT_SOCKETS = Object.freeze({
   'body.center': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy],
   'body.front': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy + 2],
-  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.54, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.02],
-  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.54, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.02],
-  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.64, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.38],
-  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.64, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.38],
+  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.08],
+  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.08],
+  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
+  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
   'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
   'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
   'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.92],
@@ -266,12 +266,12 @@ const ATTACHMENT_SOCKETS = Object.freeze({
   'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.26],
   'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.36, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.22],
   'head.center': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy],
-  'head.leftEar': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.86, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.06],
-  'head.rightEar': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.86, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.06],
-  'head.leftHorn': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
-  'head.rightHorn': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
-  'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.28, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.08],
-  'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.28, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.08],
+  'head.leftEar': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.78, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.02],
+  'head.rightEar': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.78, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.02],
+  'head.leftHorn': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.32, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.66],
+  'head.rightHorn': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.32, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.66],
+  'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.27, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.07],
+  'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.27, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.07],
   'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.34],
   'head.patchLeft': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.42, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.18],
 });
@@ -286,6 +286,7 @@ const SOCKET_COMPATIBILITY = Object.freeze({
   mascotBody: ['body.center'],
   mascotHead: ['head.center'],
   stubbyArm: ['body.leftShoulder', 'body.rightShoulder', 'body.leftHand', 'body.rightHand'],
+  wing: ['body.leftShoulder', 'body.rightShoulder'], finLimb: ['body.leftShoulder', 'body.rightShoulder'],
   noodleArm: ['body.leftShoulder', 'body.rightShoulder'],
   tentacle: ['body.leftShoulder', 'body.rightShoulder', 'body.leftHand', 'body.rightHand'],
   stubbyLeg: ['body.leftHip', 'body.rightHip'],
@@ -344,7 +345,7 @@ function inferSocket(shape, raw = {}, role = 'part') {
   if (/snout|beak/i.test(shape)) return 'head.mouth';
   if (/hoof|boot/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightFoot' : 'body.leftFoot';
   if (/stubbyLeg|\bleg\b/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHip' : 'body.leftHip';
-  if (/arm|mitten|paw|claw|tentacle|flipper/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHand' : 'body.leftHand';
+  if (/arm|mitten|paw|claw|tentacle|flipper|wing|finLimb/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHand' : 'body.leftHand';
   if (/patch|spot|stripe|panel|button|badge/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.patchRight' : 'body.patchLeft';
   if (/tie|bowtie/.test(shape)) return 'body.front';
   return null;
@@ -406,8 +407,8 @@ function presetSceneSpec(prompt = '') {
   };
 }
 
-function fallbackDrawingLayers(prompt = '') {
-  const preset = matchQualityPreset(prompt);
+function fallbackDrawingLayers(prompt = '', options = {}) {
+  const preset = !options.skipPreset ? matchQualityPreset(prompt) : null;
   if (preset?.layers?.length) return preset.layers;
   const l = prompt.toLowerCase();
   const mat = materialForPrompt(prompt);
@@ -440,7 +441,14 @@ function fallbackDrawingLayers(prompt = '') {
   }
   if (/cow|dog|pig|bear|mouse|fox|cat|animal/.test(l)) layers.push(layer('snout', 'free', 0, -2, 0.42, 0.24, 'warmCream', { z: 24, attach: { socket: 'head.mouth' } }));
   if (/spot|cow|dog|dalmatian|pattern/.test(l)) layers.push(layer('bodyPatch', 'free', 0, 0, 0.3, 0.22, 'charcoalRubber', { rotate: -10, z: 11, attach: { socket: 'body.patchLeft' } }), layer('bodyPatch', 'free', 0, 0, 0.23, 0.16, 'charcoalRubber', { rotate: 8, z: 11, attach: { socket: 'body.patchRight' } }));
+  if (/computer|monitor|screen/.test(l)) layers.push(layer('screen', 'free', 0, 2, 0.5, 0.28, 'screenGlow', { z: 13, attach: { socket: 'body.front' } }), layer('button', 'free', -20, 28, 0.14, 0.14, 'glossyRed', { z: 14, attach: { socket: 'body.front' } }));
+  if (/car|truck|vehicle/.test(l)) layers.push(layer('carBody', 'ground', 0, -34, 0.7, 0.3, 'glossyRed', { z: 13 }), layer('wheel', 'ground', -50, -20, 0.25, 0.25, 'charcoalRubber', { z: 15 }), layer('wheel', 'ground', 50, -20, 0.25, 0.25, 'charcoalRubber', { z: 15 }));
+  if (/sail|boat|ship/.test(l)) layers.push(layer('hull', 'ground', 0, -34, 0.72, 0.26, 'wood', { z: 13 }), layer('curvedSail', 'free', 8, -20, 0.45, 0.62, 'canvas', { z: 12, attach: { socket: 'head.rightHorn' } }));
+  if (/rocket|spaceship|space ship/.test(l)) layers.push(layer('rocket', 'free', 0, -12, 0.38, 0.54, 'glossyPurple', { z: 13, attach: { socket: 'body.front' } }));
   if (/idea|funny|abstract|joke/.test(l)) layers.push(layer('question', 'orbit', -158, -120, 0.36, 0.36, 'neon', { z: 12 }), layer('spark', 'orbit', 156, -150, 0.42, 0.42, 'glossyGold', { z: 12 }));
+  if (/zebra|stripe|striped/.test(l)) layers.push(layer('stripe', 'free', -10, -12, 0.42, 0.24, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.front' } }), layer('stripe', 'free', 10, 14, 0.34, 0.2, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.patchRight' } }));
+  if (/skateboard|skate board/.test(l)) layers.push(layer('roundedBox', 'ground', 0, -28, 0.78, 0.16, 'wood', { z: 14 }), layer('wheel', 'ground', -58, -14, 0.24, 0.24, 'charcoalRubber', { z: 15 }), layer('wheel', 'ground', 58, -14, 0.24, 0.24, 'charcoalRubber', { z: 15 }));
+  if (/dragon|bird|bat|wing/.test(l)) layers.push(layer('wing', 'free', -8, 4, 0.42, 0.34, bodyMaterial, { rotate: -22, z: 3, attach: { socket: 'body.leftShoulder' } }), layer('wing', 'free', 8, 4, 0.42, 0.34, bodyMaterial, { rotate: 22, z: 3, attach: { socket: 'body.rightShoulder' } }));
   layers.push(
     layer(eyeShape, 'free', 0, 0, 0.24, 0.24, 'softWhite', { role: 'eye', z: 20, attach: { socket: 'head.leftEye' } }),
     layer(eyeShape, 'free', 0, 0, 0.24, 0.24, 'softWhite', { role: 'eye', z: 20, attach: { socket: 'head.rightEye' } }),
@@ -450,7 +458,9 @@ function fallbackDrawingLayers(prompt = '') {
 }
 
 function sanitizeDrawingLayers(rawLayers, prompt = '') {
-  const source = Array.isArray(rawLayers) && rawLayers.length ? rawLayers : fallbackDrawingLayers(prompt);
+  const initialSource = Array.isArray(rawLayers) && rawLayers.length ? rawLayers : fallbackDrawingLayers(prompt);
+  const hasCore = initialSource.some(raw => raw?.shape === 'mascotBody' || raw?.shape === 'mascotHead');
+  const source = !hasCore ? fallbackDrawingLayers(prompt, { skipPreset: true }) : initialSource;
   const cleaned = source.slice(0, drawingGrammar.rules?.maxLayers || 42).map((raw, index) => {
     const shape = DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob';
     const role = raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part';
@@ -498,7 +508,7 @@ const SCENE_PALETTES = Object.freeze({
 });
 
 function sanitizeSceneSpec(spec, prompt = '') {
-  const preset = !Array.isArray(spec?.layers) || spec.layers.length < 7 ? presetSceneSpec(prompt) : null;
+  const preset = presetSceneSpec(prompt);
   if (preset) return preset;
   const primitiveSet = new Set(SCENE_PRIMITIVES);
   const paletteName = String(spec?.palette || colorHint(prompt) || 'blue').toLowerCase();
@@ -1245,14 +1255,15 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'starEye' || shape === 'star' || shape === 'spark') return <path d="M0 -60 L17 -18 L62 -16 L26 10 L38 56 L0 30 L-38 56 L-26 10 L-62 -16 L-17 -18 Z" {...common}/>;
   if (['squircle','roundedBox','monitor','screen'].includes(shape)) return <g><rect x="-86" y="-66" width="172" height="132" rx={shape === 'screen' ? 18 : 36} {...common}/><ellipse cx="-28" cy="-34" rx="34" ry="14" fill="#fff" opacity=".23" stroke="none"/></g>;
   if (['capsule','bean','blob','egg','body_blob'].includes(shape)) return <g><path d="M-78 -74 C-18 -116 82 -82 96 5 C110 95 30 132 -48 104 C-126 76 -138 -34 -78 -74 Z" {...common}/><ellipse cx="-34" cy="-45" rx="38" ry="16" fill="#fff" opacity=".22" stroke="none"/></g>;
-  if (shape === 'mascotBody') return <g><path d="M-78 -60 C-46 -100 48 -98 78 -54 C112 -2 102 66 62 104 C24 140 -42 138 -76 98 C-112 54 -112 -24 -78 -60 Z" {...common}/><path d="M-38 -56 C-5 -86 48 -70 66 -32 C36 -48 -4 -46 -38 -20 Z" fill="#fff" opacity=".18" stroke="none"/><ellipse cx="-30" cy="-14" rx="34" ry="72" fill="#fff" opacity=".12" stroke="none"/></g>;
-  if (shape === 'mascotHead') return <g><path d="M-72 -48 C-36 -86 36 -86 72 -48 C102 -14 96 48 50 74 C12 96 -50 86 -76 46 C-96 14 -92 -20 -72 -48 Z" {...common}/><ellipse cx="-26" cy="-34" rx="30" ry="14" fill="#fff" opacity=".28" stroke="none"/></g>;
-  if (shape === 'stubbyArm') return <g><path d="M-32 -62 C12 -74 42 -34 34 12 C28 52 -6 76 -38 54 C-64 34 -68 -42 -32 -62 Z" {...common}/><ellipse cx="-8" cy="-32" rx="18" ry="9" fill="#fff" opacity=".2" stroke="none"/></g>;
-  if (shape === 'stubbyLeg') return <g><path d="M-28 -36 C8 -50 38 -18 34 24 C30 60 -14 68 -36 38 C-52 14 -50 -22 -28 -36 Z" {...common}/></g>;
+  if (shape === 'mascotBody') return <g><path d="M-72 -70 C-38 -114 46 -112 76 -62 C112 -4 106 76 58 116 C18 150 -46 144 -78 106 C-112 64 -110 -22 -72 -70 Z" {...common} strokeWidth="6"/><path d="M-54 -54 C-28 -96 38 -92 66 -42 C88 0 74 70 36 96 C4 118 -42 108 -60 66 C-76 26 -76 -18 -54 -54 Z" fill="#fff" opacity=".14" stroke="none"/><ellipse cx="-34" cy="-30" rx="28" ry="54" fill="#fff" opacity=".22" stroke="none"/><ellipse cx="34" cy="42" rx="20" ry="42" fill="#0f172a" opacity=".035" stroke="none"/></g>;
+  if (shape === 'mascotHead') return <g><path d="M-78 -52 C-42 -92 44 -92 78 -50 C110 -10 100 54 52 82 C12 106 -54 92 -82 50 C-104 16 -100 -22 -78 -52 Z" {...common} strokeWidth="6"/><ellipse cx="-28" cy="-38" rx="34" ry="15" fill="#fff" opacity=".34" stroke="none"/><path d="M-62 30 C-28 64 28 66 62 30" fill="none" stroke="#fff" strokeWidth="9" opacity=".1" strokeLinecap="round"/></g>;
+  if (shape === 'stubbyArm') return <g><path d="M-24 -44 C10 -58 34 -30 30 8 C26 38 0 58 -28 44 C-52 30 -56 -28 -24 -44 Z" {...common}/><ellipse cx="-5" cy="-24" rx="14" ry="7" fill="#fff" opacity=".22" stroke="none"/></g>;
+  if (shape === 'stubbyLeg') return <g><path d="M-24 -30 C6 -42 30 -16 28 20 C26 48 -10 58 -30 34 C-44 12 -42 -18 -24 -30 Z" {...common}/></g>;
   if (shape === 'hoof') return <g><ellipse rx="42" ry="28" fill="url(#shine-charcoalRubber)" stroke="#020617" strokeWidth="4"/><ellipse cx="-10" cy="-10" rx="13" ry="8" fill="#fff" opacity=".26" stroke="none"/><path d="M0 -20 V16" stroke="#94a3b8" strokeWidth="3" opacity=".45"/></g>;
   if (shape === 'cuteEye') return <g><ellipse cx="0" cy="2" rx="44" ry="42" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="6" cy="8" r="15" fill="#020617" stroke="none"/><circle cx="0" cy="0" r="6" fill="#fff" opacity=".95" stroke="none"/><path d="M-30 -34 Q0 -52 30 -34" fill="none" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" opacity=".75"/></g>;
   if (shape === 'bodyPatch' || shape === 'attachedSpot') return <path d="M-48 -18 C-36 -42 8 -46 40 -22 C58 -8 48 28 10 36 C-28 44 -62 12 -48 -18 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" opacity=".86"/>;
-  if (shape === 'softEar') return <g><path d="M-44 18 C-60 -20 -18 -58 30 -38 C54 -18 28 26 -24 42 Z" fill="url(#shine-warmCream)" stroke="#fdba74" strokeWidth="4"/><ellipse cx="-8" cy="-8" rx="20" ry="12" fill="#fff7ed" opacity=".5" stroke="none"/></g>;
+  if (shape === 'stripe') return <path d="M-64 -24 C-36 -36 28 -34 64 -18 L56 4 C20 -10 -26 -8 -56 8 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" opacity=".82"/>;
+  if (shape === 'softEar') return <g><path d="M-44 18 C-60 -20 -18 -58 30 -38 C54 -18 28 26 -24 42 Z" fill="url(#shine-warmCream)" stroke="#fdba74" strokeWidth="5"/><path d="M-32 12 C-34 -14 -10 -36 20 -28 C30 -8 10 18 -22 30 Z" fill="#fed7aa" opacity=".55" stroke="none"/></g>;
   if (shape === 'softHorn') return <path d="M-12 40 C-8 -8 2 -44 20 -74 C18 -28 28 18 -12 40 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;
   if (shape === 'carBody') return <g><rect x="-130" y="-34" width="260" height="88" rx="42" {...common}/><path d="M-58 -32 L-20 -82 H62 L104 -32 Z" fill={fill} stroke={stroke} strokeWidth="4"/><ellipse cx="-74" cy="54" rx="34" ry="34" fill="#020617"/><ellipse cx="78" cy="54" rx="34" ry="34" fill="#020617"/></g>;
   if (shape === 'windshield') return <path d="M-72 -34 H72 L50 38 H-54 Z" fill="url(#shine-blackGlass)" stroke="#bfdbfe" strokeWidth="4"/>;
