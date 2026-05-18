@@ -246,8 +246,8 @@ const ANCHOR_POINTS = Object.freeze({
 });
 
 const MASCOT_RIG = Object.freeze({
-  body: { cx: 0, cy: 92, rx: 86, ry: 118 },
-  head: { cx: 0, cy: 20, rx: 78, ry: 70 },
+  body: { cx: 0, cy: 104, rx: 78, ry: 106 },
+  head: { cx: 0, cy: 34, rx: 76, ry: 66 },
 });
 
 const ATTACHMENT_SOCKETS = Object.freeze({
@@ -1145,8 +1145,8 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'starEye' || shape === 'star' || shape === 'spark') return <path d="M0 -60 L17 -18 L62 -16 L26 10 L38 56 L0 30 L-38 56 L-26 10 L-62 -16 L-17 -18 Z" {...common}/>;
   if (['squircle','roundedBox','monitor','screen'].includes(shape)) return <g><rect x="-86" y="-66" width="172" height="132" rx={shape === 'screen' ? 18 : 36} {...common}/><ellipse cx="-28" cy="-34" rx="34" ry="14" fill="#fff" opacity=".23" stroke="none"/></g>;
   if (['capsule','bean','blob','egg','body_blob'].includes(shape)) return <g><path d="M-78 -74 C-18 -116 82 -82 96 5 C110 95 30 132 -48 104 C-126 76 -138 -34 -78 -74 Z" {...common}/><ellipse cx="-34" cy="-45" rx="38" ry="16" fill="#fff" opacity=".22" stroke="none"/></g>;
-  if (shape === 'mascotBody') return <g><path d="M-72 -78 C-30 -116 44 -108 80 -58 C112 -12 104 84 62 126 C26 160 -42 152 -74 112 C-116 62 -118 -34 -72 -78 Z" {...common}/><path d="M-38 -56 C-5 -86 48 -70 66 -32 C36 -48 -4 -46 -38 -20 Z" fill="#fff" opacity=".18" stroke="none"/><ellipse cx="-30" cy="-14" rx="34" ry="72" fill="#fff" opacity=".12" stroke="none"/></g>;
-  if (shape === 'mascotHead') return <g><path d="M-72 -52 C-36 -94 34 -96 72 -54 C106 -16 98 56 50 82 C12 104 -50 90 -76 48 C-98 12 -94 -24 -72 -52 Z" {...common}/><ellipse cx="-26" cy="-34" rx="30" ry="14" fill="#fff" opacity=".28" stroke="none"/></g>;
+  if (shape === 'mascotBody') return <g><path d="M-66 -66 C-28 -104 42 -96 72 -50 C102 -4 90 78 48 112 C14 138 -42 132 -68 98 C-104 52 -106 -28 -66 -66 Z" {...common}/><path d="M-38 -56 C-5 -86 48 -70 66 -32 C36 -48 -4 -46 -38 -20 Z" fill="#fff" opacity=".18" stroke="none"/><ellipse cx="-30" cy="-14" rx="34" ry="72" fill="#fff" opacity=".12" stroke="none"/></g>;
+  if (shape === 'mascotHead') return <g><path d="M-70 -50 C-34 -88 34 -90 70 -50 C102 -14 94 52 48 78 C12 98 -48 86 -74 46 C-96 12 -92 -22 -70 -50 Z" {...common}/><ellipse cx="-26" cy="-34" rx="30" ry="14" fill="#fff" opacity=".28" stroke="none"/></g>;
   if (shape === 'stubbyArm') return <g><path d="M-32 -62 C12 -74 42 -34 34 12 C28 52 -6 76 -38 54 C-64 34 -68 -42 -32 -62 Z" {...common}/><ellipse cx="-8" cy="-32" rx="18" ry="9" fill="#fff" opacity=".2" stroke="none"/></g>;
   if (shape === 'stubbyLeg') return <g><path d="M-28 -36 C8 -50 38 -18 34 24 C30 60 -14 68 -36 38 C-52 14 -50 -22 -28 -36 Z" {...common}/></g>;
   if (shape === 'hoof') return <g><ellipse rx="42" ry="28" fill="url(#shine-charcoalRubber)" stroke="#020617" strokeWidth="4"/><ellipse cx="-10" cy="-10" rx="13" ry="8" fill="#fff" opacity=".26" stroke="none"/><path d="M0 -20 V16" stroke="#94a3b8" strokeWidth="3" opacity=".45"/></g>;
