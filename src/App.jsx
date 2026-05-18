@@ -916,10 +916,8 @@ function DemoApp() {
         if (payload.type === 'thinking') setBrainStatus(`speaker agent: thinking (${payload.model || 'haiku'})`);
         if (payload.type === 'delta' && typeof payload.text === 'string') {
           fullText += payload.text;
-          pending += payload.text;
           const display = plainSpeechText(fullText);
           if (display) setMessage(display);
-          flushPending(false);
         }
         if (payload.type === 'scene' && payload.sceneSpec) {
           const nextScene = sanitizeSceneSpec(payload.sceneSpec, prompt);
@@ -934,7 +932,6 @@ function DemoApp() {
             fullText = payload.text;
             pending = payload.text;
           }
-          flushPending(true);
           if (payload.personality) personalityRef.current = payload.personality;
           if (payload.sceneSpec) {
             const nextScene = sanitizeSceneSpec(payload.sceneSpec, prompt);
@@ -942,11 +939,14 @@ function DemoApp() {
             appendLog(`Scene built: ${nextScene.summary}`);
           }
           const display = plainSpeechText(fullText || payload.text || fallback) || fallback;
+          pending = '';
+          streamQueueRef.current = [];
+          streamSpeakingRef.current = false;
+          streamAfterRef.current = null;
           setMessage(display);
           appendLog(`Speaker agent: ${display}`);
-          setBrainStatus(`speaker agent: streamed in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
-          if (!firstSpoken && !(fullText || payload.text)) speak(fallback, { after });
-          else finishStreamWhenQuiet(speechRun);
+          setBrainStatus(`speaker agent: final speech in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
+          speak(display, { after });
           try { socket.close(); } catch {}
         }
       };
