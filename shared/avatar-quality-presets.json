@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A visibly polished plush My Dude cow mascot: strong silhouette first, overlapped head/body, attached ears/horns/feet, surface spots, and no floating sticker details.",
+      "summary": "A plush cow mascot with proportional face features, visible attached arms/front hooves, foot hooves, small snout, and a reusable My Dude-style talking mouth.",
       "palette": "green",
       "layers": [
         {
@@ -664,33 +664,63 @@
         {
           "shape": "stubbyArm",
           "anchor": "free",
-          "x": -6,
-          "y": -2,
+          "x": -12,
+          "y": 30,
           "scale": [
-            0.18,
-            0.22
+            0.2,
+            0.3
           ],
           "material": "softWhite",
-          "rotate": -18,
-          "opacity": 0.92,
-          "z": 1,
+          "rotate": 18,
+          "opacity": 0.96,
+          "z": 3,
           "attach": {
-            "socket": "body.leftHand"
+            "socket": "body.leftShoulder"
           }
         },
         {
           "shape": "stubbyArm",
           "anchor": "free",
-          "x": 6,
-          "y": -2,
+          "x": 12,
+          "y": 30,
           "scale": [
-            0.18,
-            0.22
+            0.2,
+            0.3
           ],
           "material": "softWhite",
-          "rotate": 18,
-          "opacity": 0.92,
-          "z": 1,
+          "rotate": -18,
+          "opacity": 0.96,
+          "z": 3,
+          "attach": {
+            "socket": "body.rightShoulder"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": -2,
+          "y": 6,
+          "scale": [
+            0.14,
+            0.1
+          ],
+          "material": "charcoalRubber",
+          "z": 8,
+          "attach": {
+            "socket": "body.leftHand"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": 2,
+          "y": 6,
+          "scale": [
+            0.14,
+            0.1
+          ],
+          "material": "charcoalRubber",
+          "z": 8,
           "attach": {
             "socket": "body.rightHand"
           }
@@ -810,8 +840,8 @@
           "x": 0,
           "y": -6,
           "scale": [
-            0.72,
-            0.64
+            0.74,
+            0.65
           ],
           "material": "softWhite",
           "z": 8,
@@ -919,10 +949,10 @@
           "shape": "snout",
           "anchor": "free",
           "x": 0,
-          "y": -3,
+          "y": -2,
           "scale": [
-            0.5,
-            0.26
+            0.34,
+            0.18
           ],
           "material": "warmCream",
           "z": 29,
@@ -934,10 +964,10 @@
           "shape": "mouthSmile",
           "anchor": "free",
           "x": 0,
-          "y": 14,
+          "y": 18,
           "scale": [
-            0.34,
-            0.14
+            0.38,
+            0.2
           ],
           "material": "charcoalRubber",
           "role": "mouth",

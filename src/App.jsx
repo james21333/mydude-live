@@ -107,7 +107,7 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
 const MOUTH_PULSE_MS = 92;
 const MOUTH_CLOSE_MS = 68;
-const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.34, y: 0.14 });
+const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
   warm: { rate: 1.04, pitch: 1.06, volume: 1, pauseAfter: 80 },
@@ -295,7 +295,7 @@ const SOCKET_COMPATIBILITY = Object.freeze({
   stubbyLeg: ['body.leftHip', 'body.rightHip'],
   leg: ['body.leftHip', 'body.rightHip'],
   boot: ['body.leftFoot', 'body.rightFoot'],
-  hoof: ['body.leftFoot', 'body.rightFoot'],
+  hoof: ['body.leftHand', 'body.rightHand', 'body.leftFoot', 'body.rightFoot'],
   paw: ['body.leftHand', 'body.rightHand', 'body.leftFoot', 'body.rightFoot'],
   mitten: ['body.leftHand', 'body.rightHand'],
   claw: ['body.leftHand', 'body.rightHand'],
@@ -346,6 +346,7 @@ function inferSocket(shape, raw = {}, role = 'part') {
   if (/ear/i.test(shape)) return sideFromRaw(raw) === 'right' ? 'head.rightEar' : 'head.leftEar';
   if (/horn|antenna/i.test(shape)) return sideFromRaw(raw) === 'right' ? 'head.rightHorn' : 'head.leftHorn';
   if (/snout|beak/i.test(shape)) return 'head.mouth';
+  if (/hoof/.test(shape) && /hand|arm|shoulder/i.test(`${raw.id || ''} ${raw.anchor || ''} ${raw.attach?.socket || ''}`)) return sideFromRaw(raw) === 'right' ? 'body.rightHand' : 'body.leftHand';
   if (/hoof|boot/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightFoot' : 'body.leftFoot';
   if (/stubbyLeg|\bleg\b/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHip' : 'body.leftHip';
   if (/arm|mitten|paw|claw|tentacle|flipper|wing|finLimb/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHand' : 'body.leftHand';
@@ -473,7 +474,9 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
     const rawScale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
     const scale = role === 'mouth' && !['beak', 'mouthScreen', 'mouthGrille'].includes(shape)
       ? [Math.max(Number(rawScale?.[0]) || 0, STANDARD_MOUTH_SCALE.x), Math.max(Number(rawScale?.[1]) || 0, STANDARD_MOUTH_SCALE.y)]
-      : rawScale;
+      : shape === 'snout'
+        ? [Math.min(Number(rawScale?.[0]) || 0.34, 0.38), Math.min(Number(rawScale?.[1]) || 0.18, 0.2)]
+        : rawScale;
     const material = DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForPrompt(prompt);
     return {
       id: String(raw?.id || `${shape}-${index}`).slice(0, 32),
@@ -1238,7 +1241,7 @@ function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
 function DrawingLayer({ item, mouthOpen }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
-  const mouthScale = item.role === 'mouth' && mouthOpen ? 1.85 : 1;
+  const mouthScale = item.role === 'mouth' && mouthOpen ? 2.2 : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
     <Shape3D shape={item.shape} material={item.material} mouthOpen={mouthOpen && item.role === 'mouth'} />
@@ -1278,12 +1281,14 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'sail' || shape === 'curvedSail') return <path d="M-28 92 C35 38 58 -36 30 -112 C92 -40 126 50 72 112 Z" {...common}/>;
   if (shape === 'lightbulb') return <g><path d="M-64 -18 C-64 -88 -12 -126 34 -102 C90 -72 72 2 38 34 C24 48 18 60 18 82 H-24 C-24 58 -34 48 -48 32 C-58 20 -64 2 -64 -18 Z" {...common}/><rect x="-28" y="78" width="58" height="42" rx="12" fill="url(#shine-brushedMetal)" stroke="#64748b" strokeWidth="4"/></g>;
   if (shape === 'rocket') return <g><path d="M0 -120 C74 -42 68 68 0 132 C-68 68 -74 -42 0 -120 Z" {...common}/><circle cx="0" cy="-26" r="32" fill="url(#shine-screenGlow)" stroke="#e0f2fe" strokeWidth="5"/></g>;
-  if (shape === 'mouthSmile') return <path d={mouthOpen ? 'M-56 -8 Q0 48 56 -8 Q0 24 -56 -8 Z' : 'M-56 0 Q0 34 56 0'} fill={mouthOpen ? '#0f172a' : 'none'} stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
+  if (shape === 'mouthSmile') return mouthOpen
+    ? <g><ellipse cx="0" cy="8" rx="58" ry="38" fill="#0f172a" stroke="#0f172a" strokeWidth="8"/><path d="M-34 24 Q0 42 34 24" fill="none" stroke="#f472b6" strokeWidth="10" strokeLinecap="round" opacity=".7"/><ellipse cx="-18" cy="-4" rx="20" ry="8" fill="#fff" opacity=".12" stroke="none"/></g>
+    : <path d="M-58 0 Q0 34 58 0" fill="none" stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
   if (shape === 'mouthO') return <ellipse rx="34" ry={mouthOpen ? 42 : 22} fill="#0f172a"/>;
   if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthOpen ? 48 : 28} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;
   if (shape === 'mouthGrille') return <g stroke="#020617" strokeWidth="9" strokeLinecap="round"><path d="M-56 0 H56"/><path d="M-32 -18 V18 M0 -18 V18 M32 -18 V18"/></g>;
-  if (shape === 'snout') return <g><ellipse rx="54" ry="34" fill="url(#shine-warmCream)" stroke="#92400e" strokeWidth="4"/><circle cx="-18" cy="0" r="7" fill="#020617"/><circle cx="18" cy="0" r="7" fill="#020617"/></g>;
+  if (shape === 'snout') return <g><ellipse rx="46" ry="28" fill="url(#shine-warmCream)" stroke="#92400e" strokeWidth="4"/><circle cx="-14" cy="0" r="6" fill="#020617"/><circle cx="14" cy="0" r="6" fill="#020617"/></g>;
   if (shape === 'beak') return <path d="M-42 -28 L76 0 L-42 32 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="4"/>;
   if (shape === 'animalEar') return <path d="M-44 34 C-60 -16 -22 -62 20 -48 C54 -18 30 30 -44 34 Z" {...common}/>;
   if (shape === 'horn') return <path d="M-18 48 C-12 -18 0 -62 28 -92 C18 -28 32 22 -18 48 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;

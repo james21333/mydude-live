@@ -228,7 +228,10 @@
       "Use large/medium/small shape hierarchy: one dominant readable silhouette, 2-4 medium identity cues, and only a few small details.",
       "Run a mental silhouette test: if the avatar would not read as one connected character when filled black, simplify or omit details.",
       "Use underlay/rim layers behind body/head when needed to make the connected silhouette visibly stronger.",
-      "Surface marks must be visibly inside or overlapping the parent body/head, not merely near it."
+      "Surface marks must be visibly inside or overlapping the parent body/head, not merely near it.",
+      "Face features must be proportional to the head: snouts/noses should be small secondary forms, eyes medium, and the talking mouth should remain readable but scaled from the face socket.",
+      "Limb details require a visible chain: if a hoof/paw/hand is present, render the corresponding arm/leg segment or omit the end detail.",
+      "Use one reusable mouth primitive for all mascot creations so lip-sync size/shape remains consistent across prompts while scaling by head/face size."
     ],
     "attachmentMath": {
       "enabled": true,
@@ -257,7 +260,7 @@
         "head.mouth",
         "head.patchLeft"
       ],
-      "rule": "Prefer attach.socket for mascot pieces; use x/y only as small local offsets from the socket."
+      "rule": "Prefer attach.socket for mascot pieces; use x/y only as small local offsets. End details like hooves/paws must attach to visible limb sockets and should be paired with visible arm/leg segments."
     }
   }
 }
