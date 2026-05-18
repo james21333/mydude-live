@@ -1244,10 +1244,11 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
           <stop offset="0%" stopColor="#fff" stopOpacity=".72"/><stop offset="36%" stopColor={colors[0]} stopOpacity=".88"/><stop offset="100%" stopColor={colors[1]} stopOpacity=".95"/>
         </radialGradient>)}
       </defs>
-      <g transform="translate(360 292)" filter="url(#softShadow)">
+      <g transform="translate(360 238)" filter="url(#softShadow)">
         <g transform="scale(2)">
           <g className="drawing-character">
-            {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
+            {status === 'listening' && <animateTransform attributeName="transform" type="translate" values="-2 0; 2 0; -2 0" dur="5.2s" repeatCount="indefinite" additive="sum" />}
+            {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} status={status} />)}
           </g>
         </g>
       </g>
@@ -1255,12 +1256,14 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
   </div>;
 }
 
-function DrawingLayer({ item, mouthPhase = 0 }) {
+function DrawingLayer({ item, mouthPhase = 0, status = 'idle' }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
   const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 2.15 : mouthPhase === 1 ? 1.35 : 1) : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
+  const isSlowWalkingPart = status === 'listening' && (item.shape === 'stubbyLeg' || (item.shape === 'hoof' && /Foot$/.test(item.attach?.socket || '')));
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
+    {isSlowWalkingPart && <animateTransform attributeName="transform" type="rotate" values="-2; 2; -2" dur="3.8s" repeatCount="indefinite" additive="sum" />}
     <Shape3D shape={item.shape} material={item.material} mouthPhase={item.role === 'mouth' ? mouthPhase : 0} />
   </g>;
 }
