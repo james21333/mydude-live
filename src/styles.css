@@ -173,3 +173,7 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 }
 @keyframes generated-wander-mobile { 0%,100% { transform: scale(4) translateX(-4px) rotate(-1deg); } 35% { transform: scale(4) translateX(5px) rotate(1.2deg); } 68% { transform: scale(4) translateY(-3px) rotate(-.5deg); } }
 @keyframes generated-walkabout-mobile { 0%,100% { transform: scale(4) translateX(-6px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(4) translateX(6px) translateY(-7px) rotate(1.5deg); } }
+/* SVG transform attribute now owns generated avatar size; animation only moves it. */
+.drawing-character { transform-box: fill-box; transform-origin: 50% 88%; }
+.avatar-card.listening .drawing-character { animation: wander 3.2s ease-in-out infinite; }
+.avatar-card.speaking .drawing-character, .avatar-card.building .drawing-character { animation: walkabout 1.4s ease-in-out infinite; }
