@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A plush cow mascot with cow-colored proportional mouth, centered black belly spots, visible attached arms/front hooves, and longer walking-ready legs to the ground.",
+      "summary": "A plush cow mascot with 50-percent smaller cow-colored mouth geometry, centered black belly spots, visible attached arms/front hooves, and longer walking-ready legs to the ground.",
       "palette": "green",
       "layers": [
         {

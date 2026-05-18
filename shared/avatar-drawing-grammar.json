@@ -236,7 +236,9 @@
       "Body spots/patches should sit inside the body mass and be visually centered enough to read as surface markings, not stray side objects.",
       "Walking-ready mascots need legs long enough to visually connect hips to ground/feet; do not leave feet/hooves isolated below a body.",
       "Render only one mouth per face: avoid drawing a separate smile line under an open talking mouth.",
-      "Mouth animation should support closed, mid, and open positions so consonants and syllable beats read more naturally than binary open/close."
+      "Mouth animation should support closed, mid, and open positions so consonants and syllable beats read more naturally than binary open/close.",
+      "Mascot mouths should stay intentionally tiny relative to the face; oversized mouths quickly read as pasted-on UI rather than character anatomy.",
+      "When browser speech does not expose reliable phonemes, approximate syllable attachment with very fast closed/mid/open cycling between word-boundary events."
     ],
     "attachmentMath": {
       "enabled": true,

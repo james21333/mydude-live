@@ -105,9 +105,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
-const MOUTH_PULSE_MS = 72;
-const MOUTH_CLOSE_MS = 46;
-const MOUTH_SEQUENCE = Object.freeze([1, 2, 1, 0]);
+const MOUTH_PULSE_MS = 42;
+const MOUTH_CLOSE_MS = 28;
+const MOUTH_SEQUENCE = Object.freeze([1, 2, 1, 0, 1, 2]);
 const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
@@ -1242,7 +1242,7 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
 function DrawingLayer({ item, mouthPhase = 0 }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
-  const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 2.25 : mouthPhase === 1 ? 1.45 : 1) : 1;
+  const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 1.55 : mouthPhase === 1 ? 1.2 : 1) : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
     <Shape3D shape={item.shape} material={item.material} mouthPhase={item.role === 'mouth' ? mouthPhase : 0} />
@@ -1287,9 +1287,9 @@ function Shape3D({ shape, material = 'glossyBlue', mouthPhase = 0 }) {
     const mouthFill = cowMouth ? '#3b1f16' : '#0f172a';
     const mouthStroke = cowMouth ? '#6b2a1a' : '#0f172a';
     const tongueFill = cowMouth ? '#f3a6a6' : '#f472b6';
-    if (mouthPhase === 2) return <g><ellipse cx="0" cy="8" rx="46" ry="30" fill={mouthFill} stroke={mouthStroke} strokeWidth="7"/><ellipse cx="0" cy="24" rx="24" ry="9" fill={tongueFill} opacity=".72" stroke="none"/><ellipse cx="-14" cy="-5" rx="13" ry="6" fill="#fff" opacity=".12" stroke="none"/></g>;
-    if (mouthPhase === 1) return <g><ellipse cx="0" cy="6" rx="38" ry="14" fill={mouthFill} stroke={mouthStroke} strokeWidth="6"/><ellipse cx="-10" cy="1" rx="10" ry="4" fill="#fff" opacity=".1" stroke="none"/></g>;
-    return <ellipse cx="0" cy="4" rx="34" ry="7" fill={cowMouth ? '#4a2418' : '#0f172a'} stroke="none"/>;
+    if (mouthPhase === 2) return <g><ellipse cx="0" cy="2" rx="23" ry="15" fill={mouthFill} stroke={mouthStroke} strokeWidth="7"/><ellipse cx="0" cy="12" rx="12" ry="4.5" fill={tongueFill} opacity=".72" stroke="none"/><ellipse cx="-14" cy="-2.5" rx="7" ry="3" fill="#fff" opacity=".12" stroke="none"/></g>;
+    if (mouthPhase === 1) return <g><ellipse cx="0" cy="3" rx="19" ry="7" fill={mouthFill} stroke={mouthStroke} strokeWidth="6"/><ellipse cx="-10" cy="0.5" rx="5" ry="2" fill="#fff" opacity=".1" stroke="none"/></g>;
+    return <ellipse cx="0" cy="2" rx="17" ry="3.5" fill={cowMouth ? '#4a2418' : '#0f172a'} stroke="none"/>;
   }
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
   if (shape === 'mouthO') return <ellipse rx="34" ry={mouthPhase === 2 ? 42 : mouthPhase === 1 ? 30 : 18} fill="#0f172a"/>;
