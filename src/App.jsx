@@ -1024,11 +1024,12 @@ function DemoApp() {
       utterance.lang = 'en-US';
     }
     const pulseMouth = () => pulseMouthFrame();
-    utterance.onstart = () => {
+    const startMouthPulse = () => {
       pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
       speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
     };
+    utterance.onstart = startMouthPulse;
     utterance.onboundary = (event) => {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
@@ -1047,6 +1048,7 @@ function DemoApp() {
     };
     utterance.onend = done;
     utterance.onerror = done;
+    startMouthPulse();
     window.speechSynthesis.speak(utterance);
   }
 
@@ -1086,6 +1088,11 @@ function DemoApp() {
     if (speechPlan.displayText && speechPlan.displayText !== text) appendLog(`Speech directed: ${speechPlan.displayText}`);
 
     const pulseMouth = () => pulseMouthFrame();
+    const startMouthPulse = () => {
+      pulseMouthFrame(true);
+      clearInterval(speakingTimer.current);
+      speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
+    };
 
     const speakChunk = (index = 0) => {
       if (speechRun !== speechRunRef.current) return;
@@ -1112,11 +1119,7 @@ function DemoApp() {
       } else {
         utterance.lang = 'en-US';
       }
-      utterance.onstart = () => {
-        pulseMouthFrame(true);
-        clearInterval(speakingTimer.current);
-        speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
-      };
+      utterance.onstart = startMouthPulse;
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
       };
@@ -1130,6 +1133,7 @@ function DemoApp() {
       utterance.onerror = () => {
         if (speechRun === speechRunRef.current) window.setTimeout(() => speakChunk(index + 1), 80);
       };
+      startMouthPulse();
       window.speechSynthesis.speak(utterance);
     };
 
