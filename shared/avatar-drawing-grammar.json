@@ -238,7 +238,9 @@
       "Render only one mouth per face: avoid drawing a separate smile line under an open talking mouth.",
       "Mouth animation should support closed, mid, and open positions so consonants and syllable beats read more naturally than binary open/close.",
       "Mascot mouths should stay intentionally tiny relative to the face; oversized mouths quickly read as pasted-on UI rather than character anatomy.",
-      "When browser speech does not expose reliable phonemes, approximate syllable attachment with very fast closed/mid/open cycling between word-boundary events."
+      "When browser speech does not expose reliable phonemes, approximate syllable attachment with very fast closed/mid/open cycling between word-boundary events.",
+      "Tiny mouths can still open vertically during speech; preserve small width while exaggerating height for readable talk motion.",
+      "For My Dude browser TTS, prefer very fast mouth pulses because word-boundary events are too sparse to feel syllable-attached."
     ],
     "attachmentMath": {
       "enabled": true,
