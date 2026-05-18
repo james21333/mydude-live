@@ -15,11 +15,71 @@ let copilotTokenCache = null;
 const sessionProfiles = new Map();
 
 
+const DRAWING_GRAMMAR_PATH = '/home/josh/.openclaw/repos/mydude-live/shared/avatar-drawing-grammar.json';
+const DRAWING_GRAMMAR = JSON.parse(readFileSync(DRAWING_GRAMMAR_PATH, 'utf8'));
+const DRAWING_SHAPES = new Set(DRAWING_GRAMMAR.shapes || []);
+const DRAWING_MATERIALS = new Set(DRAWING_GRAMMAR.materials || []);
+const DRAWING_ANCHORS = new Set(DRAWING_GRAMMAR.anchors || []);
+const DRAWING_PROMPT = `3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z}. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
+
+function clampSceneNumber(value, min, max, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+}
+function materialForText(text = '') {
+  const lower = text.toLowerCase();
+  if (/pink|dudette/.test(lower)) return 'glossyPink';
+  if (/green|cow|farm|tree|leaf/.test(lower)) return 'glossyGreen';
+  if (/gold|yellow|idea|lightbulb|sun/.test(lower)) return 'glossyGold';
+  if (/purple|alien|space/.test(lower)) return 'glossyPurple';
+  if (/red|car|fire/.test(lower)) return 'glossyRed';
+  if (/computer|monitor|robot|metal/.test(lower)) return 'chrome';
+  if (/boat|sail/.test(lower)) return 'canvas';
+  return 'glossyBlue';
+}
+function sceneLayer(shape, anchor, x, y, sx, sy, material, options = {}) { return { shape, anchor, x, y, scale: [sx, sy], material, ...options }; }
+function fallbackDrawingLayers(text = '') {
+  const l = text.toLowerCase(); const mat = materialForText(text);
+  const layers = [sceneLayer('shadow','ground',0,18,1.5,0.28,'shadow',{opacity:.28,z:-10})];
+  if (/sail|boat/.test(l)) layers.push(sceneLayer('hull','body',0,82,1.35,.75,'wood'), sceneLayer('curvedSail','head',18,-8,1.08,1.45,'canvas'), sceneLayer('rope','bodyFront',-54,8,.45,1.2,'brushedMetal'), sceneLayer('flag','top',60,42,.48,.42,'glossyRed'));
+  else if (/car|truck/.test(l)) layers.push(sceneLayer('carBody','body',0,70,1.45,.82,mat), sceneLayer('windshield','face',0,0,1.05,.7,'blackGlass'), sceneLayer('wheel','leftFoot',-25,-10,.62,.62,'charcoalRubber'), sceneLayer('wheel','rightFoot',25,-10,.62,.62,'charcoalRubber'));
+  else if (/computer|monitor/.test(l)) layers.push(sceneLayer('monitor','body',0,42,1.18,1,'chrome'), sceneLayer('screen','face',0,-2,.9,.58,'screenGlow'), sceneLayer('keyboard','bodyBottom',0,10,1.05,.32,'charcoalRubber'));
+  else if (/idea|funny|abstract|joke/.test(l)) layers.push(sceneLayer('lightbulb','body',0,20,1.05,1.2,'glossyGold'), sceneLayer('microphone','leftHand',28,-18,.42,.72,'chrome'), sceneLayer('question','orbit',-178,-110,.42,.42,'neon'), sceneLayer('spark','orbit',176,-152,.6,.6,'glossyGold'));
+  else if (/bush|president|statesman/.test(l)) layers.push(sceneLayer('roundedBox','body',0,70,1.05,1.1,'charcoalRubber'), sceneLayer('sphere','head',0,-10,.92,.88,'warmCream'), sceneLayer('hairCap','forehead',0,24,.86,.42,'softWhite'), sceneLayer('tie','bodyFront',0,18,.4,.82,'glossyRed'), sceneLayer('podium','ground',0,-24,1.05,.5,'wood'), sceneLayer('flag','right',-18,-58,.55,.55,'glossyBlue'));
+  else layers.push(sceneLayer('capsule','body',0,70,1.08,1.25,mat), sceneLayer('squircle','head',0,0,.96,.92,mat));
+  layers.push(sceneLayer(/funny|idea|abstract/.test(l)?'googlyEye':/computer|robot/.test(l)?'pixelEye':'eyeBall','leftEye',0,0,.32,.32,'softWhite',{role:'eye',z:20}));
+  layers.push(sceneLayer(/funny|idea|abstract/.test(l)?'googlyEye':/computer|robot/.test(l)?'pixelEye':'eyeBall','rightEye',0,0,.32,.32,'softWhite',{role:'eye',z:20}));
+  layers.push(sceneLayer(/car/.test(l)?'mouthGrille':/computer|robot/.test(l)?'mouthScreen':/funny|idea|abstract/.test(l)?'mouthGrin':'mouthSmile','mouth',0,0,.78,.38,'charcoalRubber',{role:'mouth',z:30}));
+  return layers;
+}
+function sanitizeDrawingLayers(rawLayers, text = '') {
+  const source = Array.isArray(rawLayers) && rawLayers.length ? rawLayers : fallbackDrawingLayers(text);
+  const cleaned = source.slice(0, DRAWING_GRAMMAR.rules?.maxLayers || 42).map((raw, index) => {
+    const scale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
+    return {
+      id: String(raw?.id || `${raw?.shape || 'part'}-${index}`).slice(0, 32),
+      shape: DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob',
+      anchor: DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free',
+      x: clampSceneNumber(raw?.x, -280, 280, 0), y: clampSceneNumber(raw?.y, -280, 280, 0),
+      scale: [clampSceneNumber(scale?.[0], .05, 3.2, 1), clampSceneNumber(scale?.[1], .05, 3.2, 1)],
+      rotate: clampSceneNumber(raw?.rotate, -180, 180, 0),
+      material: DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForText(text),
+      opacity: clampSceneNumber(raw?.opacity, .08, 1, 1),
+      role: raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part',
+      z: clampSceneNumber(raw?.z, -20, 40, index),
+    };
+  });
+  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','mouth',0,0,.78,.36,'charcoalRubber',{role:'mouth',z:30}));
+  return cleaned.sort((a,b)=>(a.z||0)-(b.z||0));
+}
+
+
+
 const SCENE_PRIMITIVES = Object.freeze([
   'body_blob','body_capsule','body_box','body_sphere','body_triangle','body_star','body_cloud','body_flame','body_crystal','body_monitor','body_car','body_boat','body_plane','body_rocket','body_house','body_tree','body_mushroom','body_book','body_phone','body_lightbulb','head_round','head_square','head_screen','head_animal','head_bird','head_fish','head_reptile','head_flower','head_planet','head_helmet','head_crown','head_hat','head_hair','head_mask','head_skull','eyes_dot','eyes_googly','eyes_sleepy','eyes_star','eyes_heart','eyes_pixel','eyes_windshield','eyes_porthole','eyes_cyclops','eyes_glasses','eyes_sunglasses','eyes_binocular','eyes_robot','eyes_cat','eyes_cartoon','mouth_smile','mouth_grin','mouth_screen','mouth_grille','mouth_beak','mouth_snout','mouth_tusk','mouth_fang','mouth_wave','mouth_speaker','mouth_mustache','mouth_tongue','limb_arm','limb_wing','limb_fin','limb_tentacle','limb_branch','limb_wheel','limb_track','limb_leg','limb_boot','limb_claw','limb_paw','limb_flipper','limb_propeller','limb_rope','accessory_hat','accessory_cap','accessory_crown','accessory_tie','accessory_bowtie','accessory_cape','accessory_backpack','accessory_toolbelt','accessory_badge','accessory_flag','accessory_microphone','accessory_sword','accessory_wand','accessory_umbrella','accessory_balloon','accessory_book','accessory_headphones','accessory_antenna','accessory_halo','accessory_lightning','texture_stripes','texture_spots','texture_stars','texture_grid','texture_circuit','texture_wood','texture_metal','texture_glass','texture_fur','texture_scales','texture_feathers','texture_cloud','texture_flame','texture_water','texture_leaf','scene_sky','scene_space','scene_ocean','scene_farm','scene_city','scene_desert','scene_forest','scene_jungle','scene_castle','scene_lab','scene_office','scene_stage','scene_road','scene_mountain','scene_beach','scene_underwater','scene_volcano','scene_snow','scene_candy','scene_dream','object_sun','object_moon','object_star','object_cloud','object_rainbow','object_tree','object_flower','object_rock','object_wave','object_anchor','object_podium','object_flag','object_keyboard','object_mouse','object_orbit','object_satellite','object_comet','object_gear','object_wire','object_spark','symbol_question','symbol_exclamation','symbol_idea','symbol_joke','symbol_music','symbol_heart','symbol_laugh','symbol_magic','symbol_money','symbol_time','symbol_map','symbol_compass','symbol_code'
 ]);
 
-const SCENE_SCHEMA = `Return only compact JSON with keys: title, summary, palette, scene, body, head, eyes, mouth, primitives. palette one of blue,pink,green,gold,purple,red,gray,orange. scene/body/head/eyes/mouth/primitives must use only these primitive ids: ${SCENE_PRIMITIVES.join(', ')}. Use symbolic approximation for real people: never exact likeness; for George H W Bush use presidential elder-statesman cartoon cues like head_hair, accessory_tie, object_podium, object_flag, scene_city. For abstract requests, map the idea to visual metaphors.`;
+const SCENE_SCHEMA = `Return only compact JSON with keys: title, summary, palette, scene, body, head, eyes, mouth, primitives, layers. palette one of blue,pink,green,gold,purple,red,gray,orange. scene/body/head/eyes/mouth/primitives must use only these primitive ids: ${SCENE_PRIMITIVES.join(', ')}. ${DRAWING_PROMPT} Use symbolic approximation for real people: never exact likeness; for George H W Bush use presidential elder-statesman cartoon cues like gray hair, suit, tie, podium, flag, elder-statesman vibe. For abstract requests, map the idea to visual metaphors.`;
 
 function wantsSceneSpec(text = '') {
   return /\b(look like|make (you|him|it)|avatar|turn into|become|transform|change into|be a|be an|computer|sailboat|boat|car|truck|cow|animal|monster|dragon|funny idea|abstract|appearance)\b/i.test(text);
@@ -34,7 +94,7 @@ function fallbackSceneSpec(text = '') {
   const eyes = pick([/computer|robot/, 'eyes_pixel'], [/car/, 'eyes_windshield'], [/funny|idea|abstract/, 'eyes_googly']) || 'eyes_cartoon';
   const mouth = pick([/car/, 'mouth_grille'], [/computer|robot/, 'mouth_screen'], [/funny|idea|abstract/, 'mouth_grin'], [/cow|animal/, 'mouth_snout']) || 'mouth_smile';
   const palette = pick([/pink/, 'pink'], [/green|cow|farm/, 'green'], [/gold|yellow|idea/, 'gold'], [/purple|space|alien/, 'purple'], [/red|car/, 'red'], [/gray|computer|bush|president/, 'gray']) || 'blue';
-  return { title: lower.replace(/[^a-z0-9\s-]/g, '').split(/\s+/).slice(-5).join(' ') || 'wild idea', summary: 'Fast symbolic cartoon transformation', palette, scene, body, head, eyes, mouth, primitives: [scene, body, head, eyes, mouth, 'object_spark'] };
+  return { title: lower.replace(/[^a-z0-9\s-]/g, '').split(/\s+/).slice(-5).join(' ') || 'wild idea', summary: 'Fast 3D cartoon transformation', palette, scene, body, head, eyes, mouth, primitives: [scene, body, head, eyes, mouth, 'object_spark'], layers: fallbackDrawingLayers(text) };
 }
 
 function sanitizeSceneSpec(raw, text = '') {
@@ -52,6 +112,7 @@ function sanitizeSceneSpec(raw, text = '') {
     eyes: use(clean.eyes, fallback.eyes),
     mouth: use(clean.mouth, fallback.mouth),
     primitives: [...new Set([...(Array.isArray(clean.primitives) ? clean.primitives : []), ...fallback.primitives].filter(x => allowed.has(x)))].slice(0, 16),
+    layers: sanitizeDrawingLayers(clean.layers, text),
   };
 }
 
@@ -65,9 +126,9 @@ async function askSceneBrain(userText, sessionId = 'demo') {
       method: 'POST', signal: controller.signal,
       headers: { ...ideHeaders, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: MODEL, messages: [
-        { role: 'system', content: `You are a My Dude cartoon scene planner. ${SCENE_SCHEMA}` },
+        { role: 'system', content: `You are a My Dude 3D cartoon avatar drawing planner. ${SCENE_SCHEMA} Return valid JSON only. The client renders your layered 3D-ish drawing recipe immediately.` },
         { role: 'user', content: userText.trim().slice(0, 900) },
-      ], max_tokens: 260, temperature: 0.35, user: `mydude-scene-${String(sessionId).slice(0, 64)}` }),
+      ], max_tokens: 900, temperature: 0.38, user: `mydude-scene-${String(sessionId).slice(0, 64)}` }),
     });
     if (!res.ok) throw new Error(`scene HTTP ${res.status}`);
     const json = await res.json();

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, RotateCcw, Sparkles } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
+import drawingGrammar from '../shared/avatar-drawing-grammar.json';
 import './styles.css';
 
 const ROOT_DOMAIN = 'mydude.live';
@@ -219,6 +220,99 @@ function avatarThemeForVoice(voiceChoice) {
 }
 
 
+
+const DRAWING_SHAPES = new Set(drawingGrammar.shapes || []);
+const DRAWING_MATERIALS = new Set(drawingGrammar.materials || []);
+const DRAWING_ANCHORS = new Set(drawingGrammar.anchors || []);
+
+const MATERIAL_COLORS = Object.freeze({
+  glossyBlue: ['#7dd3fc', '#2563eb', '#dbeafe'], glossyPink: ['#f9a8d4', '#db2777', '#fff1f2'], glossyGreen: ['#86efac', '#059669', '#dcfce7'],
+  glossyGold: ['#fde047', '#b45309', '#fef9c3'], glossyPurple: ['#c4b5fd', '#7c3aed', '#f5f3ff'], glossyRed: ['#fb7185', '#be123c', '#ffe4e6'],
+  softWhite: ['#ffffff', '#cbd5e1', '#f8fafc'], warmCream: ['#fff7ed', '#fdba74', '#ffedd5'], charcoalRubber: ['#475569', '#020617', '#cbd5e1'],
+  blackGlass: ['#1e293b', '#020617', '#93c5fd'], screenGlow: ['#67e8f9', '#0f172a', '#cffafe'], chrome: ['#f8fafc', '#64748b', '#ffffff'],
+  brushedMetal: ['#cbd5e1', '#475569', '#f8fafc'], mattePlastic: ['#93c5fd', '#334155', '#dbeafe'], rubber: ['#64748b', '#0f172a', '#cbd5e1'],
+  canvas: ['#f8fafc', '#94a3b8', '#ffffff'], wood: ['#b45309', '#78350f', '#fed7aa'], fur: ['#d97706', '#92400e', '#ffedd5'],
+  feather: ['#bae6fd', '#0284c7', '#f0f9ff'], scale: ['#34d399', '#047857', '#dcfce7'], water: ['#38bdf8', '#0369a1', '#e0f2fe'],
+  cloud: ['#f8fafc', '#94a3b8', '#ffffff'], flame: ['#fb923c', '#dc2626', '#fef3c7'], leaf: ['#4ade80', '#166534', '#dcfce7'],
+  candy: ['#f9a8d4', '#7c3aed', '#fff1f2'], neon: ['#22d3ee', '#a855f7', '#f0fdfa'], shadow: ['#334155', '#020617', '#94a3b8'], highlight: ['#ffffff', '#e0f2fe', '#ffffff'],
+});
+
+const ANCHOR_POINTS = Object.freeze({
+  body: [0, 90], bodyFront: [0, 92], bodyBack: [0, 118], bodyTop: [0, -20], bodyBottom: [0, 205], head: [0, -95], face: [0, -105], forehead: [0, -178],
+  leftEye: [-48, -122], rightEye: [48, -122], eyes: [0, -122], mouth: [0, -62], leftCheek: [-76, -82], rightCheek: [76, -82], leftEar: [-118, -124], rightEar: [118, -124],
+  leftArm: [-150, 62], rightArm: [150, 62], leftHand: [-195, 120], rightHand: [195, 120], leftLeg: [-62, 218], rightLeg: [62, 218], leftFoot: [-72, 258], rightFoot: [72, 258],
+  top: [0, -230], back: [0, 135], front: [0, 32], left: [-190, 80], right: [190, 80], ground: [0, 265], orbit: [0, 0], free: [0, 0],
+});
+
+function clampDrawingNumber(value, min, max, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+}
+
+function materialForPrompt(prompt = '') {
+  const lower = prompt.toLowerCase();
+  if (/pink|dudette/.test(lower)) return 'glossyPink';
+  if (/green|cow|farm|tree|leaf/.test(lower)) return 'glossyGreen';
+  if (/gold|yellow|idea|lightbulb|sun/.test(lower)) return 'glossyGold';
+  if (/purple|alien|space/.test(lower)) return 'glossyPurple';
+  if (/red|car|fire/.test(lower)) return 'glossyRed';
+  if (/computer|monitor|robot|metal/.test(lower)) return 'chrome';
+  if (/boat|sail/.test(lower)) return 'canvas';
+  return 'glossyBlue';
+}
+
+function layer(shape, anchor, x, y, sx, sy, material, options = {}) {
+  return { shape, anchor, x, y, scale: [sx, sy], material, ...options };
+}
+
+function fallbackDrawingLayers(prompt = '') {
+  const l = prompt.toLowerCase();
+  const mat = materialForPrompt(prompt);
+  const layers = [layer('shadow', 'ground', 0, 18, 1.5, 0.28, 'shadow', { opacity: 0.28 })];
+  if (/sail|boat/.test(l)) {
+    layers.push(layer('hull', 'body', 0, 82, 1.35, 0.75, 'wood'), layer('curvedSail', 'head', 18, -8, 1.08, 1.45, 'canvas'), layer('rope', 'bodyFront', -54, 8, 0.45, 1.2, 'brushedMetal'), layer('flag', 'top', 60, 42, 0.48, 0.42, 'glossyRed'));
+  } else if (/car|truck/.test(l)) {
+    layers.push(layer('carBody', 'body', 0, 70, 1.45, 0.82, mat), layer('windshield', 'face', 0, 0, 1.05, 0.7, 'blackGlass'), layer('wheel', 'leftFoot', -25, -10, 0.62, 0.62, 'charcoalRubber'), layer('wheel', 'rightFoot', 25, -10, 0.62, 0.62, 'charcoalRubber'));
+  } else if (/computer|monitor/.test(l)) {
+    layers.push(layer('monitor', 'body', 0, 42, 1.18, 1, 'chrome'), layer('screen', 'face', 0, -2, 0.9, 0.58, 'screenGlow'), layer('keyboard', 'bodyBottom', 0, 10, 1.05, 0.32, 'charcoalRubber'));
+  } else if (/idea|funny|abstract|joke/.test(l)) {
+    layers.push(layer('lightbulb', 'body', 0, 20, 1.05, 1.2, 'glossyGold'), layer('microphone', 'leftHand', 28, -18, 0.42, 0.72, 'chrome'), layer('question', 'orbit', -178, -110, 0.42, 0.42, 'neon'), layer('spark', 'orbit', 176, -152, 0.6, 0.6, 'glossyGold'));
+  } else if (/bush|president|statesman/.test(l)) {
+    layers.push(layer('roundedBox', 'body', 0, 70, 1.05, 1.1, 'charcoalRubber'), layer('sphere', 'head', 0, -10, 0.92, 0.88, 'warmCream'), layer('hairCap', 'forehead', 0, 24, 0.86, 0.42, 'softWhite'), layer('tie', 'bodyFront', 0, 18, 0.4, 0.82, 'glossyRed'), layer('podium', 'ground', 0, -24, 1.05, 0.5, 'wood'), layer('flag', 'right', -18, -58, 0.55, 0.55, 'glossyBlue'));
+  } else {
+    layers.push(layer('capsule', 'body', 0, 70, 1.08, 1.25, mat), layer('squircle', 'head', 0, 0, 0.96, 0.92, mat));
+  }
+  layers.push(layer(/funny|idea|abstract/.test(l) ? 'googlyEye' : /computer|robot/.test(l) ? 'pixelEye' : 'eyeBall', 'leftEye', 0, 0, 0.32, 0.32, 'softWhite'));
+  layers.push(layer(/funny|idea|abstract/.test(l) ? 'googlyEye' : /computer|robot/.test(l) ? 'pixelEye' : 'eyeBall', 'rightEye', 0, 0, 0.32, 0.32, 'softWhite'));
+  layers.push(layer(/car/.test(l) ? 'mouthGrille' : /computer|robot/.test(l) ? 'mouthScreen' : /funny|idea|abstract/.test(l) ? 'mouthGrin' : 'mouthSmile', 'mouth', 0, 0, 0.78, 0.38, 'charcoalRubber', { role: 'mouth' }));
+  return layers;
+}
+
+function sanitizeDrawingLayers(rawLayers, prompt = '') {
+  const source = Array.isArray(rawLayers) && rawLayers.length ? rawLayers : fallbackDrawingLayers(prompt);
+  const cleaned = source.slice(0, drawingGrammar.rules?.maxLayers || 42).map((raw, index) => {
+    const shape = DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob';
+    const anchor = DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free';
+    const scale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
+    const material = DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForPrompt(prompt);
+    return {
+      id: String(raw?.id || `${shape}-${index}`).slice(0, 32),
+      shape,
+      anchor,
+      x: clampDrawingNumber(raw?.x, -280, 280, 0),
+      y: clampDrawingNumber(raw?.y, -280, 280, 0),
+      scale: [clampDrawingNumber(scale?.[0], 0.05, 3.2, 1), clampDrawingNumber(scale?.[1], 0.05, 3.2, 1)],
+      rotate: clampDrawingNumber(raw?.rotate, -180, 180, 0),
+      material,
+      opacity: clampDrawingNumber(raw?.opacity, 0.08, 1, 1),
+      role: raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part',
+      z: clampDrawingNumber(raw?.z, -20, 20, index),
+    };
+  }).sort((a, b) => a.z - b.z);
+  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(layer('mouthSmile', 'mouth', 0, 0, 0.78, 0.36, 'charcoalRubber', { role: 'mouth', z: 30 }));
+  return cleaned;
+}
+
 const SCENE_PRIMITIVES = Object.freeze([
   'body_blob','body_capsule','body_box','body_sphere','body_triangle','body_star','body_cloud','body_flame','body_crystal','body_monitor','body_car','body_boat','body_plane','body_rocket','body_house','body_tree','body_mushroom','body_book','body_phone','body_lightbulb',
   'head_round','head_square','head_screen','head_animal','head_bird','head_fish','head_reptile','head_flower','head_planet','head_helmet','head_crown','head_hat','head_hair','head_mask','head_skull',
@@ -259,6 +353,7 @@ function sanitizeSceneSpec(spec, prompt = '') {
     eyes,
     mouth,
     primitives: [...new Set([scene, body, head, eyes, mouth, ...primitives])].slice(0, 18),
+    layers: sanitizeDrawingLayers(spec?.layers, prompt),
   };
 }
 
@@ -935,85 +1030,77 @@ function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
 function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
   const palette = SCENE_PALETTES[scene.palette] || SCENE_PALETTES.blue;
   const [primary, dark, light] = palette;
-  const bgClass = String(scene.scene || 'scene_sky').replace('scene_', '');
-  const body = String(scene.body || 'body_blob').replace('body_', '');
-  const head = String(scene.head || 'head_round').replace('head_', '');
-  const eyes = String(scene.eyes || 'eyes_cartoon').replace('eyes_', '');
-  const mouth = String(scene.mouth || 'mouth_smile').replace('mouth_', '');
-  const extras = (scene.primitives || []).filter(item => /^object_|^symbol_|^accessory_|^texture_|^limb_/.test(item)).slice(0, 9);
-  return <div className={`avatar-card scene-card ${status} built scene-${bgClass}`} style={{ '--scene-primary': voiceTheme.bot || primary, '--scene-dark': dark, '--scene-light': light }}>
-    <svg className="scene-svg" viewBox="0 0 720 620" role="img" aria-label={scene.summary || scene.title}>
+  const layers = sanitizeDrawingLayers(scene.layers, scene.prompt || scene.title || '');
+  return <div className={`avatar-card scene-card drawing-card ${status} built`} style={{ '--scene-primary': voiceTheme.bot || primary, '--scene-dark': dark, '--scene-light': light }}>
+    <svg className="scene-svg drawing-svg" viewBox="0 0 720 620" role="img" aria-label={scene.summary || scene.title}>
       <defs>
-        <radialGradient id="sceneGlow" cx="50%" cy="35%" r="70%"><stop offset="0%" stopColor="var(--scene-light)" stopOpacity="0.72"/><stop offset="58%" stopColor="var(--scene-primary)" stopOpacity="0.2"/><stop offset="100%" stopColor="transparent"/></radialGradient>
-        <linearGradient id="bodyFill" x1="0" x2="1" y1="0" y2="1"><stop stopColor="var(--scene-primary)"/><stop offset="1" stopColor="var(--scene-dark)"/></linearGradient>
+        <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#020617" floodOpacity="0.35"/></filter>
+        <filter id="innerGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="-3" stdDeviation="5" floodColor="#ffffff" floodOpacity="0.22"/></filter>
+        {Object.entries(MATERIAL_COLORS).map(([name, colors]) => <linearGradient id={`mat-${name}`} x1="0" x2="1" y1="0" y2="1" key={name}>
+          <stop offset="0%" stopColor={colors[2]} stopOpacity=".98"/><stop offset="38%" stopColor={colors[0]}/><stop offset="100%" stopColor={colors[1]}/>
+        </linearGradient>)}
+        {Object.entries(MATERIAL_COLORS).map(([name, colors]) => <radialGradient id={`shine-${name}`} cx="32%" cy="22%" r="74%" key={`shine-${name}`}>
+          <stop offset="0%" stopColor="#fff" stopOpacity=".72"/><stop offset="36%" stopColor={colors[0]} stopOpacity=".88"/><stop offset="100%" stopColor={colors[1]} stopOpacity=".95"/>
+        </radialGradient>)}
       </defs>
-      <rect width="720" height="620" rx="34" fill="url(#sceneGlow)"/>
-      <SceneBackdrop scene={scene.scene} />
-      <g className={`scene-character scene-body-${body} ${status === 'speaking' ? 'scene-speaking' : ''}`}>
-        <BodyShape type={body} />
-        <HeadShape type={head} />
-        <EyeShape type={eyes} />
-        <MouthShape type={mouth} open={mouthOpen} />
-        <PrimitiveExtras items={extras} />
+      <rect x="92" y="58" width="536" height="500" rx="58" fill="rgba(15,23,42,.2)" />
+      <g className={`drawing-character ${status === 'speaking' ? 'scene-speaking' : ''}`} transform="translate(360 292)" filter="url(#softShadow)">
+        {layers.map(item => <DrawingLayer key={item.id} item={item} mouthOpen={mouthOpen} />)}
       </g>
       <text className="scene-label" x="360" y="586" textAnchor="middle">{scene.title}</text>
     </svg>
   </div>;
 }
 
-function SceneBackdrop({ scene }) {
-  const name = String(scene || 'scene_sky');
-  const ground = /ocean|beach|underwater/.test(name) ? '#0ea5e9' : /farm|forest|jungle/.test(name) ? '#16a34a' : /road|city/.test(name) ? '#475569' : /space/.test(name) ? '#020617' : /desert/.test(name) ? '#d97706' : '#1d4ed8';
-  return <g className="scene-backdrop">
-    <circle cx="610" cy="90" r="42" fill="#fde68a" opacity=".88" />
-    <path d="M0 450 C120 415 210 480 335 445 C470 408 570 458 720 430 L720 620 L0 620 Z" fill={ground} opacity=".68" />
-    {/space/.test(name) && [120,210,450,555,640].map((x,i)=><circle key={x} cx={x} cy={70+i*38} r={i%2?4:6} fill="#fff" opacity=".9"/>)}
-    {/ocean|boat|beach|underwater/.test(name) && [0,1,2].map(i=><path key={i} d={`M${40+i*30} ${470+i*34} C140 ${440+i*30} 210 ${500+i*20} 330 ${465+i*22} C450 ${430+i*25} 530 ${492+i*18} 680 ${455+i*25}`} fill="none" stroke="#bfdbfe" strokeWidth="8" opacity=".55"/>)}
-    {/city|road/.test(name) && [90,160,540,610].map((x,i)=><rect key={x} x={x} y={250-i*20} width="64" height={210+i*20} rx="8" fill="#334155" opacity=".62"/>)}
-    {/farm|forest|jungle/.test(name) && [90,560,625].map(x=><g key={x}><rect x={x} y="335" width="24" height="96" fill="#854d0e"/><circle cx={x+12} cy="315" r="54" fill="#22c55e" opacity=".78"/></g>)}
+function DrawingLayer({ item, mouthOpen }) {
+  const [ax, ay] = ANCHOR_POINTS[item.anchor] || ANCHOR_POINTS.free;
+  const [sx, sy] = item.scale || [1, 1];
+  const mouthScale = item.role === 'mouth' && mouthOpen ? 1.45 : 1;
+  const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
+  return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
+    <Shape3D shape={item.shape} material={item.material} mouthOpen={mouthOpen && item.role === 'mouth'} />
   </g>;
 }
 
-function BodyShape({ type }) {
-  if (type === 'car') return <g><rect x="210" y="320" width="300" height="105" rx="42" fill="url(#bodyFill)"/><circle cx="280" cy="430" r="36" fill="#0f172a"/><circle cx="440" cy="430" r="36" fill="#0f172a"/><path d="M280 318 L330 250 H415 L470 318 Z" fill="var(--scene-light)" opacity=".55"/></g>;
-  if (type === 'boat') return <g><path d="M205 380 H520 L465 455 H260 Z" fill="url(#bodyFill)"/><path d="M360 180 V380" stroke="var(--scene-light)" strokeWidth="12"/><path d="M370 190 L500 355 H370 Z" fill="var(--scene-primary)"/><path d="M350 215 L245 360 H350 Z" fill="var(--scene-light)" opacity=".78"/></g>;
-  if (type === 'monitor') return <g><rect x="235" y="215" width="250" height="170" rx="24" fill="url(#bodyFill)"/><rect x="265" y="245" width="190" height="95" rx="16" fill="#020617" opacity=".8"/><path d="M360 385 V440 M300 440 H420" stroke="var(--scene-light)" strokeWidth="18" strokeLinecap="round"/></g>;
-  if (type === 'lightbulb') return <g><path d="M275 260 C275 205 320 165 360 165 C405 165 445 205 445 260 C445 302 420 325 405 354 H315 C300 326 275 302 275 260 Z" fill="url(#bodyFill)"/><rect x="315" y="355" width="90" height="72" rx="18" fill="#64748b"/></g>;
-  if (type === 'star') return <path d="M360 175 L405 295 L532 300 L430 374 L466 500 L360 426 L254 500 L290 374 L188 300 L315 295 Z" fill="url(#bodyFill)"/>;
-  if (type === 'rocket') return <g><path d="M360 145 C430 220 430 360 360 445 C290 360 290 220 360 145 Z" fill="url(#bodyFill)"/><path d="M310 385 L255 465 L330 430 Z M410 385 L465 465 L390 430 Z" fill="var(--scene-dark)"/></g>;
-  return <ellipse cx="360" cy="340" rx="150" ry="135" fill="url(#bodyFill)"/>;
-}
-function HeadShape({ type }) {
-  if (['screen','helmet'].includes(type)) return <rect x="277" y="175" width="166" height="128" rx="28" fill="rgba(15,23,42,.38)" stroke="var(--scene-light)" strokeWidth="8"/>;
-  if (type === 'crown') return <path d="M290 205 L320 145 L360 202 L405 145 L435 205 V250 H290 Z" fill="#facc15" opacity=".88"/>;
-  if (type === 'animal') return <g><circle cx="298" cy="188" r="36" fill="var(--scene-primary)"/><circle cx="422" cy="188" r="36" fill="var(--scene-primary)"/></g>;
-  if (type === 'hair') return <path d="M270 210 C300 145 420 145 452 215 C410 190 315 190 270 210 Z" fill="#e5e7eb"/>;
-  return <circle cx="360" cy="235" r="92" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.22)" strokeWidth="5"/>;
-}
-function EyeShape({ type }) {
-  const eyeFill = type === 'heart' ? '#fb7185' : '#f8fafc';
-  if (type === 'pixel') return <g fill="#86efac"><rect x="315" y="248" width="26" height="26"/><rect x="380" y="248" width="26" height="26"/></g>;
-  if (type === 'windshield') return <path d="M292 250 H430 L405 292 H315 Z" fill="#dbeafe" opacity=".82"/>;
-  if (type === 'googly') return <g><circle cx="322" cy="258" r="24" fill="#fff"/><circle cx="397" cy="252" r="29" fill="#fff"/><circle cx="330" cy="263" r="9" fill="#020617"/><circle cx="386" cy="245" r="10" fill="#020617"/></g>;
-  return <g fill={eyeFill}><ellipse cx="322" cy="258" rx="23" ry="28"/><ellipse cx="398" cy="258" rx="23" ry="28"/></g>;
-}
-function MouthShape({ type, open }) {
-  if (type === 'grille') return <g stroke="#020617" strokeWidth="8" strokeLinecap="round"><path d="M315 324 H405"/><path d="M330 308 V340 M360 308 V340 M390 308 V340"/></g>;
-  if (type === 'screen') return <rect x="320" y="305" width="82" height={open ? 34 : 16} rx="8" fill="#0f172a"/>;
-  if (type === 'beak') return <path d="M335 310 L410 330 L335 350 Z" fill="#fbbf24"/>;
-  if (type === 'grin') return <path d="M312 315 Q360 370 410 315" fill="none" stroke="#020617" strokeWidth="16" strokeLinecap="round"/>;
-  return <rect x="316" y="312" width="88" height={open ? 36 : 18} rx="999" fill="#0f172a"/>;
-}
-function PrimitiveExtras({ items }) {
-  return <g className="scene-extras">{items.map((item, index) => {
-    const x = 130 + (index % 5) * 116; const y = index < 5 ? 120 : 505;
-    if (item.includes('star') || item.includes('spark')) return <path key={item+index} d={`M${x} ${y-22} L${x+8} ${y-4} L${x+28} ${y} L${x+8} ${y+6} L${x} ${y+24} L${x-8} ${y+6} L${x-28} ${y} L${x-8} ${y-4} Z`} fill="#fde68a" opacity=".9"/>;
-    if (item.includes('heart')) return <text key={item+index} x={x} y={y} fontSize="44" textAnchor="middle">♥</text>;
-    if (item.includes('question')) return <text key={item+index} x={x} y={y} fontSize="50" textAnchor="middle">?</text>;
-    if (item.includes('flag')) return <g key={item+index}><path d={`M${x} ${y+28} V${y-32}`} stroke="#fff" strokeWidth="6"/><path d={`M${x} ${y-32} H${x+48} V${y-4} H${x} Z`} fill="#ef4444"/></g>;
-    if (item.includes('gear')) return <circle key={item+index} cx={x} cy={y} r="28" fill="none" stroke="#cbd5e1" strokeWidth="10" strokeDasharray="8 8"/>;
-    return <circle key={item+index} cx={x} cy={y} r="22" fill="var(--scene-light)" opacity=".72"/>;
-  })}</g>;
+function fillFor(material) { return `url(#shine-${MATERIAL_COLORS[material] ? material : 'glossyBlue'})`; }
+function strokeFor(material) { return MATERIAL_COLORS[material]?.[1] || '#1d4ed8'; }
+
+function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
+  const fill = fillFor(material);
+  const stroke = strokeFor(material);
+  const common = { fill, stroke, strokeWidth: 4, filter: 'url(#innerGlow)' };
+  if (shape === 'shadow') return <ellipse cx="0" cy="0" rx="116" ry="32" fill="#020617" opacity=".7" stroke="none"/>;
+  if (['sphere','eyeBall'].includes(shape)) return <g><ellipse cx="0" cy="8" rx="58" ry="54" {...common}/><ellipse cx="-16" cy="-12" rx="17" ry="12" fill="#fff" opacity=".72" stroke="none"/>{shape === 'eyeBall' && <circle cx="8" cy="10" r="16" fill="#020617" stroke="none"/>}</g>;
+  if (shape === 'googlyEye') return <g><circle cx="0" cy="0" r="48" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="12" cy="10" r="15" fill="#020617"/></g>;
+  if (shape === 'pixelEye') return <g><rect x="-36" y="-28" width="72" height="56" rx="10" fill="#0f172a" stroke="#67e8f9" strokeWidth="4"/><rect x="-16" y="-8" width="32" height="18" fill="#86efac"/></g>;
+  if (shape === 'sleepyEye') return <path d="M-44 0 Q0 24 44 0" fill="none" stroke="#f8fafc" strokeWidth="12" strokeLinecap="round"/>;
+  if (shape === 'heartEye' || shape === 'heart') return <path d="M0 42 C-58 5 -54 -44 -15 -36 C-4 -34 0 -22 0 -22 C0 -22 4 -34 15 -36 C54 -44 58 5 0 42 Z" fill="#fb7185" stroke="#be123c" strokeWidth="4"/>;
+  if (shape === 'starEye' || shape === 'star' || shape === 'spark') return <path d="M0 -60 L17 -18 L62 -16 L26 10 L38 56 L0 30 L-38 56 L-26 10 L-62 -16 L-17 -18 Z" {...common}/>;
+  if (['squircle','roundedBox','monitor','screen'].includes(shape)) return <g><rect x="-86" y="-66" width="172" height="132" rx={shape === 'screen' ? 18 : 36} {...common}/><ellipse cx="-28" cy="-34" rx="34" ry="14" fill="#fff" opacity=".23" stroke="none"/></g>;
+  if (['capsule','bean','blob','egg','body_blob'].includes(shape)) return <g><path d="M-78 -74 C-18 -116 82 -82 96 5 C110 95 30 132 -48 104 C-126 76 -138 -34 -78 -74 Z" {...common}/><ellipse cx="-34" cy="-45" rx="38" ry="16" fill="#fff" opacity=".22" stroke="none"/></g>;
+  if (shape === 'carBody') return <g><rect x="-130" y="-34" width="260" height="88" rx="42" {...common}/><path d="M-58 -32 L-20 -82 H62 L104 -32 Z" fill={fill} stroke={stroke} strokeWidth="4"/><ellipse cx="-74" cy="54" rx="34" ry="34" fill="#020617"/><ellipse cx="78" cy="54" rx="34" ry="34" fill="#020617"/></g>;
+  if (shape === 'windshield') return <path d="M-72 -34 H72 L50 38 H-54 Z" fill="url(#shine-blackGlass)" stroke="#bfdbfe" strokeWidth="4"/>;
+  if (shape === 'wheel' || shape === 'tire') return <g><circle r="48" fill="#020617"/><circle r="22" fill="url(#shine-chrome)"/></g>;
+  if (shape === 'hull') return <path d="M-140 -42 H140 L90 54 H-96 Z" {...common}/>;
+  if (shape === 'sail' || shape === 'curvedSail') return <path d="M-28 92 C35 38 58 -36 30 -112 C92 -40 126 50 72 112 Z" {...common}/>;
+  if (shape === 'lightbulb') return <g><path d="M-64 -18 C-64 -88 -12 -126 34 -102 C90 -72 72 2 38 34 C24 48 18 60 18 82 H-24 C-24 58 -34 48 -48 32 C-58 20 -64 2 -64 -18 Z" {...common}/><rect x="-28" y="78" width="58" height="42" rx="12" fill="url(#shine-brushedMetal)" stroke="#64748b" strokeWidth="4"/></g>;
+  if (shape === 'rocket') return <g><path d="M0 -120 C74 -42 68 68 0 132 C-68 68 -74 -42 0 -120 Z" {...common}/><circle cx="0" cy="-26" r="32" fill="url(#shine-screenGlow)" stroke="#e0f2fe" strokeWidth="5"/></g>;
+  if (shape === 'mouthSmile') return <path d={mouthOpen ? 'M-52 -8 Q0 42 52 -8 Q0 18 -52 -8 Z' : 'M-52 0 Q0 34 52 0'} fill={mouthOpen ? '#0f172a' : 'none'} stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
+  if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
+  if (shape === 'mouthO') return <ellipse rx="34" ry={mouthOpen ? 42 : 22} fill="#0f172a"/>;
+  if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthOpen ? 48 : 28} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;
+  if (shape === 'mouthGrille') return <g stroke="#020617" strokeWidth="9" strokeLinecap="round"><path d="M-56 0 H56"/><path d="M-32 -18 V18 M0 -18 V18 M32 -18 V18"/></g>;
+  if (shape === 'snout') return <g><ellipse rx="54" ry="34" fill="url(#shine-warmCream)" stroke="#92400e" strokeWidth="4"/><circle cx="-18" cy="0" r="7" fill="#020617"/><circle cx="18" cy="0" r="7" fill="#020617"/></g>;
+  if (shape === 'beak') return <path d="M-42 -28 L76 0 L-42 32 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="4"/>;
+  if (shape === 'hairCap') return <path d="M-76 -8 C-42 -62 54 -64 82 -4 C42 -24 -34 -24 -76 -8 Z" fill="url(#shine-softWhite)" stroke="#94a3b8" strokeWidth="4"/>;
+  if (shape === 'keyboard') return <g><rect x="-92" y="-28" width="184" height="56" rx="14" fill="url(#shine-charcoalRubber)" stroke="#64748b" strokeWidth="4"/>{[-48,0,48].map(x => <rect key={x} x={x-18} y="-8" width="36" height="16" rx="4" fill="#cbd5e1" opacity=".7"/> )}</g>;
+  if (shape === 'rope') return <path d="M-12 -70 C28 -28 -34 18 10 72" fill="none" stroke="#f5deb3" strokeWidth="12" strokeLinecap="round" strokeDasharray="10 8"/>;
+  if (shape === 'tie') return <path d="M0 -46 L34 -10 L12 86 H-12 L-34 -10 Z" fill="url(#shine-glossyRed)" stroke="#991b1b" strokeWidth="4"/>;
+  if (shape === 'podium') return <path d="M-90 -44 H90 L68 58 H-68 Z" fill="url(#shine-wood)" stroke="#78350f" strokeWidth="5"/>;
+  if (shape === 'flag') return <g><path d="M-30 58 V-58" stroke="#f8fafc" strokeWidth="8"/><path d="M-26 -58 H66 V-4 H-26 Z" fill="url(#shine-glossyBlue)" stroke="#e0f2fe" strokeWidth="4"/></g>;
+  if (shape === 'question') return <text y="30" textAnchor="middle" fontSize="112" fontWeight="900" fill="url(#shine-neon)" stroke="#0f172a" strokeWidth="3">?</text>;
+  if (shape === 'microphone') return <g><rect x="-20" y="-60" width="40" height="82" rx="20" fill="url(#shine-chrome)" stroke="#64748b" strokeWidth="4"/><path d="M0 20 V74 M-34 74 H34" stroke="#cbd5e1" strokeWidth="8" strokeLinecap="round"/></g>;
+  return <g><ellipse cx="0" cy="8" rx="70" ry="58" {...common}/><ellipse cx="-24" cy="-18" rx="30" ry="13" fill="#fff" opacity=".22" stroke="none"/></g>;
 }
 
 function makeAvatar(prompt) {
