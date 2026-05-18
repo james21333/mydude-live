@@ -223,7 +223,8 @@
       "Never make core limbs/hooves/ears/spots read as floating stickers; attach, overlap, or embed them into the parent surface.",
       "Use My Dude plush/toy proportions: rounded compact body, oversized friendly face, stubby limbs, glossy highlights.",
       "For animal avatars, use mascotBody + mascotHead + stubbyArm/stubbyLeg + hoof/cuteEye/bodyPatch before decorative horns/ears/details.",
-      "For abstract shapes/forms/ideas/colors, still construct them as a mascot: readable core silhouette, face attached to core, details integrated into surfaces."
+      "For abstract shapes/forms/ideas/colors, still construct them as a mascot: readable core silhouette, face attached to core, details integrated into surfaces.",
+      "If a detail cannot be convincingly attached or embedded, omit it; omission is better than a floating sticker artifact."
     ],
     "attachmentMath": {
       "enabled": true,
