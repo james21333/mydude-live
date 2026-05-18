@@ -5,7 +5,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const PORT = Number(process.env.PORT || 8787);
-const ALLOWED_ORIGIN = process.env.MYDUDE_ALLOWED_ORIGIN || 'https://demo.mydude.live';
+const ALLOWED_ORIGINS = (process.env.MYDUDE_ALLOWED_ORIGINS || 'https://demo.mydude.live,https://demo2.mydude.live')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+const DEFAULT_ALLOWED_ORIGIN = ALLOWED_ORIGINS[0] || 'https://demo.mydude.live';
 const MODEL = 'gpt-4o-mini';
 const AGENT_DIR = '/home/josh/.openclaw/bridge/mydude-speaker-agent';
 const AUTH_PROFILE = '/home/josh/.openclaw/agents/main/agent/auth-profiles.json';
@@ -248,11 +252,16 @@ const ideHeaders = {
   'OpenAI-Intent': 'conversation-panel',
 };
 
-function corsHeaders() {
+function allowedOriginFor(req) {
+  const origin = req?.headers?.origin;
+  return ALLOWED_ORIGINS.includes(origin) ? origin : DEFAULT_ALLOWED_ORIGIN;
+}
+
+function corsHeaders(req) {
   return {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
-    'access-control-allow-origin': ALLOWED_ORIGIN,
+    'access-control-allow-origin': allowedOriginFor(req),
     'access-control-allow-methods': 'GET,POST,OPTIONS',
     'access-control-allow-headers': 'content-type',
   };
@@ -519,7 +528,7 @@ async function handleWsMessage(socket, raw) {
 
 const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, corsHeaders());
+    res.writeHead(204, corsHeaders(req));
     res.end();
     return;
   }
@@ -534,11 +543,11 @@ const server = http.createServer(async (req, res) => {
       ws: '/speak',
       time: new Date().toISOString(),
     });
-    res.writeHead(200, corsHeaders());
+    res.writeHead(200, corsHeaders(req));
     res.end(body);
     return;
   }
-  res.writeHead(404, corsHeaders());
+  res.writeHead(404, corsHeaders(req));
   res.end(JSON.stringify({ ok: false, error: 'not_found' }));
 });
 
@@ -551,7 +560,7 @@ server.on('upgrade', (req, socket) => {
     'Upgrade: websocket',
     'Connection: Upgrade',
     `Sec-WebSocket-Accept: ${wsAccept(key)}`,
-    `Access-Control-Allow-Origin: ${ALLOWED_ORIGIN}`,
+    `Access-Control-Allow-Origin: ${allowedOriginFor(req)}`,
     '',
     '',
   ].join('\r\n'));
