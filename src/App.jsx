@@ -1244,7 +1244,7 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
           <stop offset="0%" stopColor="#fff" stopOpacity=".72"/><stop offset="36%" stopColor={colors[0]} stopOpacity=".88"/><stop offset="100%" stopColor={colors[1]} stopOpacity=".95"/>
         </radialGradient>)}
       </defs>
-      <g transform="translate(360 238)" filter="url(#softShadow)">
+      <g transform="translate(360 150)" filter="url(#softShadow)">
         <g transform="scale(2)">
           <g className="drawing-character">
             {status === 'listening' && <animateTransform attributeName="transform" type="translate" values="-2 0; 2 0; -2 0" dur="5.2s" repeatCount="indefinite" additive="sum" />}
