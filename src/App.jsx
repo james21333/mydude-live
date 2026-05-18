@@ -423,16 +423,16 @@ function fallbackDrawingLayers(prompt = '', options = {}) {
   const layers = [
     layer('shadow', 'ground', 0, 6, 0.98, 0.18, 'shadow', { opacity: 0.24, z: -10 }),
     layer('mascotBody', 'free', 0, 0, 0.62, 0.6, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
-    layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.leftHip' } }),
-    layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.rightHip' } }),
-    layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.leftFoot' } }),
-    layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.rightFoot' } }),
+    layer('stubbyLeg', 'free', 0, -2, 0.32, 0.34, bodyMaterial, { z: 4, attach: { socket: 'body.leftHip' } }),
+    layer('stubbyLeg', 'free', 0, -2, 0.32, 0.34, bodyMaterial, { z: 4, attach: { socket: 'body.rightHip' } }),
+    layer('hoof', 'free', 0, -2, 0.28, 0.16, 'charcoalRubber', { z: 6, attach: { socket: 'body.leftFoot' } }),
+    layer('hoof', 'free', 0, -2, 0.28, 0.16, 'charcoalRubber', { z: 6, attach: { socket: 'body.rightFoot' } }),
     layer('mascotHead', 'free', 0, 0, 0.94, 0.84, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
   ];
   if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) {
     layers.push(
-      layer('stubbyArm', 'free', -2, 0, 0.22, 0.26, bodyMaterial, { rotate: -10, z: 5, attach: { socket: 'body.leftHand' } }),
-      layer('stubbyArm', 'free', 2, 0, 0.22, 0.26, bodyMaterial, { rotate: 10, z: 5, attach: { socket: 'body.rightHand' } }),
+      layer('stubbyArm', 'free', -2, 0, 0.34, 0.36, bodyMaterial, { rotate: -10, z: 5, attach: { socket: 'body.leftHand' } }),
+      layer('stubbyArm', 'free', 2, 0, 0.34, 0.36, bodyMaterial, { rotate: 10, z: 5, attach: { socket: 'body.rightHand' } }),
     );
   }
   if (/cat|dog|bear|rabbit|bunny|animal|mouse|fox|tiger|lion|elephant/.test(l)) {
@@ -1236,8 +1236,10 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
         </radialGradient>)}
       </defs>
       <rect x="92" y="58" width="536" height="500" rx="58" fill="rgba(15,23,42,.2)" />
-      <g className={`drawing-character ${status === 'speaking' ? 'scene-speaking' : ''}`} transform="translate(360 292)" filter="url(#softShadow)">
-        {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
+      <g transform="translate(360 292)" filter="url(#softShadow)">
+        <g className="drawing-character">
+          {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
+        </g>
       </g>
       <text className="scene-label" x="360" y="586" textAnchor="middle">{scene.title}</text>
     </svg>

@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A plush Cow Buddy using the original My Dude/Buddy silhouette: oversized expressive head, compact body, tiny cow-colored mouth, centered black belly spots, attached hooves, and walking-ready legs.",
+      "summary": "A plush Cow Buddy using the original My Dude/Buddy silhouette: oversized expressive head, compact body, thick Buddy-style arms and legs, no horns, tiny cow-colored mouth, centered black belly spots, attached hooves, and walking-ready motion.",
       "palette": "green",
       "layers": [
         {
@@ -665,10 +665,10 @@
           "shape": "stubbyArm",
           "anchor": "free",
           "x": -12,
-          "y": 30,
+          "y": 22,
           "scale": [
-            0.2,
-            0.3
+            0.32,
+            0.38
           ],
           "material": "softWhite",
           "rotate": 18,
@@ -682,10 +682,10 @@
           "shape": "stubbyArm",
           "anchor": "free",
           "x": 12,
-          "y": 30,
+          "y": 22,
           "scale": [
-            0.2,
-            0.3
+            0.32,
+            0.38
           ],
           "material": "softWhite",
           "rotate": -18,
@@ -701,8 +701,8 @@
           "x": -2,
           "y": 6,
           "scale": [
-            0.14,
-            0.1
+            0.2,
+            0.12
           ],
           "material": "charcoalRubber",
           "z": 8,
@@ -716,8 +716,8 @@
           "x": 2,
           "y": 6,
           "scale": [
-            0.14,
-            0.1
+            0.2,
+            0.12
           ],
           "material": "charcoalRubber",
           "z": 8,
@@ -744,10 +744,10 @@
           "shape": "stubbyLeg",
           "anchor": "free",
           "x": 0,
-          "y": 8,
+          "y": 6,
           "scale": [
-            0.24,
-            0.46
+            0.34,
+            0.5
           ],
           "material": "softWhite",
           "z": 4,
@@ -759,10 +759,10 @@
           "shape": "stubbyLeg",
           "anchor": "free",
           "x": 0,
-          "y": 8,
+          "y": 6,
           "scale": [
-            0.24,
-            0.46
+            0.34,
+            0.5
           ],
           "material": "softWhite",
           "z": 4,
@@ -776,8 +776,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.22,
-            0.14
+            0.28,
+            0.16
           ],
           "material": "charcoalRubber",
           "z": 6,
@@ -791,8 +791,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.22,
-            0.14
+            0.28,
+            0.16
           ],
           "material": "charcoalRubber",
           "z": 6,
@@ -879,38 +879,6 @@
           "z": 9,
           "attach": {
             "socket": "head.rightEar"
-          }
-        },
-        {
-          "shape": "softHorn",
-          "anchor": "free",
-          "x": 0,
-          "y": 2,
-          "scale": [
-            0.16,
-            0.3
-          ],
-          "material": "canvas",
-          "rotate": -8,
-          "z": 10,
-          "attach": {
-            "socket": "head.leftHorn"
-          }
-        },
-        {
-          "shape": "softHorn",
-          "anchor": "free",
-          "x": 0,
-          "y": 2,
-          "scale": [
-            0.16,
-            0.3
-          ],
-          "material": "canvas",
-          "rotate": 8,
-          "z": 10,
-          "attach": {
-            "socket": "head.rightHorn"
           }
         },
         {
