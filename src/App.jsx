@@ -644,12 +644,12 @@ function DemoApp() {
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 70 + Math.random() * 90);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 48);
     };
     utterance.onstart = () => {
       pulseMouth();
       clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+      speakingTimer.current = setInterval(pulseMouth, 118);
     };
     utterance.onboundary = (event) => {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
@@ -707,7 +707,7 @@ function DemoApp() {
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 70 + Math.random() * 90);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 48);
     };
 
     const speakChunk = (index = 0) => {
@@ -738,7 +738,7 @@ function DemoApp() {
       utterance.onstart = () => {
         pulseMouth();
         clearInterval(speakingTimer.current);
-        speakingTimer.current = setInterval(pulseMouth, 95 + Math.random() * 85);
+        speakingTimer.current = setInterval(pulseMouth, 118);
       };
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
