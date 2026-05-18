@@ -662,22 +662,6 @@
           "z": -10
         },
         {
-          "shape": "mascotBody",
-          "anchor": "free",
-          "x": 0,
-          "y": 2,
-          "scale": [
-            0.78,
-            0.76
-          ],
-          "material": "shadow",
-          "opacity": 0.16,
-          "z": 0,
-          "attach": {
-            "socket": "body.center"
-          }
-        },
-        {
           "shape": "stubbyArm",
           "anchor": "free",
           "x": -6,
@@ -717,8 +701,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.74,
-            0.72
+            0.76,
+            0.74
           ],
           "material": "softWhite",
           "z": 2,
@@ -824,26 +808,10 @@
           "shape": "mascotHead",
           "anchor": "free",
           "x": 0,
-          "y": -8,
-          "scale": [
-            0.76,
-            0.66
-          ],
-          "material": "shadow",
-          "opacity": 0.12,
-          "z": 7,
-          "attach": {
-            "socket": "head.center"
-          }
-        },
-        {
-          "shape": "mascotHead",
-          "anchor": "free",
-          "x": 0,
           "y": -6,
           "scale": [
-            0.7,
-            0.62
+            0.72,
+            0.64
           ],
           "material": "softWhite",
           "z": 8,
@@ -966,10 +934,10 @@
           "shape": "mouthSmile",
           "anchor": "free",
           "x": 0,
-          "y": 15,
+          "y": 14,
           "scale": [
-            0.22,
-            0.08
+            0.34,
+            0.14
           ],
           "material": "charcoalRubber",
           "role": "mouth",

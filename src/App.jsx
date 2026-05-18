@@ -105,6 +105,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
+const MOUTH_PULSE_MS = 92;
+const MOUTH_CLOSE_MS = 68;
+const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.34, y: 0.14 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
   warm: { rate: 1.04, pitch: 1.06, volume: 1, pauseAfter: 80 },
@@ -467,7 +470,10 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
     const attach = normalizeAttach(raw, shape, role);
     if (!attach && FLOATING_ARTIFACT_SHAPES.has(shape) && (!raw?.anchor || raw.anchor === 'free' || raw.anchor === 'orbit')) return null;
     const anchor = attach ? 'free' : DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free';
-    const scale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
+    const rawScale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
+    const scale = role === 'mouth' && !['beak', 'mouthScreen', 'mouthGrille'].includes(shape)
+      ? [Math.max(Number(rawScale?.[0]) || 0, STANDARD_MOUTH_SCALE.x), Math.max(Number(rawScale?.[1]) || 0, STANDARD_MOUTH_SCALE.y)]
+      : rawScale;
     const material = DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForPrompt(prompt);
     return {
       id: String(raw?.id || `${shape}-${index}`).slice(0, 32),
@@ -484,7 +490,7 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
       attach,
     };
   }).filter(Boolean).sort((a, b) => a.z - b.z);
-  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(layer('mouthSmile', 'free', 0, 14, 0.22, 0.09, 'charcoalRubber', { role: 'mouth', z: 30, attach: { socket: 'head.mouth' } }));
+  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(layer('mouthSmile', 'free', 0, 14, STANDARD_MOUTH_SCALE.x, STANDARD_MOUTH_SCALE.y, 'charcoalRubber', { role: 'mouth', z: 30, attach: { socket: 'head.mouth' } }));
   return cleaned;
 }
 
@@ -981,12 +987,12 @@ function DemoApp() {
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 48);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), MOUTH_CLOSE_MS);
     };
     utterance.onstart = () => {
       pulseMouth();
       clearInterval(speakingTimer.current);
-      speakingTimer.current = setInterval(pulseMouth, 118);
+      speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
     };
     utterance.onboundary = (event) => {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
@@ -1044,7 +1050,7 @@ function DemoApp() {
     const pulseMouth = () => {
       setMouthOpen(true);
       clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), 48);
+      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), MOUTH_CLOSE_MS);
     };
 
     const speakChunk = (index = 0) => {
@@ -1075,7 +1081,7 @@ function DemoApp() {
       utterance.onstart = () => {
         pulseMouth();
         clearInterval(speakingTimer.current);
-        speakingTimer.current = setInterval(pulseMouth, 118);
+        speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
       };
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
@@ -1232,7 +1238,7 @@ function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
 function DrawingLayer({ item, mouthOpen }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
-  const mouthScale = item.role === 'mouth' && mouthOpen ? 1.45 : 1;
+  const mouthScale = item.role === 'mouth' && mouthOpen ? 1.85 : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
     <Shape3D shape={item.shape} material={item.material} mouthOpen={mouthOpen && item.role === 'mouth'} />
@@ -1272,7 +1278,7 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'sail' || shape === 'curvedSail') return <path d="M-28 92 C35 38 58 -36 30 -112 C92 -40 126 50 72 112 Z" {...common}/>;
   if (shape === 'lightbulb') return <g><path d="M-64 -18 C-64 -88 -12 -126 34 -102 C90 -72 72 2 38 34 C24 48 18 60 18 82 H-24 C-24 58 -34 48 -48 32 C-58 20 -64 2 -64 -18 Z" {...common}/><rect x="-28" y="78" width="58" height="42" rx="12" fill="url(#shine-brushedMetal)" stroke="#64748b" strokeWidth="4"/></g>;
   if (shape === 'rocket') return <g><path d="M0 -120 C74 -42 68 68 0 132 C-68 68 -74 -42 0 -120 Z" {...common}/><circle cx="0" cy="-26" r="32" fill="url(#shine-screenGlow)" stroke="#e0f2fe" strokeWidth="5"/></g>;
-  if (shape === 'mouthSmile') return <path d={mouthOpen ? 'M-52 -8 Q0 42 52 -8 Q0 18 -52 -8 Z' : 'M-52 0 Q0 34 52 0'} fill={mouthOpen ? '#0f172a' : 'none'} stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
+  if (shape === 'mouthSmile') return <path d={mouthOpen ? 'M-56 -8 Q0 48 56 -8 Q0 24 -56 -8 Z' : 'M-56 0 Q0 34 56 0'} fill={mouthOpen ? '#0f172a' : 'none'} stroke="#0f172a" strokeWidth="13" strokeLinecap="round"/>;
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
   if (shape === 'mouthO') return <ellipse rx="34" ry={mouthOpen ? 42 : 22} fill="#0f172a"/>;
   if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthOpen ? 48 : 28} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;

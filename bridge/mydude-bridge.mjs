@@ -113,7 +113,7 @@ function fallbackDrawingLayers(text = '', options = {}) {
   if (/zebra|stripe|striped/.test(l)) layers.push(sceneLayer('stripe','free',-10,-12,.42,.24,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.front'}}), sceneLayer('stripe','free',10,14,.34,.2,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.patchRight'}}));
   if (/skateboard|skate board/.test(l)) layers.push(sceneLayer('roundedBox','ground',0,-28,.78,.16,'wood',{z:14}), sceneLayer('wheel','ground',-58,-14,.24,.24,'charcoalRubber',{z:15}), sceneLayer('wheel','ground',58,-14,.24,.24,'charcoalRubber',{z:15}));
   if (/dragon|bird|bat|wing/.test(l)) layers.push(sceneLayer('wing','free',-8,4,.42,.34,bodyMaterial,{rotate:-22,z:3,attach:{socket:'body.leftShoulder'}}), sceneLayer('wing','free',8,4,.42,.34,bodyMaterial,{rotate:22,z:3,attach:{socket:'body.rightShoulder'}}));
-  layers.push(sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.leftEye'}}), sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.rightEye'}}), sceneLayer(mouthShape,'free',0,mouthShape === 'mouthGrin' ? 10 : 14,mouthShape === 'beak' ? .38 : .22,mouthShape === 'beak' ? .22 : .09,'charcoalRubber',{role:'mouth',z:31,attach:{socket:'head.mouth'}}));
+  layers.push(sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.leftEye'}}), sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.rightEye'}}), sceneLayer(mouthShape,'free',0,mouthShape === 'mouthGrin' ? 10 : 14,mouthShape === 'beak' ? .38 : .34,mouthShape === 'beak' ? .22 : .14,'charcoalRubber',{role:'mouth',z:31,attach:{socket:'head.mouth'}}));
   return layers;
 }
 function sanitizeDrawingLayers(rawLayers, text = '') {
@@ -140,7 +140,7 @@ function sanitizeDrawingLayers(rawLayers, text = '') {
       attach,
     };
   }).filter(Boolean);
-  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','free',0,14,.22,.09,'charcoalRubber',{role:'mouth',z:30,attach:{socket:'head.mouth'}}));
+  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','free',0,14,.34,.14,'charcoalRubber',{role:'mouth',z:30,attach:{socket:'head.mouth'}}));
   return cleaned.sort((a,b)=>(a.z||0)-(b.z||0));
 }
 
