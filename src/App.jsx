@@ -696,6 +696,12 @@ function DemoApp() {
     return Math.max(105, Math.min(210, syllableMs));
   }
 
+  function estimateUtteranceMs(text = '', rate = 1) {
+    const words = Math.max(1, (String(text).match(/\S+/g) || []).length);
+    const safeRate = Math.max(0.72, Math.min(1.35, Number(rate) || 1));
+    return Math.max(900, Math.min(12000, (words / 2.35) * 1000 / safeRate + 650));
+  }
+
   function pulseMouthFrame(forceOpen = false, minGap = 65) {
     const now = performance.now();
     if (!forceOpen && now - lastMouthPulseRef.current < minGap) return;
@@ -1061,9 +1067,11 @@ function DemoApp() {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
     let finished = false;
+    let watchdog = null;
     const done = () => {
       if (finished) return;
       finished = true;
+      if (watchdog) window.clearTimeout(watchdog);
       if (speechRun !== speechRunRef.current) return;
       clearInterval(speakingTimer.current);
       clearTimeout(mouthCloseTimer.current);
@@ -1076,6 +1084,7 @@ function DemoApp() {
     utterance.onend = done;
     utterance.onerror = done;
     startMouthPulse();
+    watchdog = window.setTimeout(done, estimateUtteranceMs(chunk.text, utterance.rate || 1) + 1800);
     window.speechSynthesis.speak(utterance);
   }
 
@@ -1151,17 +1160,22 @@ function DemoApp() {
       utterance.onboundary = (event) => {
         if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
       };
-      utterance.onend = () => {
+      let finished = false;
+      let watchdog = null;
+      const finishChunk = (delay = chunk.pauseAfter || 40) => {
+        if (finished) return;
+        finished = true;
+        if (watchdog) window.clearTimeout(watchdog);
         if (speechRun !== speechRunRef.current) return;
         clearInterval(speakingTimer.current);
         clearTimeout(mouthCloseTimer.current);
         setMouthPhase(0);
-        window.setTimeout(() => speakChunk(index + 1), chunk.pauseAfter || 40);
+        window.setTimeout(() => speakChunk(index + 1), delay);
       };
-      utterance.onerror = () => {
-        if (speechRun === speechRunRef.current) window.setTimeout(() => speakChunk(index + 1), 80);
-      };
+      utterance.onend = () => finishChunk();
+      utterance.onerror = () => finishChunk(80);
       startMouthPulse(chunk.text, utterance.rate || 1);
+      watchdog = window.setTimeout(() => finishChunk(), estimateUtteranceMs(chunk.text, utterance.rate || 1) + 1800);
       window.speechSynthesis.speak(utterance);
     };
 
