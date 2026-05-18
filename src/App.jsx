@@ -51,13 +51,10 @@ function scoreVoiceForPlatform(voice, platform) {
   const lang = voice.lang || '';
   const id = `${name} ${lang}`.toLowerCase();
   const isGoogleEnglishUk = /google/.test(id) && (/en[-_]gb/i.test(lang) || /english.*(united kingdom|uk)|uk english|english uk/i.test(id));
-  const isPaulinaEsMx = /paulina/.test(id) && (/es[-_]mx/i.test(lang) || /spanish.*mexico|mexico.*spanish|mexican spanish/i.test(id));
-
-  if (isGoogleEnglishUk) return 10000;
-  if (isPaulinaEsMx) return 9000;
-
   const isEnglish = /^en([-_]|$)/i.test(lang) || /english|samantha|alex|daniel|karen|zira|david|aria|jenny|guy|michelle/.test(id);
+
   if (!isEnglish) return -1000;
+  if (isGoogleEnglishUk) return 10000;
 
   let score = 0;
   if (/en[-_]us/i.test(lang)) score += 24;
@@ -1032,7 +1029,7 @@ function DemoApp() {
     utterance.rate = chunk.rate || 1.08;
     utterance.pitch = chunk.pitch || 1.08;
     utterance.volume = chunk.volume ?? 1;
-    if (voiceRef.current) {
+    if (voiceRef.current && /^en([-_]|$)/i.test(voiceRef.current.lang || '')) {
       utterance.voice = voiceRef.current;
       utterance.lang = voiceRef.current.lang || 'en-US';
     } else {
@@ -1121,7 +1118,7 @@ function DemoApp() {
       utterance.rate = chunk.rate || options.rate || 1.08;
       utterance.pitch = chunk.pitch || 1.08;
       utterance.volume = chunk.volume ?? 1;
-      if (voiceRef.current) {
+      if (voiceRef.current && /^en([-_]|$)/i.test(voiceRef.current.lang || '')) {
         utterance.voice = voiceRef.current;
         utterance.lang = voiceRef.current.lang || 'en-US';
       } else {
