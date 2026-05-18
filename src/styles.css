@@ -118,12 +118,3 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 .scene-extras text { fill: var(--scene-light); font-weight: 900; }
 @keyframes scene-float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-13px) rotate(1.2deg); } }
 @keyframes scene-talk { 0%,100% { transform: translateX(-8px) translateY(0) rotate(-2deg); } 50% { transform: translateX(8px) translateY(-16px) rotate(2deg); } }
-.drawing-character { transform-box: fill-box; transform-origin: 50% 88%; animation: wander 4.8s ease-in-out infinite; will-change: transform; }
-.avatar-card.listening .drawing-character { animation: wander 3.2s ease-in-out infinite; }
-.avatar-card.speaking .drawing-character, .avatar-card.building .drawing-character { animation: walkabout 1.4s ease-in-out infinite; }
-.draw-mascotHead { transform-box: fill-box; transform-origin: center; }
-.avatar-card.speaking .draw-mascotHead, .avatar-card.building .draw-mascotHead { animation: talk-bob .72s ease-in-out infinite, lookaround 3.1s ease-in-out infinite; }
-.draw-stubbyArm, .draw-stubbyLeg { transform-box: fill-box; transform-origin: 50% 0%; }
-.avatar-card.speaking .draw-stubbyArm, .avatar-card.building .draw-stubbyArm { animation: arm-left .7s ease-in-out infinite; }
-.avatar-card.speaking .draw-stubbyLeg:nth-of-type(odd), .avatar-card.building .draw-stubbyLeg:nth-of-type(odd) { animation: step-left .7s ease-in-out infinite; }
-.avatar-card.speaking .draw-stubbyLeg:nth-of-type(even), .avatar-card.building .draw-stubbyLeg:nth-of-type(even) { animation: step-right .7s ease-in-out infinite; }
