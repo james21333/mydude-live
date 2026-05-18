@@ -246,21 +246,21 @@ const ANCHOR_POINTS = Object.freeze({
 });
 
 const MASCOT_RIG = Object.freeze({
-  body: { cx: 0, cy: 104, rx: 78, ry: 106 },
-  head: { cx: 0, cy: 34, rx: 76, ry: 66 },
+  body: { cx: 0, cy: 108, rx: 88, ry: 100 },
+  head: { cx: 0, cy: 48, rx: 78, ry: 64 },
 });
 
 const ATTACHMENT_SOCKETS = Object.freeze({
   'body.center': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy],
   'body.front': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy + 2],
-  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.72, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.05],
-  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.72, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.05],
-  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.62, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.46],
-  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.62, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.46],
-  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.82],
-  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.82],
-  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.02],
-  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.02],
+  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.54, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.02],
+  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.54, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.02],
+  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.64, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.38],
+  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.64, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.38],
+  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
+  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.7],
+  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.92],
+  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.26, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.92],
   'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.34, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.26],
   'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.36, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.22],
   'head.center': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy],
@@ -268,9 +268,9 @@ const ATTACHMENT_SOCKETS = Object.freeze({
   'head.rightEar': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.86, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.06],
   'head.leftHorn': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
   'head.rightHorn': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.34, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.72],
-  'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.38, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.1],
-  'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.38, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.1],
-  'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.38],
+  'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.28, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.08],
+  'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.28, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.08],
+  'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.34],
   'head.patchLeft': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.42, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.18],
 });
 
@@ -1145,12 +1145,12 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'starEye' || shape === 'star' || shape === 'spark') return <path d="M0 -60 L17 -18 L62 -16 L26 10 L38 56 L0 30 L-38 56 L-26 10 L-62 -16 L-17 -18 Z" {...common}/>;
   if (['squircle','roundedBox','monitor','screen'].includes(shape)) return <g><rect x="-86" y="-66" width="172" height="132" rx={shape === 'screen' ? 18 : 36} {...common}/><ellipse cx="-28" cy="-34" rx="34" ry="14" fill="#fff" opacity=".23" stroke="none"/></g>;
   if (['capsule','bean','blob','egg','body_blob'].includes(shape)) return <g><path d="M-78 -74 C-18 -116 82 -82 96 5 C110 95 30 132 -48 104 C-126 76 -138 -34 -78 -74 Z" {...common}/><ellipse cx="-34" cy="-45" rx="38" ry="16" fill="#fff" opacity=".22" stroke="none"/></g>;
-  if (shape === 'mascotBody') return <g><path d="M-66 -66 C-28 -104 42 -96 72 -50 C102 -4 90 78 48 112 C14 138 -42 132 -68 98 C-104 52 -106 -28 -66 -66 Z" {...common}/><path d="M-38 -56 C-5 -86 48 -70 66 -32 C36 -48 -4 -46 -38 -20 Z" fill="#fff" opacity=".18" stroke="none"/><ellipse cx="-30" cy="-14" rx="34" ry="72" fill="#fff" opacity=".12" stroke="none"/></g>;
-  if (shape === 'mascotHead') return <g><path d="M-70 -50 C-34 -88 34 -90 70 -50 C102 -14 94 52 48 78 C12 98 -48 86 -74 46 C-96 12 -92 -22 -70 -50 Z" {...common}/><ellipse cx="-26" cy="-34" rx="30" ry="14" fill="#fff" opacity=".28" stroke="none"/></g>;
+  if (shape === 'mascotBody') return <g><path d="M-78 -60 C-46 -100 48 -98 78 -54 C112 -2 102 66 62 104 C24 140 -42 138 -76 98 C-112 54 -112 -24 -78 -60 Z" {...common}/><path d="M-38 -56 C-5 -86 48 -70 66 -32 C36 -48 -4 -46 -38 -20 Z" fill="#fff" opacity=".18" stroke="none"/><ellipse cx="-30" cy="-14" rx="34" ry="72" fill="#fff" opacity=".12" stroke="none"/></g>;
+  if (shape === 'mascotHead') return <g><path d="M-72 -48 C-36 -86 36 -86 72 -48 C102 -14 96 48 50 74 C12 96 -50 86 -76 46 C-96 14 -92 -20 -72 -48 Z" {...common}/><ellipse cx="-26" cy="-34" rx="30" ry="14" fill="#fff" opacity=".28" stroke="none"/></g>;
   if (shape === 'stubbyArm') return <g><path d="M-32 -62 C12 -74 42 -34 34 12 C28 52 -6 76 -38 54 C-64 34 -68 -42 -32 -62 Z" {...common}/><ellipse cx="-8" cy="-32" rx="18" ry="9" fill="#fff" opacity=".2" stroke="none"/></g>;
   if (shape === 'stubbyLeg') return <g><path d="M-28 -36 C8 -50 38 -18 34 24 C30 60 -14 68 -36 38 C-52 14 -50 -22 -28 -36 Z" {...common}/></g>;
   if (shape === 'hoof') return <g><ellipse rx="42" ry="28" fill="url(#shine-charcoalRubber)" stroke="#020617" strokeWidth="4"/><ellipse cx="-10" cy="-10" rx="13" ry="8" fill="#fff" opacity=".26" stroke="none"/><path d="M0 -20 V16" stroke="#94a3b8" strokeWidth="3" opacity=".45"/></g>;
-  if (shape === 'cuteEye') return <g><ellipse cx="0" cy="2" rx="44" ry="42" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="10" cy="10" r="14" fill="#020617" stroke="none"/><circle cx="4" cy="2" r="5" fill="#fff" opacity=".95" stroke="none"/></g>;
+  if (shape === 'cuteEye') return <g><ellipse cx="0" cy="2" rx="44" ry="42" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="6" cy="8" r="15" fill="#020617" stroke="none"/><circle cx="0" cy="0" r="6" fill="#fff" opacity=".95" stroke="none"/><path d="M-30 -34 Q0 -52 30 -34" fill="none" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" opacity=".75"/></g>;
   if (shape === 'bodyPatch' || shape === 'attachedSpot') return <path d="M-48 -18 C-36 -42 8 -46 40 -22 C58 -8 48 28 10 36 C-28 44 -62 12 -48 -18 Z" fill="#334155" stroke="#1e293b" strokeWidth="3" opacity=".86"/>;
   if (shape === 'softEar') return <g><path d="M-44 18 C-60 -20 -18 -58 30 -38 C54 -18 28 26 -24 42 Z" fill="url(#shine-warmCream)" stroke="#fdba74" strokeWidth="4"/><ellipse cx="-8" cy="-8" rx="20" ry="12" fill="#fff7ed" opacity=".5" stroke="none"/></g>;
   if (shape === 'softHorn') return <path d="M-12 40 C-8 -8 2 -44 20 -74 C18 -28 28 18 -12 40 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;
