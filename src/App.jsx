@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, RotateCcw, Sparkles } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import drawingGrammar from '../shared/avatar-drawing-grammar.json';
+import qualityPresets from '../shared/avatar-quality-presets.json';
 import './styles.css';
 
 const ROOT_DOMAIN = 'mydude.live';
@@ -227,7 +228,7 @@ const DRAWING_ANCHORS = new Set(drawingGrammar.anchors || []);
 
 const MATERIAL_COLORS = Object.freeze({
   glossyBlue: ['#7dd3fc', '#2563eb', '#dbeafe'], glossyPink: ['#f9a8d4', '#db2777', '#fff1f2'], glossyGreen: ['#86efac', '#059669', '#dcfce7'],
-  glossyGold: ['#fde047', '#b45309', '#fef9c3'], glossyPurple: ['#c4b5fd', '#7c3aed', '#f5f3ff'], glossyRed: ['#fb7185', '#be123c', '#ffe4e6'],
+  glossyGold: ['#fde047', '#b45309', '#fef9c3'], glossyPurple: ['#c4b5fd', '#7c3aed', '#f5f3ff'], glossyRed: ['#fb7185', '#be123c', '#ffe4e6'], glossyOrange: ['#fdba74', '#ea580c', '#ffedd5'],
   softWhite: ['#ffffff', '#cbd5e1', '#f8fafc'], warmCream: ['#fff7ed', '#fdba74', '#ffedd5'], charcoalRubber: ['#475569', '#020617', '#cbd5e1'],
   blackGlass: ['#1e293b', '#020617', '#93c5fd'], screenGlow: ['#67e8f9', '#0f172a', '#cffafe'], chrome: ['#f8fafc', '#64748b', '#ffffff'],
   brushedMetal: ['#cbd5e1', '#475569', '#f8fafc'], mattePlastic: ['#93c5fd', '#334155', '#dbeafe'], rubber: ['#64748b', '#0f172a', '#cbd5e1'],
@@ -256,6 +257,7 @@ function materialForPrompt(prompt = '') {
   if (/gold|yellow|idea|lightbulb|sun/.test(lower)) return 'glossyGold';
   if (/purple|alien|space/.test(lower)) return 'glossyPurple';
   if (/red|car|fire/.test(lower)) return 'glossyRed';
+  if (/orange|cat|kitten/.test(lower)) return 'glossyOrange';
   if (/computer|monitor|robot|metal/.test(lower)) return 'chrome';
   if (/boat|sail/.test(lower)) return 'canvas';
   return 'glossyBlue';
@@ -265,7 +267,34 @@ function layer(shape, anchor, x, y, sx, sy, material, options = {}) {
   return { shape, anchor, x, y, scale: [sx, sy], material, ...options };
 }
 
+
+function matchQualityPreset(prompt = '') {
+  const lower = prompt.toLowerCase();
+  return (qualityPresets.presets || []).find(preset => (preset.match || []).some(token => lower.includes(String(token).toLowerCase()))) || null;
+}
+
+function presetSceneSpec(prompt = '') {
+  const preset = matchQualityPreset(prompt);
+  if (!preset) return null;
+  return {
+    kind: 'scene',
+    prompt,
+    title: preset.title,
+    summary: preset.summary,
+    palette: preset.palette || colorHint(prompt) || 'blue',
+    scene: inferScene(prompt),
+    body: inferBody(prompt),
+    head: inferHead(prompt),
+    eyes: inferEyes(prompt),
+    mouth: inferMouth(prompt),
+    primitives: [],
+    layers: sanitizeDrawingLayers(preset.layers, prompt),
+  };
+}
+
 function fallbackDrawingLayers(prompt = '') {
+  const preset = matchQualityPreset(prompt);
+  if (preset?.layers?.length) return preset.layers;
   const l = prompt.toLowerCase();
   const mat = materialForPrompt(prompt);
   const layers = [layer('shadow', 'ground', 0, 18, 1.5, 0.28, 'shadow', { opacity: 0.28 })];
@@ -333,6 +362,8 @@ const SCENE_PALETTES = Object.freeze({
 });
 
 function sanitizeSceneSpec(spec, prompt = '') {
+  const preset = !Array.isArray(spec?.layers) || spec.layers.length < 7 ? presetSceneSpec(prompt) : null;
+  if (preset) return preset;
   const primitiveSet = new Set(SCENE_PRIMITIVES);
   const paletteName = String(spec?.palette || colorHint(prompt) || 'blue').toLowerCase();
   const primitives = Array.isArray(spec?.primitives) ? spec.primitives.filter(item => primitiveSet.has(item)).slice(0, 14) : [];
@@ -1092,12 +1123,28 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'mouthGrille') return <g stroke="#020617" strokeWidth="9" strokeLinecap="round"><path d="M-56 0 H56"/><path d="M-32 -18 V18 M0 -18 V18 M32 -18 V18"/></g>;
   if (shape === 'snout') return <g><ellipse rx="54" ry="34" fill="url(#shine-warmCream)" stroke="#92400e" strokeWidth="4"/><circle cx="-18" cy="0" r="7" fill="#020617"/><circle cx="18" cy="0" r="7" fill="#020617"/></g>;
   if (shape === 'beak') return <path d="M-42 -28 L76 0 L-42 32 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="4"/>;
+  if (shape === 'animalEar') return <path d="M-44 34 C-60 -16 -22 -62 20 -48 C54 -18 30 30 -44 34 Z" {...common}/>;
+  if (shape === 'horn') return <path d="M-18 48 C-12 -18 0 -62 28 -92 C18 -28 32 22 -18 48 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;
+  if (shape === 'wing') return <path d="M-8 -70 C-92 -24 -108 42 -22 82 C-30 34 18 12 -8 -70 Z" {...common}/>;
+  if (shape === 'fin') return <path d="M-16 -58 C34 -10 32 36 -34 70 C-18 24 -16 -18 -16 -58 Z" {...common}/>;
+  if (shape === 'fender') return <path d="M-64 20 C-48 -38 50 -42 66 20 C22 2 -20 2 -64 20 Z" {...common}/>;
+  if (shape === 'spot') return <ellipse rx="52" ry="34" fill="url(#shine-charcoalRubber)" stroke="#0f172a" strokeWidth="3" opacity=".9"/>;
+  if (shape === 'paw' || shape === 'mitten') return <g><ellipse rx="42" ry="34" {...common}/><circle cx="-18" cy="-24" r="10" fill="#fff" opacity=".32"/><circle cx="4" cy="-30" r="10" fill="#fff" opacity=".32"/><circle cx="24" cy="-20" r="10" fill="#fff" opacity=".32"/></g>;
+  if (shape === 'claw') return <path d="M-44 30 L-14 -42 L8 22 L42 -38 L34 34 Z" fill="url(#shine-canvas)" stroke="#d6d3d1" strokeWidth="4"/>;
+  if (shape === 'antenna') return <g><path d="M0 54 C-4 8 8 -28 32 -62" fill="none" stroke="url(#shine-neon)" strokeWidth="10" strokeLinecap="round"/><circle cx="34" cy="-66" r="18" fill="url(#shine-neon)" stroke="#67e8f9" strokeWidth="4"/></g>;
+  if (shape === 'wire') return <path d="M-62 -28 C-8 -76 44 -28 12 30 C-8 68 38 82 70 38" fill="none" stroke="url(#shine-brushedMetal)" strokeWidth="12" strokeLinecap="round"/>;
+  if (shape === 'button' || shape === 'bolt') return <circle r="30" {...common}/>;
   if (shape === 'hairCap') return <path d="M-76 -8 C-42 -62 54 -64 82 -4 C42 -24 -34 -24 -76 -8 Z" fill="url(#shine-softWhite)" stroke="#94a3b8" strokeWidth="4"/>;
   if (shape === 'keyboard') return <g><rect x="-92" y="-28" width="184" height="56" rx="14" fill="url(#shine-charcoalRubber)" stroke="#64748b" strokeWidth="4"/>{[-48,0,48].map(x => <rect key={x} x={x-18} y="-8" width="36" height="16" rx="4" fill="#cbd5e1" opacity=".7"/> )}</g>;
   if (shape === 'rope') return <path d="M-12 -70 C28 -28 -34 18 10 72" fill="none" stroke="#f5deb3" strokeWidth="12" strokeLinecap="round" strokeDasharray="10 8"/>;
   if (shape === 'tie') return <path d="M0 -46 L34 -10 L12 86 H-12 L-34 -10 Z" fill="url(#shine-glossyRed)" stroke="#991b1b" strokeWidth="4"/>;
   if (shape === 'podium') return <path d="M-90 -44 H90 L68 58 H-68 Z" fill="url(#shine-wood)" stroke="#78350f" strokeWidth="5"/>;
   if (shape === 'flag') return <g><path d="M-30 58 V-58" stroke="#f8fafc" strokeWidth="8"/><path d="M-26 -58 H66 V-4 H-26 Z" fill="url(#shine-glossyBlue)" stroke="#e0f2fe" strokeWidth="4"/></g>;
+  if (shape === 'exclamation') return <text y="34" textAnchor="middle" fontSize="112" fontWeight="900" fill="url(#shine-neon)" stroke="#0f172a" strokeWidth="3">!</text>;
+  if (shape === 'musicNote') return <text y="30" textAnchor="middle" fontSize="104" fontWeight="900" fill="url(#shine-neon)" stroke="#0f172a" strokeWidth="3">♪</text>;
+  if (shape === 'codeBracket') return <text y="28" textAnchor="middle" fontSize="92" fontWeight="900" fill="url(#shine-screenGlow)" stroke="#0f172a" strokeWidth="3">{'{}'}</text>;
+  if (shape === 'gear') return <circle r="48" fill="none" stroke="url(#shine-chrome)" strokeWidth="16" strokeDasharray="12 8"/>;
+  if (shape === 'coin') return <g><circle r="48" fill="url(#shine-glossyGold)" stroke="#b45309" strokeWidth="5"/><text y="18" textAnchor="middle" fontSize="52" fontWeight="900" fill="#92400e">$</text></g>;
   if (shape === 'question') return <text y="30" textAnchor="middle" fontSize="112" fontWeight="900" fill="url(#shine-neon)" stroke="#0f172a" strokeWidth="3">?</text>;
   if (shape === 'microphone') return <g><rect x="-20" y="-60" width="40" height="82" rx="20" fill="url(#shine-chrome)" stroke="#64748b" strokeWidth="4"/><path d="M0 20 V74 M-34 74 H34" stroke="#cbd5e1" strokeWidth="8" strokeLinecap="round"/></g>;
   return <g><ellipse cx="0" cy="8" rx="70" ry="58" {...common}/><ellipse cx="-24" cy="-18" rx="30" ry="13" fill="#fff" opacity=".22" stroke="none"/></g>;

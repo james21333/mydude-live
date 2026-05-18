@@ -17,28 +17,48 @@ const sessionProfiles = new Map();
 
 const DRAWING_GRAMMAR_PATH = '/home/josh/.openclaw/repos/mydude-live/shared/avatar-drawing-grammar.json';
 const DRAWING_GRAMMAR = JSON.parse(readFileSync(DRAWING_GRAMMAR_PATH, 'utf8'));
+const QUALITY_PRESETS = JSON.parse(readFileSync('/home/josh/.openclaw/repos/mydude-live/shared/avatar-quality-presets.json', 'utf8'));
+const QUALITY_PRESET_HINTS = (QUALITY_PRESETS.presets || []).map(p => `${p.id}: ${p.summary}`).join(' | ');
 const DRAWING_SHAPES = new Set(DRAWING_GRAMMAR.shapes || []);
 const DRAWING_MATERIALS = new Set(DRAWING_GRAMMAR.materials || []);
 const DRAWING_ANCHORS = new Set(DRAWING_GRAMMAR.anchors || []);
-const DRAWING_PROMPT = `3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z}. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
+const DRAWING_PROMPT = `Use these polished house-style presets when relevant: ${QUALITY_PRESET_HINTS}. 3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z}. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
 
 function clampSceneNumber(value, min, max, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 function materialForText(text = '') {
+  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   if (/pink|dudette/.test(lower)) return 'glossyPink';
   if (/green|cow|farm|tree|leaf/.test(lower)) return 'glossyGreen';
   if (/gold|yellow|idea|lightbulb|sun/.test(lower)) return 'glossyGold';
   if (/purple|alien|space/.test(lower)) return 'glossyPurple';
   if (/red|car|fire/.test(lower)) return 'glossyRed';
+  if (/orange|cat|kitten/.test(lower)) return 'glossyOrange';
   if (/computer|monitor|robot|metal/.test(lower)) return 'chrome';
   if (/boat|sail/.test(lower)) return 'canvas';
   return 'glossyBlue';
 }
 function sceneLayer(shape, anchor, x, y, sx, sy, material, options = {}) { return { shape, anchor, x, y, scale: [sx, sy], material, ...options }; }
+
+function matchQualityPreset(text = '') {
+  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
+  const lower = text.toLowerCase();
+  return (QUALITY_PRESETS.presets || []).find(preset => (preset.match || []).some(token => lower.includes(String(token).toLowerCase()))) || null;
+}
+
+function presetSceneSpec(text = '') {
+  const preset = matchQualityPreset(text);
+  if (!preset) return null;
+  const base = fallbackSceneSpec(text, { skipPreset: true });
+  return { ...base, title: preset.title, summary: preset.summary, palette: preset.palette || base.palette, layers: sanitizeDrawingLayers(preset.layers, text) };
+}
+
 function fallbackDrawingLayers(text = '') {
+  const preset = matchQualityPreset(text);
+  if (preset?.layers?.length) return preset.layers;
   const l = text.toLowerCase(); const mat = materialForText(text);
   const layers = [sceneLayer('shadow','ground',0,18,1.5,0.28,'shadow',{opacity:.28,z:-10})];
   if (/sail|boat/.test(l)) layers.push(sceneLayer('hull','body',0,82,1.35,.75,'wood'), sceneLayer('curvedSail','head',18,-8,1.08,1.45,'canvas'), sceneLayer('rope','bodyFront',-54,8,.45,1.2,'brushedMetal'), sceneLayer('flag','top',60,42,.48,.42,'glossyRed'));
@@ -85,7 +105,8 @@ function wantsSceneSpec(text = '') {
   return /\b(look like|make (you|him|it)|avatar|turn into|become|transform|change into|be a|be an|computer|sailboat|boat|car|truck|cow|animal|monster|dragon|funny idea|abstract|appearance)\b/i.test(text);
 }
 
-function fallbackSceneSpec(text = '') {
+function fallbackSceneSpec(text = '', options = {}) {
+  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   const pick = (...pairs) => pairs.find(([rx]) => rx.test(lower))?.[1];
   const scene = pick([/boat|sail|ocean|sea/, 'scene_ocean'], [/car|road|truck/, 'scene_road'], [/cow|farm|pasture/, 'scene_farm'], [/space|alien|rocket/, 'scene_space'], [/computer|robot/, 'scene_lab'], [/funny|joke|idea|abstract/, 'scene_stage'], [/bush|president|statesman/, 'scene_city']) || 'scene_sky';
@@ -98,6 +119,8 @@ function fallbackSceneSpec(text = '') {
 }
 
 function sanitizeSceneSpec(raw, text = '') {
+  const preset = (!Array.isArray(raw?.layers) || raw.layers.length < 7) ? presetSceneSpec(text) : null;
+  if (preset) return preset;
   const allowed = new Set(SCENE_PRIMITIVES);
   const fallback = fallbackSceneSpec(text);
   const clean = raw && typeof raw === 'object' ? raw : {};
@@ -219,6 +242,7 @@ async function loadPersonality() {
 }
 
 function inferPersonalityUpdate(text, current = {}) {
+  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   const next = { ...defaultServerConfig.defaultProfile, ...current, updatedAt: new Date().toISOString() };
   next.lastUserUtterance = text;
