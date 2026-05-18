@@ -106,9 +106,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
-const MOUTH_PULSE_MS = 28;
-const MOUTH_CLOSE_MS = 18;
-const MOUTH_SEQUENCE = Object.freeze([2, 1, 2, 0, 2, 1, 2]);
+const MOUTH_PULSE_MS = 18;
+const MOUTH_CLOSE_MS = 10;
+const MOUTH_SEQUENCE = Object.freeze([2, 0, 2, 1, 2, 0, 2, 1, 2]);
 const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
@@ -1235,7 +1235,6 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
   return <div className={`avatar-card scene-card drawing-card ${status} built`} style={{ '--scene-primary': voiceTheme.bot || primary, '--scene-dark': dark, '--scene-light': light }}>
     <svg className="scene-svg drawing-svg" viewBox="0 0 720 620" role="img" aria-label={scene.summary || scene.title}>
       <defs>
-        <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#020617" floodOpacity="0.35"/></filter>
         <filter id="innerGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="-3" stdDeviation="5" floodColor="#ffffff" floodOpacity="0.22"/></filter>
         {Object.entries(MATERIAL_COLORS).map(([name, colors]) => <linearGradient id={`mat-${name}`} x1="0" x2="1" y1="0" y2="1" key={name}>
           <stop offset="0%" stopColor={colors[2]} stopOpacity=".98"/><stop offset="38%" stopColor={colors[0]}/><stop offset="100%" stopColor={colors[1]}/>
@@ -1244,7 +1243,7 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
           <stop offset="0%" stopColor="#fff" stopOpacity=".72"/><stop offset="36%" stopColor={colors[0]} stopOpacity=".88"/><stop offset="100%" stopColor={colors[1]} stopOpacity=".95"/>
         </radialGradient>)}
       </defs>
-      <g transform="translate(360 150)" filter="url(#softShadow)">
+      <g transform="translate(360 150)">
         <g transform="scale(2)">
           <g className="drawing-character">
             {status === 'listening' && <animateTransform attributeName="transform" type="translate" values="-2 0; 2 0; -2 0" dur="5.2s" repeatCount="indefinite" additive="sum" />}
@@ -1259,11 +1258,13 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
 function DrawingLayer({ item, mouthPhase = 0, status = 'idle' }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
-  const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 2.15 : mouthPhase === 1 ? 1.35 : 1) : 1;
+  const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 3 : mouthPhase === 1 ? 1.8 : 1) : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
   const isSlowWalkingPart = status === 'listening' && (item.shape === 'stubbyLeg' || (item.shape === 'hoof' && /Foot$/.test(item.attach?.socket || '')));
+  const isSpeakingArm = status === 'speaking' && item.shape === 'stubbyArm';
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
     {isSlowWalkingPart && <animateTransform attributeName="transform" type="rotate" values="-2; 2; -2" dur="3.8s" repeatCount="indefinite" additive="sum" />}
+    {isSpeakingArm && <animateTransform attributeName="transform" type="rotate" values="0; 0; -4; 2; 0; 0" dur="2.8s" repeatCount="indefinite" additive="sum" />}
     <Shape3D shape={item.shape} material={item.material} mouthPhase={item.role === 'mouth' ? mouthPhase : 0} />
   </g>;
 }
@@ -1306,8 +1307,8 @@ function Shape3D({ shape, material = 'glossyBlue', mouthPhase = 0 }) {
     const mouthFill = cowMouth ? '#3b1f16' : '#0f172a';
     const mouthStroke = cowMouth ? '#6b2a1a' : '#0f172a';
     const tongueFill = cowMouth ? '#f3a6a6' : '#f472b6';
-    if (mouthPhase === 2) return <g><ellipse cx="0" cy="2" rx="24" ry="22" fill={mouthFill} stroke={mouthStroke} strokeWidth="7"/><ellipse cx="0" cy="12" rx="13" ry="6" fill={tongueFill} opacity=".72" stroke="none"/><ellipse cx="-14" cy="-2.5" rx="7" ry="3" fill="#fff" opacity=".12" stroke="none"/></g>;
-    if (mouthPhase === 1) return <g><ellipse cx="0" cy="3" rx="20" ry="10" fill={mouthFill} stroke={mouthStroke} strokeWidth="6"/><ellipse cx="-10" cy="0.5" rx="5" ry="2" fill="#fff" opacity=".1" stroke="none"/></g>;
+    if (mouthPhase === 2) return <g><ellipse cx="0" cy="2" rx="28" ry="28" fill={mouthFill} stroke={mouthStroke} strokeWidth="7"/><ellipse cx="0" cy="16" rx="15" ry="7" fill={tongueFill} opacity=".72" stroke="none"/><ellipse cx="-15" cy="-4" rx="8" ry="3.5" fill="#fff" opacity=".12" stroke="none"/></g>;
+    if (mouthPhase === 1) return <g><ellipse cx="0" cy="3" rx="24" ry="14" fill={mouthFill} stroke={mouthStroke} strokeWidth="6"/><ellipse cx="-11" cy="0" rx="6" ry="2.5" fill="#fff" opacity=".1" stroke="none"/></g>;
     return <ellipse cx="0" cy="2" rx="17" ry="3.5" fill={cowMouth ? '#4a2418' : '#0f172a'} stroke="none"/>;
   }
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
