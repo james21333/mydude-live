@@ -23,6 +23,10 @@
       "zone_name": "mydude.live"
     },
     {
+      "pattern": "demo2.mydude.live/*",
+      "zone_name": "mydude.live"
+    },
+    {
       "pattern": "clawtest.mydude.live/*",
       "zone_name": "mydude.live"
     },
