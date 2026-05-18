@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A plush Cow Buddy with original My Dude-style oversized head, compact body, tiny cow-colored mouth, centered black belly spots, attached hooves, and walking-ready legs.",
+      "summary": "A plush cow mascot with 50-percent smaller cow-colored mouth geometry, centered black belly spots, visible attached arms/front hooves, and longer walking-ready legs to the ground.",
       "palette": "green",
       "layers": [
         {
@@ -665,10 +665,10 @@
           "shape": "stubbyArm",
           "anchor": "free",
           "x": -12,
-          "y": 24,
+          "y": 30,
           "scale": [
-            0.18,
-            0.28
+            0.2,
+            0.3
           ],
           "material": "softWhite",
           "rotate": 18,
@@ -682,10 +682,10 @@
           "shape": "stubbyArm",
           "anchor": "free",
           "x": 12,
-          "y": 24,
+          "y": 30,
           "scale": [
-            0.18,
-            0.28
+            0.2,
+            0.3
           ],
           "material": "softWhite",
           "rotate": -18,
@@ -729,10 +729,10 @@
           "shape": "mascotBody",
           "anchor": "free",
           "x": 0,
-          "y": 6,
+          "y": 0,
           "scale": [
-            0.58,
-            0.56
+            0.76,
+            0.74
           ],
           "material": "softWhite",
           "z": 2,
@@ -746,7 +746,7 @@
           "x": 0,
           "y": 8,
           "scale": [
-            0.22,
+            0.24,
             0.46
           ],
           "material": "softWhite",
@@ -761,7 +761,7 @@
           "x": 0,
           "y": 8,
           "scale": [
-            0.22,
+            0.24,
             0.46
           ],
           "material": "softWhite",
@@ -806,8 +806,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.22,
-            0.16
+            0.28,
+            0.2
           ],
           "material": "charcoalRubber",
           "rotate": -8,
@@ -823,8 +823,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.2,
-            0.14
+            0.26,
+            0.18
           ],
           "material": "charcoalRubber",
           "rotate": 8,
@@ -838,10 +838,10 @@
           "shape": "mascotHead",
           "anchor": "free",
           "x": 0,
-          "y": -4,
+          "y": -6,
           "scale": [
-            1.02,
-            0.9
+            0.74,
+            0.65
           ],
           "material": "softWhite",
           "z": 8,
@@ -919,8 +919,8 @@
           "x": -2,
           "y": 0,
           "scale": [
-            0.25,
-            0.25
+            0.27,
+            0.27
           ],
           "material": "softWhite",
           "role": "eye",
@@ -935,8 +935,8 @@
           "x": 2,
           "y": 0,
           "scale": [
-            0.25,
-            0.25
+            0.27,
+            0.27
           ],
           "material": "softWhite",
           "role": "eye",
@@ -951,8 +951,8 @@
           "x": 0,
           "y": -4,
           "scale": [
-            0.24,
-            0.13
+            0.28,
+            0.15
           ],
           "material": "warmCream",
           "z": 29,
@@ -966,8 +966,8 @@
           "x": 0,
           "y": 14,
           "scale": [
-            0.24,
-            0.12
+            0.26,
+            0.14
           ],
           "material": "warmCream",
           "role": "mouth",

@@ -250,8 +250,8 @@ const ANCHOR_POINTS = Object.freeze({
 });
 
 const MASCOT_RIG = Object.freeze({
-  body: { cx: 0, cy: 142, rx: 78, ry: 88 },
-  head: { cx: 0, cy: 28, rx: 116, ry: 96 },
+  body: { cx: 0, cy: 118, rx: 92, ry: 108 },
+  head: { cx: 0, cy: 38, rx: 84, ry: 70 },
 });
 
 const ATTACHMENT_SOCKET_NAMES = new Set(drawingGrammar.rules?.attachmentMath?.sockets || []);
@@ -259,14 +259,14 @@ const ATTACHMENT_SOCKET_NAMES = new Set(drawingGrammar.rules?.attachmentMath?.so
 const ATTACHMENT_SOCKETS = Object.freeze({
   'body.center': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy],
   'body.front': () => [MASCOT_RIG.body.cx, MASCOT_RIG.body.cy + 2],
-  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.2],
-  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.2],
-  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.14],
-  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.14],
-  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.54],
-  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.54],
-  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.1],
-  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.1],
+  'body.leftShoulder': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.08],
+  'body.rightShoulder': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.46, MASCOT_RIG.body.cy - MASCOT_RIG.body.ry * 0.08],
+  'body.leftHand': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
+  'body.rightHand': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.52, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.2],
+  'body.leftHip': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.58],
+  'body.rightHip': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.25, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.58],
+  'body.leftFoot': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.04],
+  'body.rightFoot': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 1.04],
   'body.patchLeft': () => [MASCOT_RIG.body.cx - MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.04],
   'body.patchRight': () => [MASCOT_RIG.body.cx + MASCOT_RIG.body.rx * 0.24, MASCOT_RIG.body.cy + MASCOT_RIG.body.ry * 0.18],
   'head.center': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy],
@@ -276,7 +276,7 @@ const ATTACHMENT_SOCKETS = Object.freeze({
   'head.rightHorn': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.32, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.66],
   'head.leftEye': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.27, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.07],
   'head.rightEye': () => [MASCOT_RIG.head.cx + MASCOT_RIG.head.rx * 0.27, MASCOT_RIG.head.cy - MASCOT_RIG.head.ry * 0.07],
-  'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.28],
+  'head.mouth': () => [MASCOT_RIG.head.cx, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.34],
   'head.patchLeft': () => [MASCOT_RIG.head.cx - MASCOT_RIG.head.rx * 0.42, MASCOT_RIG.head.cy + MASCOT_RIG.head.ry * 0.18],
 });
 
@@ -422,12 +422,12 @@ function fallbackDrawingLayers(prompt = '', options = {}) {
   const bodyMaterial = /idea|funny|abstract|joke/.test(l) ? 'glossyGold' : mat;
   const layers = [
     layer('shadow', 'ground', 0, 6, 0.98, 0.18, 'shadow', { opacity: 0.24, z: -10 }),
-    layer('mascotBody', 'free', 0, 0, 0.62, 0.58, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
+    layer('mascotBody', 'free', 0, 0, 0.78, 0.74, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
     layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.leftHip' } }),
     layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.rightHip' } }),
     layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.leftFoot' } }),
     layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.rightFoot' } }),
-    layer('mascotHead', 'free', 0, 0, 1.02, 0.92, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
+    layer('mascotHead', 'free', 0, 2, 0.7, 0.62, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
   ];
   if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) {
     layers.push(
@@ -1141,7 +1141,7 @@ function DemoApp() {
     setLog(items => [item, ...items].slice(0, 5));
   }
 
-  return <main className={`demo-page ${FULL_AVATAR_ENABLED ? 'full-avatar' : ''}`} style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
+  return <main className="demo-page" style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
     <section className="demo-hero compact">
       <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
       <div className={`status-pill ${status}`}>{status}</div>
