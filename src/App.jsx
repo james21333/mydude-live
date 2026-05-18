@@ -422,12 +422,12 @@ function fallbackDrawingLayers(prompt = '', options = {}) {
   const bodyMaterial = /idea|funny|abstract|joke/.test(l) ? 'glossyGold' : mat;
   const layers = [
     layer('shadow', 'ground', 0, 6, 0.98, 0.18, 'shadow', { opacity: 0.24, z: -10 }),
-    layer('mascotBody', 'free', 0, 0, 0.78, 0.74, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
+    layer('mascotBody', 'free', 0, 0, 0.62, 0.6, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
     layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.leftHip' } }),
     layer('stubbyLeg', 'free', 0, -4, 0.21, 0.25, bodyMaterial, { z: 4, attach: { socket: 'body.rightHip' } }),
     layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.leftFoot' } }),
     layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.rightFoot' } }),
-    layer('mascotHead', 'free', 0, 2, 0.7, 0.62, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
+    layer('mascotHead', 'free', 0, 0, 0.94, 0.84, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
   ];
   if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) {
     layers.push(
@@ -473,11 +473,16 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
     if (!attach && FLOATING_ARTIFACT_SHAPES.has(shape) && (!raw?.anchor || raw.anchor === 'free' || raw.anchor === 'orbit')) return null;
     const anchor = attach ? 'free' : DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free';
     const rawScale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
-    const scale = role === 'mouth' && !['beak', 'mouthScreen', 'mouthGrille'].includes(shape)
+    const baseScale = role === 'mouth' && !['beak', 'mouthScreen', 'mouthGrille'].includes(shape)
       ? [Math.max(Number(rawScale?.[0]) || 0, STANDARD_MOUTH_SCALE.x), Math.max(Number(rawScale?.[1]) || 0, STANDARD_MOUTH_SCALE.y)]
       : shape === 'snout'
         ? [Math.min(Number(rawScale?.[0]) || 0.28, 0.32), Math.min(Number(rawScale?.[1]) || 0.15, 0.17)]
         : rawScale;
+    const scale = shape === 'mascotHead'
+      ? [Math.max(Number(baseScale?.[0]) || 0, 0.9), Math.max(Number(baseScale?.[1]) || 0, 0.78)]
+      : shape === 'mascotBody'
+        ? [Math.min(Number(baseScale?.[0]) || 1, 0.68), Math.min(Number(baseScale?.[1]) || 1, 0.66)]
+        : baseScale;
     const material = DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForPrompt(prompt);
     return {
       id: String(raw?.id || `${shape}-${index}`).slice(0, 32),

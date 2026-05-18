@@ -645,7 +645,7 @@
         "farm animal"
       ],
       "title": "Cow Buddy",
-      "summary": "A plush cow mascot with 50-percent smaller cow-colored mouth geometry, centered black belly spots, visible attached arms/front hooves, and longer walking-ready legs to the ground.",
+      "summary": "A plush Cow Buddy using the original My Dude/Buddy silhouette: oversized expressive head, compact body, tiny cow-colored mouth, centered black belly spots, attached hooves, and walking-ready legs.",
       "palette": "green",
       "layers": [
         {
@@ -731,8 +731,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.76,
-            0.74
+            0.62,
+            0.6
           ],
           "material": "softWhite",
           "z": 2,
@@ -806,8 +806,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.28,
-            0.2
+            0.22,
+            0.16
           ],
           "material": "charcoalRubber",
           "rotate": -8,
@@ -823,8 +823,8 @@
           "x": 0,
           "y": 0,
           "scale": [
-            0.26,
-            0.18
+            0.2,
+            0.14
           ],
           "material": "charcoalRubber",
           "rotate": 8,
@@ -838,10 +838,10 @@
           "shape": "mascotHead",
           "anchor": "free",
           "x": 0,
-          "y": -6,
+          "y": -2,
           "scale": [
-            0.74,
-            0.65
+            0.96,
+            0.84
           ],
           "material": "softWhite",
           "z": 8,
