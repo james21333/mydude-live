@@ -22,7 +22,8 @@ const QUALITY_PRESET_HINTS = (QUALITY_PRESETS.presets || []).map(p => `${p.id}: 
 const DRAWING_SHAPES = new Set(DRAWING_GRAMMAR.shapes || []);
 const DRAWING_MATERIALS = new Set(DRAWING_GRAMMAR.materials || []);
 const DRAWING_ANCHORS = new Set(DRAWING_GRAMMAR.anchors || []);
-const DRAWING_PROMPT = `Use these polished house-style presets when relevant: ${QUALITY_PRESET_HINTS}. 3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z, attach:{socket}}. For mascot pieces prefer attach.socket and use x/y as small local offsets. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" anchored to mouth. Follow the house-style process: build one connected mascot silhouette first (body, overlapping head, attached limbs), then face, then details; never leave core limbs/hooves/ears/spots/patches floating like stickers; details should be embedded into or overlapping their parent surfaces. If a detail cannot be convincingly attached, omit it instead of rendering a floating artifact. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
+const ATTACHMENT_SOCKET_NAMES = new Set(DRAWING_GRAMMAR.rules?.attachmentMath?.sockets || []);
+const DRAWING_PROMPT = `Use these polished house-style presets when relevant: ${QUALITY_PRESET_HINTS}. 3D cartoon drawing grammar ${DRAWING_GRAMMAR.version}. Return JSON with title, summary, palette, scene, body, head, eyes, mouth, primitives, and layers. layers is an array of up to 32 objects: {shape, anchor, x, y, scale:[sx,sy], rotate, material, role, z, attach:{socket}}. For mascot pieces prefer attach.socket and use x/y as small local offsets. Use only shapes: ${DRAWING_GRAMMAR.shapes.join(', ')}. Use only anchors: ${DRAWING_GRAMMAR.anchors.join(', ')}. Use only materials: ${DRAWING_GRAMMAR.materials.join(', ')}. Coordinates are -280..280. Required: visible face and one mouth layer with role:"mouth" attached to head.mouth when using mascot parts. Follow the house-style process: build one connected mascot silhouette first (body, overlapping head, attached limbs), then face, then details; never leave core limbs/hooves/ears/spots/patches floating like stickers; details should be embedded into or overlapping their parent surfaces. If a detail cannot be convincingly attached, omit it instead of rendering a floating artifact. Make it look like dimensional glossy 3D cartoon pieces, not flat icon art. Ignore backgrounds. For real people, do symbolic safe caricature/vibe only, not exact likeness.`;
 
 function clampSceneNumber(value, min, max, fallback = 0) {
   const parsed = Number(value);
@@ -42,6 +43,34 @@ function materialForText(text = '') {
 }
 function sceneLayer(shape, anchor, x, y, sx, sy, material, options = {}) { return { shape, anchor, x, y, scale: [sx, sy], material, ...options }; }
 
+const SOCKET_COMPATIBILITY = Object.freeze({
+  mascotBody: ['body.center'], mascotHead: ['head.center'],
+  stubbyArm: ['body.leftShoulder', 'body.rightShoulder', 'body.leftHand', 'body.rightHand'], noodleArm: ['body.leftShoulder', 'body.rightShoulder'], tentacle: ['body.leftShoulder', 'body.rightShoulder', 'body.leftHand', 'body.rightHand'],
+  stubbyLeg: ['body.leftHip', 'body.rightHip'], leg: ['body.leftHip', 'body.rightHip'], boot: ['body.leftFoot', 'body.rightFoot'], hoof: ['body.leftFoot', 'body.rightFoot'],
+  paw: ['body.leftHand', 'body.rightHand', 'body.leftFoot', 'body.rightFoot'], mitten: ['body.leftHand', 'body.rightHand'], claw: ['body.leftHand', 'body.rightHand'],
+  softEar: ['head.leftEar', 'head.rightEar'], animalEar: ['head.leftEar', 'head.rightEar'], softHorn: ['head.leftHorn', 'head.rightHorn'], horn: ['head.leftHorn', 'head.rightHorn'], antenna: ['head.leftHorn', 'head.rightHorn'],
+  cuteEye: ['head.leftEye', 'head.rightEye'], googlyEye: ['head.leftEye', 'head.rightEye'], eyeBall: ['head.leftEye', 'head.rightEye'], pixelEye: ['head.leftEye', 'head.rightEye'], sleepyEye: ['head.leftEye', 'head.rightEye'], heartEye: ['head.leftEye', 'head.rightEye'], starEye: ['head.leftEye', 'head.rightEye'],
+  snout: ['head.mouth'], beak: ['head.mouth'], mouthSmile: ['head.mouth'], mouthGrin: ['head.mouth'], mouthO: ['head.mouth'], mouthScreen: ['head.mouth'], mouthGrille: ['head.mouth'],
+  bodyPatch: ['body.patchLeft', 'body.patchRight', 'head.patchLeft'], attachedSpot: ['body.patchLeft', 'body.patchRight', 'head.patchLeft'], spot: ['body.patchLeft', 'body.patchRight', 'head.patchLeft'], stripe: ['body.front', 'body.center'], panel: ['body.front', 'body.center'], button: ['body.front'], tie: ['body.front'], bowtie: ['body.front'], badge: ['body.front'],
+});
+const FLOATING_ARTIFACT_SHAPES = new Set(['hoof', 'paw', 'claw', 'softEar', 'animalEar', 'softHorn', 'horn', 'snout', 'bodyPatch', 'attachedSpot', 'spot', 'stripe', 'panel', 'button', 'badge']);
+function sideFromRaw(raw = {}, fallback = 'left') { const text = `${raw.id || ''} ${raw.anchor || ''} ${raw.attach?.socket || ''}`.toLowerCase(); if (/right/.test(text) || Number(raw.x) > 0) return 'right'; if (/left/.test(text) || Number(raw.x) < 0) return 'left'; return fallback; }
+function inferSocket(shape, raw = {}, role = 'part') {
+  if (role === 'mouth' || /^mouth/.test(shape)) return 'head.mouth';
+  if (role === 'eye' || /eye/i.test(shape)) return sideFromRaw(raw) === 'right' ? 'head.rightEye' : 'head.leftEye';
+  if (shape === 'mascotBody') return 'body.center'; if (shape === 'mascotHead') return 'head.center';
+  if (/ear/i.test(shape)) return sideFromRaw(raw) === 'right' ? 'head.rightEar' : 'head.leftEar';
+  if (/horn|antenna/i.test(shape)) return sideFromRaw(raw) === 'right' ? 'head.rightHorn' : 'head.leftHorn';
+  if (/snout|beak/i.test(shape)) return 'head.mouth';
+  if (/hoof|boot/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightFoot' : 'body.leftFoot';
+  if (/stubbyLeg|leg/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHip' : 'body.leftHip';
+  if (/arm|mitten|paw|claw|tentacle|flipper/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.rightHand' : 'body.leftHand';
+  if (/patch|spot|stripe|panel|button|badge/.test(shape)) return sideFromRaw(raw) === 'right' ? 'body.patchRight' : 'body.patchLeft';
+  if (/tie|bowtie/.test(shape)) return 'body.front';
+  return null;
+}
+function normalizeAttach(raw, shape, role) { const requested = raw?.attach && typeof raw.attach === 'object' ? String(raw.attach.socket || '') : ''; const allowed = SOCKET_COMPATIBILITY[shape]; if (requested && ATTACHMENT_SOCKET_NAMES.has(requested) && (!allowed || allowed.includes(requested))) return { socket: requested }; const inferred = inferSocket(shape, raw, role); if (inferred && ATTACHMENT_SOCKET_NAMES.has(inferred) && (!allowed || allowed.includes(inferred))) return { socket: inferred }; return null; }
+
 function matchQualityPreset(text = '') {
   const lower = text.toLowerCase();
   return (QUALITY_PRESETS.presets || []).find(preset => (preset.match || []).some(token => lower.includes(String(token).toLowerCase()))) || null;
@@ -58,37 +87,51 @@ function fallbackDrawingLayers(text = '') {
   const preset = matchQualityPreset(text);
   if (preset?.layers?.length) return preset.layers;
   const l = text.toLowerCase(); const mat = materialForText(text);
-  const layers = [sceneLayer('shadow','ground',0,18,1.5,0.28,'shadow',{opacity:.28,z:-10})];
-  if (/sail|boat/.test(l)) layers.push(sceneLayer('hull','body',0,82,1.35,.75,'wood'), sceneLayer('curvedSail','head',18,-8,1.08,1.45,'canvas'), sceneLayer('rope','bodyFront',-54,8,.45,1.2,'brushedMetal'), sceneLayer('flag','top',60,42,.48,.42,'glossyRed'));
-  else if (/car|truck/.test(l)) layers.push(sceneLayer('carBody','body',0,70,1.45,.82,mat), sceneLayer('windshield','face',0,0,1.05,.7,'blackGlass'), sceneLayer('wheel','leftFoot',-25,-10,.62,.62,'charcoalRubber'), sceneLayer('wheel','rightFoot',25,-10,.62,.62,'charcoalRubber'));
-  else if (/computer|monitor/.test(l)) layers.push(sceneLayer('monitor','body',0,42,1.18,1,'chrome'), sceneLayer('screen','face',0,-2,.9,.58,'screenGlow'), sceneLayer('keyboard','bodyBottom',0,10,1.05,.32,'charcoalRubber'));
-  else if (/idea|funny|abstract|joke/.test(l)) layers.push(sceneLayer('lightbulb','body',0,20,1.05,1.2,'glossyGold'), sceneLayer('microphone','leftHand',28,-18,.42,.72,'chrome'), sceneLayer('question','orbit',-178,-110,.42,.42,'neon'), sceneLayer('spark','orbit',176,-152,.6,.6,'glossyGold'));
-  else if (/bush|president|statesman/.test(l)) layers.push(sceneLayer('roundedBox','body',0,70,1.05,1.1,'charcoalRubber'), sceneLayer('sphere','head',0,-10,.92,.88,'warmCream'), sceneLayer('hairCap','forehead',0,24,.86,.42,'softWhite'), sceneLayer('tie','bodyFront',0,18,.4,.82,'glossyRed'), sceneLayer('podium','ground',0,-24,1.05,.5,'wood'), sceneLayer('flag','right',-18,-58,.55,.55,'glossyBlue'));
-  else layers.push(sceneLayer('capsule','body',0,70,1.08,1.25,mat), sceneLayer('squircle','head',0,0,.96,.92,mat));
-  layers.push(sceneLayer(/funny|idea|abstract/.test(l)?'googlyEye':/computer|robot/.test(l)?'pixelEye':'eyeBall','leftEye',0,0,.32,.32,'softWhite',{role:'eye',z:20}));
-  layers.push(sceneLayer(/funny|idea|abstract/.test(l)?'googlyEye':/computer|robot/.test(l)?'pixelEye':'eyeBall','rightEye',0,0,.32,.32,'softWhite',{role:'eye',z:20}));
-  layers.push(sceneLayer(/car/.test(l)?'mouthGrille':/computer|robot/.test(l)?'mouthScreen':/funny|idea|abstract/.test(l)?'mouthGrin':'mouthSmile','mouth',0,0,.78,.38,'charcoalRubber',{role:'mouth',z:30}));
+  const eyeShape = /funny|idea|abstract|silly/.test(l) ? 'googlyEye' : /computer|robot|screen/.test(l) ? 'pixelEye' : 'cuteEye';
+  const mouthShape = /computer|robot|screen/.test(l) ? 'mouthScreen' : /funny|idea|abstract|joke/.test(l) ? 'mouthGrin' : /bird|duck|chicken/.test(l) ? 'beak' : 'mouthSmile';
+  const bodyMaterial = /idea|funny|abstract|joke/.test(l) ? 'glossyGold' : mat;
+  const layers = [
+    sceneLayer('shadow','ground',0,6,.98,.18,'shadow',{opacity:.24,z:-10}),
+    sceneLayer('mascotBody','free',0,0,.78,.74,bodyMaterial,{z:2,attach:{socket:'body.center'}}),
+    sceneLayer('stubbyLeg','free',0,-4,.21,.25,bodyMaterial,{z:4,attach:{socket:'body.leftHip'}}),
+    sceneLayer('stubbyLeg','free',0,-4,.21,.25,bodyMaterial,{z:4,attach:{socket:'body.rightHip'}}),
+    sceneLayer('hoof','free',0,-4,.2,.13,'charcoalRubber',{z:6,attach:{socket:'body.leftFoot'}}),
+    sceneLayer('hoof','free',0,-4,.2,.13,'charcoalRubber',{z:6,attach:{socket:'body.rightFoot'}}),
+    sceneLayer('mascotHead','free',0,2,.7,.62,bodyMaterial,{z:8,attach:{socket:'head.center'}}),
+  ];
+  if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) layers.push(sceneLayer('stubbyArm','free',-2,0,.22,.26,bodyMaterial,{rotate:-10,z:5,attach:{socket:'body.leftHand'}}), sceneLayer('stubbyArm','free',2,0,.22,.26,bodyMaterial,{rotate:10,z:5,attach:{socket:'body.rightHand'}}));
+  if (/cat|dog|bear|rabbit|bunny|animal|mouse|fox|tiger|lion|elephant/.test(l)) layers.push(sceneLayer('softEar','free',-3,6,.34,.42,bodyMaterial,{rotate:-24,z:9,attach:{socket:'head.leftEar'}}), sceneLayer('softEar','free',3,6,.34,.42,bodyMaterial,{rotate:24,z:9,attach:{socket:'head.rightEar'}}));
+  if (/dragon|unicorn|goat|horn|devil|monster/.test(l)) layers.push(sceneLayer('softHorn','free',0,0,.18,.34,'canvas',{rotate:-8,z:10,attach:{socket:'head.leftHorn'}}), sceneLayer('softHorn','free',0,0,.18,.34,'canvas',{rotate:8,z:10,attach:{socket:'head.rightHorn'}}));
+  if (/alien|robot|bug|insect/.test(l)) layers.push(sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:-18,z:10,attach:{socket:'head.leftHorn'}}), sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:18,z:10,attach:{socket:'head.rightHorn'}}));
+  if (/cow|dog|pig|bear|mouse|fox|cat|animal/.test(l)) layers.push(sceneLayer('snout','free',0,-2,.42,.24,'warmCream',{z:24,attach:{socket:'head.mouth'}}));
+  if (/spot|cow|dog|dalmatian|pattern/.test(l)) layers.push(sceneLayer('bodyPatch','free',0,0,.3,.22,'charcoalRubber',{rotate:-10,z:11,attach:{socket:'body.patchLeft'}}), sceneLayer('bodyPatch','free',0,0,.23,.16,'charcoalRubber',{rotate:8,z:11,attach:{socket:'body.patchRight'}}));
+  if (/idea|funny|abstract|joke/.test(l)) layers.push(sceneLayer('question','orbit',-158,-120,.36,.36,'neon',{z:12}), sceneLayer('spark','orbit',156,-150,.42,.42,'glossyGold',{z:12}));
+  layers.push(sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.leftEye'}}), sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.rightEye'}}), sceneLayer(mouthShape,'free',0,mouthShape === 'mouthGrin' ? 10 : 14,mouthShape === 'beak' ? .38 : .22,mouthShape === 'beak' ? .22 : .09,'charcoalRubber',{role:'mouth',z:31,attach:{socket:'head.mouth'}}));
   return layers;
 }
 function sanitizeDrawingLayers(rawLayers, text = '') {
   const source = Array.isArray(rawLayers) && rawLayers.length ? rawLayers : fallbackDrawingLayers(text);
   const cleaned = source.slice(0, DRAWING_GRAMMAR.rules?.maxLayers || 42).map((raw, index) => {
+    const shape = DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob';
+    const role = raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part';
+    const attach = normalizeAttach(raw, shape, role);
+    if (!attach && FLOATING_ARTIFACT_SHAPES.has(shape) && (!raw?.anchor || raw.anchor === 'free' || raw.anchor === 'orbit')) return null;
     const scale = Array.isArray(raw?.scale) ? raw.scale : [raw?.sx, raw?.sy];
     return {
-      id: String(raw?.id || `${raw?.shape || 'part'}-${index}`).slice(0, 32),
-      shape: DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob',
-      anchor: DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free',
+      id: String(raw?.id || `${shape}-${index}`).slice(0, 32),
+      shape,
+      anchor: attach ? 'free' : DRAWING_ANCHORS.has(raw?.anchor) ? raw.anchor : 'free',
       x: clampSceneNumber(raw?.x, -280, 280, 0), y: clampSceneNumber(raw?.y, -280, 280, 0),
       scale: [clampSceneNumber(scale?.[0], .05, 3.2, 1), clampSceneNumber(scale?.[1], .05, 3.2, 1)],
       rotate: clampSceneNumber(raw?.rotate, -180, 180, 0),
       material: DRAWING_MATERIALS.has(raw?.material) ? raw.material : materialForText(text),
       opacity: clampSceneNumber(raw?.opacity, .08, 1, 1),
-      role: raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part',
+      role,
       z: clampSceneNumber(raw?.z, -20, 40, index),
-      attach: raw?.attach && typeof raw.attach === 'object' && typeof raw.attach.socket === 'string' ? { socket: String(raw.attach.socket).slice(0, 40) } : null,
+      attach,
     };
-  });
-  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','mouth',0,0,.78,.36,'charcoalRubber',{role:'mouth',z:30}));
+  }).filter(Boolean);
+  if (!cleaned.some(item => item.role === 'mouth')) cleaned.push(sceneLayer('mouthSmile','free',0,14,.22,.09,'charcoalRubber',{role:'mouth',z:30,attach:{socket:'head.mouth'}}));
   return cleaned.sort((a,b)=>(a.z||0)-(b.z||0));
 }
 
