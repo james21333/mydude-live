@@ -1228,7 +1228,7 @@ function CartoonAvatar({ avatar, mouthPhase, status, voiceTheme = {} }) {
         <div className="shine" />
         <div className={`eyes ${avatar?.eyes || 'friendly'}`}><span/><span/></div>
         {avatar?.accessory === 'glasses' && <div className="glasses"><i/><i/></div>}
-        <div className={`mouth mouth-${mouthPhase > 1 ? 'open' : mouthPhase === 1 ? 'mid' : 'closed'}`} />
+        <div className={`mouth ${mouthPhase > 1 ? 'open' : mouthPhase === 1 ? 'mid' : 'closed'}`} />
       </div>
       <div className="character-lower">
         <div className="arm left-arm"><span /></div>
