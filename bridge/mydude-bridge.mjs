@@ -123,6 +123,7 @@ function sanitizeDrawingLayers(rawLayers, text = '') {
   const source = !hasCore ? fallbackDrawingLayers(text, { skipPreset: true }) : initialSource;
   const cleaned = source.slice(0, DRAWING_GRAMMAR.rules?.maxLayers || 42).map((raw, index) => {
     const shape = DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob';
+    if (shape === 'shadow') return null;
     const role = raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part';
     const attach = normalizeAttach(raw, shape, role);
     if (!attach && FLOATING_ARTIFACT_SHAPES.has(shape) && (!raw?.anchor || raw.anchor === 'free' || raw.anchor === 'orbit')) return null;

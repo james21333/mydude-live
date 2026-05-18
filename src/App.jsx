@@ -469,6 +469,7 @@ function sanitizeDrawingLayers(rawLayers, prompt = '') {
   const source = !hasCore ? fallbackDrawingLayers(prompt, { skipPreset: true }) : initialSource;
   const cleaned = source.slice(0, drawingGrammar.rules?.maxLayers || 42).map((raw, index) => {
     const shape = DRAWING_SHAPES.has(raw?.shape) ? raw.shape : 'blob';
+    if (shape === 'shadow') return null;
     const role = raw?.role === 'mouth' ? 'mouth' : raw?.role === 'eye' ? 'eye' : 'part';
     const attach = normalizeAttach(raw, shape, role);
     if (!attach && FLOATING_ARTIFACT_SHAPES.has(shape) && (!raw?.anchor || raw.anchor === 'free' || raw.anchor === 'orbit')) return null;
@@ -1246,7 +1247,6 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
       <g className={`drawing-character ${status === 'speaking' ? 'scene-speaking' : ''}`} transform="translate(360 292)" filter="url(#softShadow)">
         {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
       </g>
-      <text className="scene-label" x="360" y="586" textAnchor="middle">{scene.title}</text>
     </svg>
   </div>;
 }

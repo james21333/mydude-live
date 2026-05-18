@@ -160,16 +160,16 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 /* Generated avatars should read like the original Buddy: no inner scene box, much larger character. */
 .drawing-card { background: transparent; }
 .drawing-svg { overflow: visible; }
-.drawing-character-large { transform-box: fill-box; transform-origin: 50% 62%; transform: scale(1.85); }
+.drawing-character-large { transform-box: fill-box; transform-origin: 50% 62%; transform: scale(3.4); }
 .avatar-card.listening .drawing-character-large { animation: generated-wander 3.2s ease-in-out infinite; }
 .avatar-card.speaking .drawing-character-large, .avatar-card.building .drawing-character-large { animation: generated-walkabout 1.4s ease-in-out infinite; }
-@keyframes generated-wander { 0%,100% { transform: scale(1.85) translateX(-5px) rotate(-1deg); } 35% { transform: scale(1.85) translateX(6px) rotate(1.2deg); } 68% { transform: scale(1.85) translateY(-4px) rotate(-.5deg); } }
-@keyframes generated-walkabout { 0%,100% { transform: scale(1.85) translateX(-8px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(1.85) translateX(8px) translateY(-8px) rotate(1.5deg); } }
+@keyframes generated-wander { 0%,100% { transform: scale(3.4) translateX(-5px) rotate(-1deg); } 35% { transform: scale(3.4) translateX(6px) rotate(1.2deg); } 68% { transform: scale(3.4) translateY(-4px) rotate(-.5deg); } }
+@keyframes generated-walkabout { 0%,100% { transform: scale(3.4) translateX(-8px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(3.4) translateX(8px) translateY(-8px) rotate(1.5deg); } }
 @media (max-width: 860px) {
-  .scene-svg { width: 100vw; height: calc(100dvh - 128px); max-height: calc(100dvh - 128px); }
-  .drawing-character-large { transform: scale(2); }
+  .scene-svg { width: 100vw; height: calc(100dvh - 96px); max-height: calc(100dvh - 96px); }
+  .drawing-character-large { transform: scale(4); }
   .avatar-card.listening .drawing-character-large { animation: generated-wander-mobile 3.2s ease-in-out infinite; }
   .avatar-card.speaking .drawing-character-large, .avatar-card.building .drawing-character-large { animation: generated-walkabout-mobile 1.4s ease-in-out infinite; }
 }
-@keyframes generated-wander-mobile { 0%,100% { transform: scale(2) translateX(-4px) rotate(-1deg); } 35% { transform: scale(2) translateX(5px) rotate(1.2deg); } 68% { transform: scale(2) translateY(-3px) rotate(-.5deg); } }
-@keyframes generated-walkabout-mobile { 0%,100% { transform: scale(2) translateX(-6px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(2) translateX(6px) translateY(-7px) rotate(1.5deg); } }
+@keyframes generated-wander-mobile { 0%,100% { transform: scale(4) translateX(-4px) rotate(-1deg); } 35% { transform: scale(4) translateX(5px) rotate(1.2deg); } 68% { transform: scale(4) translateY(-3px) rotate(-.5deg); } }
+@keyframes generated-walkabout-mobile { 0%,100% { transform: scale(4) translateX(-6px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(4) translateX(6px) translateY(-7px) rotate(1.5deg); } }
