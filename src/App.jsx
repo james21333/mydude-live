@@ -1243,7 +1243,6 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
           <stop offset="0%" stopColor="#fff" stopOpacity=".72"/><stop offset="36%" stopColor={colors[0]} stopOpacity=".88"/><stop offset="100%" stopColor={colors[1]} stopOpacity=".95"/>
         </radialGradient>)}
       </defs>
-      <rect x="92" y="58" width="536" height="500" rx="58" fill="rgba(15,23,42,.2)" />
       <g className={`drawing-character ${status === 'speaking' ? 'scene-speaking' : ''}`} transform="translate(360 292)" filter="url(#softShadow)">
         {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
       </g>
