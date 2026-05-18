@@ -75,6 +75,11 @@
     "leaf",
     "flower",
     "mushroomCap",
+    "mascotBody",
+    "mascotHead",
+    "stubbyArm",
+    "stubbyLeg",
+    "hoof",
     "animalEar",
     "horn",
     "snout",
@@ -206,6 +211,12 @@
       "face",
       "mouth"
     ],
-    "mouthLayerAnimated": true
+    "mouthLayerAnimated": true,
+    "houseStyleProcess": [
+      "Build one connected mascot silhouette first: shadow, body, overlapping head, attached limbs, face, then details.",
+      "Never make core limbs/hooves/ears read as floating stickers; attach or overlap them with the body/head.",
+      "Use My Dude plush/toy proportions: rounded compact body, oversized friendly face, stubby limbs, glossy highlights.",
+      "For animal avatars, use mascotBody + mascotHead + stubbyArm/stubbyLeg + hoof before decorative spots/horns/ears."
+    ]
   }
 }
