@@ -691,7 +691,7 @@ function DemoApp() {
       rate: 1.02,
       after: () => {
         setTranscript('Listening… say something now.');
-        startListening();
+        resumeListeningAfterSpeech();
         startAudioMeter();
       },
     });
@@ -720,11 +720,26 @@ function DemoApp() {
     }
   }
 
-  function startListening() {
+  function resumeListeningAfterSpeech() {
+    const started = performance.now();
+    const wait = () => {
+      const speaking = !!window.speechSynthesis?.speaking;
+      if (!speaking || performance.now() - started > 6000) {
+        window.setTimeout(() => startListening({ preserveSpeech: true }), 450);
+        return;
+      }
+      window.setTimeout(wait, 120);
+    };
+    wait();
+  }
+
+  function startListening(options = {}) {
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
-    window.speechSynthesis?.cancel?.();
-    speechRunRef.current += 1;
+    if (!options.preserveSpeech) {
+      window.speechSynthesis?.cancel?.();
+      speechRunRef.current += 1;
+    }
     clearInterval(speakingTimer.current);
     setMouthPhase(0);
     activatedRef.current = true;
@@ -828,7 +843,7 @@ function DemoApp() {
     setMessage('Thinking…');
     setBuildProgress(0);
     const fallbackReply = 'I hear you.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListeningAfterSpeech(); };
     if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
     else speak(fallbackReply, { after: finish });
   }
@@ -840,7 +855,7 @@ function DemoApp() {
     setBuildProgress(8);
     const built = makeAvatar(prompt);
     const fallbackReply = 'Done.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListeningAfterSpeech(); };
 
     if (BRAIN_ENABLED) {
       startStreamingSpeakerReply(prompt, built, fallbackReply, finish);
@@ -1153,7 +1168,7 @@ function DemoApp() {
     setMessage('Reset complete. I am listening.');
     setDebug('reset — starting listener');
     appendLog('Demo reset. Avatar and conversation vibe cleared.');
-    speak('Reset complete. I am listening.', { after: startListening });
+    speak('Reset complete. I am listening.', { after: resumeListeningAfterSpeech });
   }
 
   function resetSpeakerSession(sessionId) {
