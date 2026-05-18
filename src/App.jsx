@@ -978,10 +978,12 @@ function DemoApp() {
     const started = performance.now();
     const check = () => {
       if (speechRun !== speechRunRef.current) return;
-      const stalled = performance.now() - started > 18000;
-      if ((!streamSpeakingRef.current && streamQueueRef.current.length === 0) || stalled) {
-        if (stalled) {
-          appendLog('Speaker stream watchdog restored listener.');
+      const browserSpeaking = !!window.speechSynthesis?.speaking;
+      const queueEmpty = !streamSpeakingRef.current && streamQueueRef.current.length === 0;
+      const stalledAfterSpeech = performance.now() - started > 45000 && !browserSpeaking;
+      if (queueEmpty || stalledAfterSpeech) {
+        if (stalledAfterSpeech) {
+          appendLog('Speaker stream watchdog restored listener after speech ended.');
           streamSpeakingRef.current = false;
           streamQueueRef.current = [];
           clearInterval(speakingTimer.current);
@@ -993,7 +995,7 @@ function DemoApp() {
         after?.();
         return;
       }
-      window.setTimeout(check, 120);
+      window.setTimeout(check, 160);
     };
     check();
   }
@@ -1031,11 +1033,9 @@ function DemoApp() {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
     let finished = false;
-    let safetyTimer = null;
     const done = () => {
       if (finished) return;
       finished = true;
-      if (safetyTimer) window.clearTimeout(safetyTimer);
       if (speechRun !== speechRunRef.current) return;
       clearInterval(speakingTimer.current);
       clearTimeout(mouthCloseTimer.current);
@@ -1048,7 +1048,6 @@ function DemoApp() {
     utterance.onend = done;
     utterance.onerror = done;
     window.speechSynthesis.speak(utterance);
-    safetyTimer = window.setTimeout(done, Math.min(9000, Math.max(2200, chunk.text.length * 95)));
   }
 
 
