@@ -29,7 +29,6 @@ function clampSceneNumber(value, min, max, fallback = 0) {
   return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 function materialForText(text = '') {
-  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   if (/pink|dudette/.test(lower)) return 'glossyPink';
   if (/green|cow|farm|tree|leaf/.test(lower)) return 'glossyGreen';
@@ -44,7 +43,6 @@ function materialForText(text = '') {
 function sceneLayer(shape, anchor, x, y, sx, sy, material, options = {}) { return { shape, anchor, x, y, scale: [sx, sy], material, ...options }; }
 
 function matchQualityPreset(text = '') {
-  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   return (QUALITY_PRESETS.presets || []).find(preset => (preset.match || []).some(token => lower.includes(String(token).toLowerCase()))) || null;
 }
@@ -242,7 +240,6 @@ async function loadPersonality() {
 }
 
 function inferPersonalityUpdate(text, current = {}) {
-  if (!options.skipPreset) { const preset = presetSceneSpec(text); if (preset) return preset; }
   const lower = text.toLowerCase();
   const next = { ...defaultServerConfig.defaultProfile, ...current, updatedAt: new Date().toISOString() };
   next.lastUserUtterance = text;
