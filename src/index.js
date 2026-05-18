@@ -9,7 +9,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const hostname = url.hostname.toLowerCase();
-    if (hostname === `demo2.${ROOT_DOMAIN}`) return fetchDemo2Asset(url);
 
     const assetResponse = await env.ASSETS?.fetch(request);
     if (assetResponse && assetResponse.status !== 404) return assetResponse;
@@ -18,35 +17,6 @@ export default {
     });
   }
 };
-
-async function fetchDemo2Asset(url) {
-  const pathname = url.pathname === '/' ? '/index.html' : url.pathname;
-  if (!/^\/(index\.html|assets\/[A-Za-z0-9._-]+\.(js|css|png|svg|webp|jpg|jpeg)|\.vite\/manifest\.json)$/.test(pathname)) {
-    return new Response('Not found', { status: 404, headers: { 'cache-control': 'no-store' } });
-  }
-  const upstream = `https://raw.githubusercontent.com/james21333/mydude-demo2/main/dist${pathname}`;
-  const response = await fetch(upstream, { cf: { cacheTtl: 60, cacheEverything: true } });
-  if (!response.ok) return new Response('Not found', { status: 404, headers: { 'cache-control': 'no-store' } });
-  return new Response(response.body, {
-    status: response.status,
-    headers: {
-      'content-type': contentTypeFor(pathname),
-      'cache-control': pathname === '/index.html' ? 'public, max-age=30' : 'public, max-age=60'
-    }
-  });
-}
-
-function contentTypeFor(pathname) {
-  if (pathname.endsWith('.html')) return 'text/html; charset=utf-8';
-  if (pathname.endsWith('.js')) return 'text/javascript; charset=utf-8';
-  if (pathname.endsWith('.css')) return 'text/css; charset=utf-8';
-  if (pathname.endsWith('.json')) return 'application/json; charset=utf-8';
-  if (pathname.endsWith('.svg')) return 'image/svg+xml';
-  if (pathname.endsWith('.png')) return 'image/png';
-  if (pathname.endsWith('.webp')) return 'image/webp';
-  if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) return 'image/jpeg';
-  return 'application/octet-stream';
-}
 
 function renderShell(hostname) {
   const subdomain = getSubdomain(hostname);
