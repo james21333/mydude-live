@@ -105,8 +105,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
-const MOUTH_PULSE_MS = 92;
-const MOUTH_CLOSE_MS = 68;
+const MOUTH_PULSE_MS = 72;
+const MOUTH_CLOSE_MS = 46;
+const MOUTH_SEQUENCE = Object.freeze([1, 2, 1, 0]);
 const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
@@ -587,7 +588,7 @@ function DemoApp() {
   const [message, setMessage] = useState('Tap Start. I will listen, talk, and build my cartoon avatar in under one minute.');
   const [avatar, setAvatar] = useState(null);
   const [volume, setVolume] = useState(0.18);
-  const [mouthOpen, setMouthOpen] = useState(false);
+  const [mouthPhase, setMouthPhase] = useState(0);
   const [buildProgress, setBuildProgress] = useState(0);
   const [log, setLog] = useState(['Ready for one-click live mode.']);
   const [debug, setDebug] = useState('idle — press Start');
@@ -601,6 +602,7 @@ function DemoApp() {
   const animationRef = useRef(null);
   const speakingTimer = useRef(null);
   const mouthCloseTimer = useRef(null);
+  const mouthStepRef = useRef(0);
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
   const listenTokenRef = useRef(0);
@@ -664,6 +666,13 @@ function DemoApp() {
     audioRef.current?.getTracks?.().forEach(track => track.stop());
   }, []);
 
+  function pulseMouthFrame(forceOpen = false) {
+    mouthStepRef.current = forceOpen ? 1 : (mouthStepRef.current + 1) % MOUTH_SEQUENCE.length;
+    setMouthPhase(forceOpen ? 2 : MOUTH_SEQUENCE[mouthStepRef.current]);
+    clearTimeout(mouthCloseTimer.current);
+    mouthCloseTimer.current = setTimeout(() => setMouthPhase(0), MOUTH_CLOSE_MS);
+  }
+
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
@@ -710,7 +719,7 @@ function DemoApp() {
     window.speechSynthesis?.cancel?.();
     speechRunRef.current += 1;
     clearInterval(speakingTimer.current);
-    setMouthOpen(false);
+    setMouthPhase(0);
     activatedRef.current = true;
     if (!SpeechRecognition) {
       setMessage('This browser does not expose SpeechRecognition. Chrome should support it, so try refreshing and allowing microphone access.');
@@ -970,7 +979,7 @@ function DemoApp() {
     if (!chunk) return;
     streamSpeakingRef.current = true;
     if (chunk.type === 'pause') {
-      setMouthOpen(false);
+      setMouthPhase(0);
       window.setTimeout(() => {
         streamSpeakingRef.current = false;
         drainSpeechQueue(speechRun);
@@ -987,13 +996,9 @@ function DemoApp() {
     } else {
       utterance.lang = 'en-US';
     }
-    const pulseMouth = () => {
-      setMouthOpen(true);
-      clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), MOUTH_CLOSE_MS);
-    };
+    const pulseMouth = () => pulseMouthFrame();
     utterance.onstart = () => {
-      pulseMouth();
+      pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
       speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
     };
@@ -1004,7 +1009,7 @@ function DemoApp() {
       if (speechRun !== speechRunRef.current) return;
       clearInterval(speakingTimer.current);
       clearTimeout(mouthCloseTimer.current);
-      setMouthOpen(false);
+      setMouthPhase(0);
       window.setTimeout(() => {
         streamSpeakingRef.current = false;
         drainSpeechQueue(speechRun);
@@ -1050,11 +1055,7 @@ function DemoApp() {
     setStatus('speaking');
     if (speechPlan.displayText && speechPlan.displayText !== text) appendLog(`Speech directed: ${speechPlan.displayText}`);
 
-    const pulseMouth = () => {
-      setMouthOpen(true);
-      clearTimeout(mouthCloseTimer.current);
-      mouthCloseTimer.current = setTimeout(() => setMouthOpen(false), MOUTH_CLOSE_MS);
-    };
+    const pulseMouth = () => pulseMouthFrame();
 
     const speakChunk = (index = 0) => {
       if (speechRun !== speechRunRef.current) return;
@@ -1062,12 +1063,12 @@ function DemoApp() {
       if (!chunk) {
         clearInterval(speakingTimer.current);
         clearTimeout(mouthCloseTimer.current);
-        setMouthOpen(false);
+        setMouthPhase(0);
         options.after?.();
         return;
       }
       if (chunk.type === 'pause') {
-        setMouthOpen(false);
+        setMouthPhase(0);
         window.setTimeout(() => speakChunk(index + 1), chunk.duration);
         return;
       }
@@ -1082,7 +1083,7 @@ function DemoApp() {
         utterance.lang = 'en-US';
       }
       utterance.onstart = () => {
-        pulseMouth();
+        pulseMouthFrame(true);
         clearInterval(speakingTimer.current);
         speakingTimer.current = setInterval(pulseMouth, MOUTH_PULSE_MS);
       };
@@ -1093,7 +1094,7 @@ function DemoApp() {
         if (speechRun !== speechRunRef.current) return;
         clearInterval(speakingTimer.current);
         clearTimeout(mouthCloseTimer.current);
-        setMouthOpen(false);
+        setMouthPhase(0);
         window.setTimeout(() => speakChunk(index + 1), chunk.pauseAfter || 40);
       };
       utterance.onerror = () => {
@@ -1147,7 +1148,7 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} voiceTheme={avatarVoiceTheme} />
+      <CartoonAvatar avatar={avatar} mouthPhase={mouthPhase} status={status} voiceTheme={avatarVoiceTheme} />
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
@@ -1181,8 +1182,8 @@ function DemoApp() {
 }
 
 
-function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
-  if (avatar?.kind === 'scene') return <SceneAvatar scene={avatar} mouthOpen={mouthOpen} status={status} voiceTheme={voiceTheme} />;
+function CartoonAvatar({ avatar, mouthPhase, status, voiceTheme = {} }) {
+  if (avatar?.kind === 'scene') return <SceneAvatar scene={avatar} mouthPhase={mouthPhase} status={status} voiceTheme={voiceTheme} />;
   const isBuilt = Boolean(avatar);
   const style = {
     '--bot': voiceTheme.bot || avatar?.color,
@@ -1198,7 +1199,7 @@ function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
         <div className="shine" />
         <div className={`eyes ${avatar?.eyes || 'friendly'}`}><span/><span/></div>
         {avatar?.accessory === 'glasses' && <div className="glasses"><i/><i/></div>}
-        <div className={`mouth ${mouthOpen ? 'open' : ''}`} />
+        <div className={`mouth mouth-${mouthPhase > 1 ? 'open' : mouthPhase === 1 ? 'mid' : 'closed'}`} />
       </div>
       <div className="character-lower">
         <div className="arm left-arm"><span /></div>
@@ -1213,7 +1214,7 @@ function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
   </div>;
 }
 
-function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
+function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
   const palette = SCENE_PALETTES[scene.palette] || SCENE_PALETTES.blue;
   const [primary, dark, light] = palette;
   const layers = sanitizeDrawingLayers(scene.layers, scene.prompt || scene.title || '');
@@ -1231,27 +1232,27 @@ function SceneAvatar({ scene, mouthOpen, status, voiceTheme = {} }) {
       </defs>
       <rect x="92" y="58" width="536" height="500" rx="58" fill="rgba(15,23,42,.2)" />
       <g className={`drawing-character ${status === 'speaking' ? 'scene-speaking' : ''}`} transform="translate(360 292)" filter="url(#softShadow)">
-        {layers.map(item => <DrawingLayer key={item.id} item={item} mouthOpen={mouthOpen} />)}
+        {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} />)}
       </g>
       <text className="scene-label" x="360" y="586" textAnchor="middle">{scene.title}</text>
     </svg>
   </div>;
 }
 
-function DrawingLayer({ item, mouthOpen }) {
+function DrawingLayer({ item, mouthPhase = 0 }) {
   const [ax, ay] = rigPoint(item);
   const [sx, sy] = item.scale || [1, 1];
-  const mouthScale = item.role === 'mouth' && mouthOpen ? 2.2 : 1;
+  const mouthScale = item.role === 'mouth' ? (mouthPhase === 2 ? 2.25 : mouthPhase === 1 ? 1.45 : 1) : 1;
   const transform = `translate(${ax + item.x} ${ay + item.y}) rotate(${item.rotate || 0}) scale(${sx} ${sy * mouthScale})`;
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
-    <Shape3D shape={item.shape} material={item.material} mouthOpen={mouthOpen && item.role === 'mouth'} />
+    <Shape3D shape={item.shape} material={item.material} mouthPhase={item.role === 'mouth' ? mouthPhase : 0} />
   </g>;
 }
 
 function fillFor(material) { return `url(#shine-${MATERIAL_COLORS[material] ? material : 'glossyBlue'})`; }
 function strokeFor(material) { return MATERIAL_COLORS[material]?.[1] || '#1d4ed8'; }
 
-function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
+function Shape3D({ shape, material = 'glossyBlue', mouthPhase = 0 }) {
   const fill = fillFor(material);
   const stroke = strokeFor(material);
   const common = { fill, stroke, strokeWidth: 4, filter: 'url(#innerGlow)' };
@@ -1283,13 +1284,16 @@ function Shape3D({ shape, material = 'glossyBlue', mouthOpen = false }) {
   if (shape === 'rocket') return <g><path d="M0 -120 C74 -42 68 68 0 132 C-68 68 -74 -42 0 -120 Z" {...common}/><circle cx="0" cy="-26" r="32" fill="url(#shine-screenGlow)" stroke="#e0f2fe" strokeWidth="5"/></g>;
   if (shape === 'mouthSmile') {
     const cowMouth = material === 'warmCream';
-    return mouthOpen
-      ? <g><ellipse cx="0" cy="8" rx="50" ry="32" fill={cowMouth ? '#3b1f16' : '#0f172a'} stroke={cowMouth ? '#7c2d12' : '#0f172a'} strokeWidth="8"/><path d="M-28 22 Q0 36 28 22" fill="none" stroke={cowMouth ? '#f9a8a8' : '#f472b6'} strokeWidth="9" strokeLinecap="round" opacity=".82"/><ellipse cx="-16" cy="-4" rx="16" ry="7" fill="#fff" opacity=".12" stroke="none"/></g>
-      : <path d="M-50 0 Q0 28 50 0" fill="none" stroke={cowMouth ? '#4a2418' : '#0f172a'} strokeWidth="11" strokeLinecap="round"/>;
+    const mouthFill = cowMouth ? '#3b1f16' : '#0f172a';
+    const mouthStroke = cowMouth ? '#6b2a1a' : '#0f172a';
+    const tongueFill = cowMouth ? '#f3a6a6' : '#f472b6';
+    if (mouthPhase === 2) return <g><ellipse cx="0" cy="8" rx="46" ry="30" fill={mouthFill} stroke={mouthStroke} strokeWidth="7"/><ellipse cx="0" cy="24" rx="24" ry="9" fill={tongueFill} opacity=".72" stroke="none"/><ellipse cx="-14" cy="-5" rx="13" ry="6" fill="#fff" opacity=".12" stroke="none"/></g>;
+    if (mouthPhase === 1) return <g><ellipse cx="0" cy="6" rx="38" ry="14" fill={mouthFill} stroke={mouthStroke} strokeWidth="6"/><ellipse cx="-10" cy="1" rx="10" ry="4" fill="#fff" opacity=".1" stroke="none"/></g>;
+    return <ellipse cx="0" cy="4" rx="34" ry="7" fill={cowMouth ? '#4a2418' : '#0f172a'} stroke="none"/>;
   }
   if (shape === 'mouthGrin') return <path d="M-60 -6 Q0 52 62 -6 Q0 24 -60 -6 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="7"/>;
-  if (shape === 'mouthO') return <ellipse rx="34" ry={mouthOpen ? 42 : 22} fill="#0f172a"/>;
-  if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthOpen ? 48 : 28} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;
+  if (shape === 'mouthO') return <ellipse rx="34" ry={mouthPhase === 2 ? 42 : mouthPhase === 1 ? 30 : 18} fill="#0f172a"/>;
+  if (shape === 'mouthScreen') return <rect x="-52" y="-18" width="104" height={mouthPhase === 2 ? 48 : mouthPhase === 1 ? 36 : 22} rx="12" fill="#020617" stroke="#67e8f9" strokeWidth="4"/>;
   if (shape === 'mouthGrille') return <g stroke="#020617" strokeWidth="9" strokeLinecap="round"><path d="M-56 0 H56"/><path d="M-32 -18 V18 M0 -18 V18 M32 -18 V18"/></g>;
   if (shape === 'snout') return <g><ellipse rx="46" ry="28" fill="url(#shine-warmCream)" stroke="#92400e" strokeWidth="4"/><circle cx="-14" cy="0" r="6" fill="#020617"/><circle cx="14" cy="0" r="6" fill="#020617"/></g>;
   if (shape === 'beak') return <path d="M-42 -28 L76 0 L-42 32 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="4"/>;

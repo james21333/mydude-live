@@ -234,7 +234,9 @@
       "Use one reusable mouth primitive for all mascot creations so lip-sync size/shape remains consistent across prompts while scaling by head/face size.",
       "Animal mouths should use animal-appropriate materials/colors; cow mouths should read as warm brown/pink, not generic black UI holes.",
       "Body spots/patches should sit inside the body mass and be visually centered enough to read as surface markings, not stray side objects.",
-      "Walking-ready mascots need legs long enough to visually connect hips to ground/feet; do not leave feet/hooves isolated below a body."
+      "Walking-ready mascots need legs long enough to visually connect hips to ground/feet; do not leave feet/hooves isolated below a body.",
+      "Render only one mouth per face: avoid drawing a separate smile line under an open talking mouth.",
+      "Mouth animation should support closed, mid, and open positions so consonants and syllable beats read more naturally than binary open/close."
     ],
     "attachmentMath": {
       "enabled": true,
