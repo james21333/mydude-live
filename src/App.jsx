@@ -315,11 +315,11 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
-    setMessage("Hey dude! I'm here. What's up?");
+    setMessage("Hey, what's up?");
     setTranscript('Greeting… then I will listen.');
     setDebug('start clicked — greeting first, listener next');
     appendLog('Live mode activated. Greeting from the click before listener starts.');
-    speak("Hey dude! I'm here. What's up?", {
+    speak("Hey, what's up?", {
       rate: 1.02,
       after: () => {
         setTranscript('Listening… say something now.');
