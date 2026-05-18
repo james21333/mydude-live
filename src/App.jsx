@@ -106,9 +106,9 @@ function pickBestVoice(voices, platform = detectVoicePlatform()) {
 }
 
 const DEFAULT_PROSODY = Object.freeze({ rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 });
-const MOUTH_PULSE_MS = 18;
-const MOUTH_CLOSE_MS = 10;
-const MOUTH_SEQUENCE = Object.freeze([2, 0, 2, 1, 2, 0, 2, 1, 2]);
+const MOUTH_PULSE_MS = 28;
+const MOUTH_CLOSE_MS = 18;
+const MOUTH_SEQUENCE = Object.freeze([2, 1, 2, 0, 2, 1, 2]);
 const STANDARD_MOUTH_SCALE = Object.freeze({ x: 0.38, y: 0.2 });
 const DIRECTOR_PRESETS = Object.freeze({
   normal: { rate: 1.08, pitch: 1.08, volume: 1, pauseAfter: 0 },
@@ -691,7 +691,7 @@ function DemoApp() {
       rate: 1.02,
       after: () => {
         setTranscript('Listening… say something now.');
-        startListening();
+        resumeListeningAfterSpeech();
         startAudioMeter();
       },
     });
@@ -720,11 +720,26 @@ function DemoApp() {
     }
   }
 
-  function startListening() {
+  function resumeListeningAfterSpeech() {
+    const started = performance.now();
+    const wait = () => {
+      const speaking = !!window.speechSynthesis?.speaking;
+      if (!speaking || performance.now() - started > 6000) {
+        window.setTimeout(() => startListening({ preserveSpeech: true }), 450);
+        return;
+      }
+      window.setTimeout(wait, 120);
+    };
+    wait();
+  }
+
+  function startListening(options = {}) {
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
-    window.speechSynthesis?.cancel?.();
-    speechRunRef.current += 1;
+    if (!options.preserveSpeech) {
+      window.speechSynthesis?.cancel?.();
+      speechRunRef.current += 1;
+    }
     clearInterval(speakingTimer.current);
     setMouthPhase(0);
     activatedRef.current = true;
@@ -828,7 +843,7 @@ function DemoApp() {
     setMessage('Thinking…');
     setBuildProgress(0);
     const fallbackReply = 'I hear you.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListeningAfterSpeech(); };
     if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
     else speak(fallbackReply, { after: finish });
   }
@@ -840,7 +855,7 @@ function DemoApp() {
     setBuildProgress(8);
     const built = makeAvatar(prompt);
     const fallbackReply = 'Done.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListeningAfterSpeech(); };
 
     if (BRAIN_ENABLED) {
       startStreamingSpeakerReply(prompt, built, fallbackReply, finish);
@@ -1153,7 +1168,7 @@ function DemoApp() {
     setMessage('Reset complete. I am listening.');
     setDebug('reset — starting listener');
     appendLog('Demo reset. Avatar and conversation vibe cleared.');
-    speak('Reset complete. I am listening.', { after: startListening });
+    speak('Reset complete. I am listening.', { after: resumeListeningAfterSpeech });
   }
 
   function resetSpeakerSession(sessionId) {
@@ -1261,7 +1276,6 @@ function SceneAvatar({ scene, mouthPhase, status, voiceTheme = {} }) {
       <g transform="translate(360 150)">
         <g transform="scale(2)">
           <g className="drawing-character">
-            {status === 'listening' && <animateTransform attributeName="transform" type="translate" values="-2 0; 2 0; -2 0" dur="5.2s" repeatCount="indefinite" additive="sum" />}
             {layers.map(item => <DrawingLayer key={item.id} item={item} mouthPhase={mouthPhase} status={status} />)}
           </g>
         </g>
@@ -1278,8 +1292,6 @@ function DrawingLayer({ item, mouthPhase = 0, status = 'idle' }) {
   const isSlowWalkingPart = status === 'listening' && (item.shape === 'stubbyLeg' || (item.shape === 'hoof' && /Foot$/.test(item.attach?.socket || '')));
   const isSpeakingArm = status === 'speaking' && item.shape === 'stubbyArm';
   return <g transform={transform} opacity={item.opacity ?? 1} className={`draw-layer draw-${item.shape} role-${item.role || 'part'}`}>
-    {isSlowWalkingPart && <animateTransform attributeName="transform" type="rotate" values="-2; 2; -2" dur="3.8s" repeatCount="indefinite" additive="sum" />}
-    {isSpeakingArm && <animateTransform attributeName="transform" type="rotate" values="0; 0; -4; 2; 0; 0" dur="2.8s" repeatCount="indefinite" additive="sum" />}
     <Shape3D shape={item.shape} material={item.material} mouthPhase={item.role === 'mouth' ? mouthPhase : 0} />
   </g>;
 }
@@ -1290,7 +1302,7 @@ function strokeFor(material) { return MATERIAL_COLORS[material]?.[1] || '#1d4ed8
 function Shape3D({ shape, material = 'glossyBlue', mouthPhase = 0 }) {
   const fill = fillFor(material);
   const stroke = strokeFor(material);
-  const common = { fill, stroke, strokeWidth: 4, filter: 'url(#innerGlow)' };
+  const common = { fill, stroke, strokeWidth: 4 };
   if (shape === 'shadow') return <ellipse cx="0" cy="0" rx="116" ry="32" fill="#020617" opacity=".7" stroke="none"/>;
   if (['sphere','eyeBall'].includes(shape)) return <g><ellipse cx="0" cy="8" rx="58" ry="54" {...common}/><ellipse cx="-16" cy="-12" rx="17" ry="12" fill="#fff" opacity=".72" stroke="none"/>{shape === 'eyeBall' && <circle cx="8" cy="10" r="16" fill="#020617" stroke="none"/>}</g>;
   if (shape === 'googlyEye') return <g><circle cx="0" cy="0" r="48" fill="#fff" stroke="#cbd5e1" strokeWidth="4"/><circle cx="12" cy="10" r="15" fill="#020617"/></g>;
