@@ -182,3 +182,6 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 .avatar-card.listening .drawing-character,
 .avatar-card.speaking .drawing-character,
 .avatar-card.building .drawing-character { animation: none !important; }
+/* Keep the full-screen generated avatar from interfering with the mic/listen controls. */
+.stage, .avatar-card, .scene-svg, .drawing-svg { pointer-events: none; }
+.voice-panel.compact-controls, .voice-panel.compact-controls * { pointer-events: auto; }

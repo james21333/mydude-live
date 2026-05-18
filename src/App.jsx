@@ -975,9 +975,19 @@ function DemoApp() {
   }
 
   function finishStreamWhenQuiet(speechRun) {
+    const started = performance.now();
     const check = () => {
       if (speechRun !== speechRunRef.current) return;
-      if (!streamSpeakingRef.current && streamQueueRef.current.length === 0) {
+      const stalled = performance.now() - started > 18000;
+      if ((!streamSpeakingRef.current && streamQueueRef.current.length === 0) || stalled) {
+        if (stalled) {
+          appendLog('Speaker stream watchdog restored listener.');
+          streamSpeakingRef.current = false;
+          streamQueueRef.current = [];
+          clearInterval(speakingTimer.current);
+          clearTimeout(mouthCloseTimer.current);
+          setMouthPhase(0);
+        }
         const after = streamAfterRef.current;
         streamAfterRef.current = null;
         after?.();
@@ -1020,7 +1030,12 @@ function DemoApp() {
     utterance.onboundary = (event) => {
       if (event.name === 'word' || event.charIndex >= 0) pulseMouth();
     };
+    let finished = false;
+    let safetyTimer = null;
     const done = () => {
+      if (finished) return;
+      finished = true;
+      if (safetyTimer) window.clearTimeout(safetyTimer);
       if (speechRun !== speechRunRef.current) return;
       clearInterval(speakingTimer.current);
       clearTimeout(mouthCloseTimer.current);
@@ -1033,6 +1048,7 @@ function DemoApp() {
     utterance.onend = done;
     utterance.onerror = done;
     window.speechSynthesis.speak(utterance);
+    safetyTimer = window.setTimeout(done, Math.min(9000, Math.max(2200, chunk.text.length * 95)));
   }
 
 
