@@ -14,6 +14,71 @@ const SERVER_CONFIG_PATH = path.join(AGENT_DIR, 'server-config.json');
 let copilotTokenCache = null;
 const sessionProfiles = new Map();
 
+
+const SCENE_PRIMITIVES = Object.freeze([
+  'body_blob','body_capsule','body_box','body_sphere','body_triangle','body_star','body_cloud','body_flame','body_crystal','body_monitor','body_car','body_boat','body_plane','body_rocket','body_house','body_tree','body_mushroom','body_book','body_phone','body_lightbulb','head_round','head_square','head_screen','head_animal','head_bird','head_fish','head_reptile','head_flower','head_planet','head_helmet','head_crown','head_hat','head_hair','head_mask','head_skull','eyes_dot','eyes_googly','eyes_sleepy','eyes_star','eyes_heart','eyes_pixel','eyes_windshield','eyes_porthole','eyes_cyclops','eyes_glasses','eyes_sunglasses','eyes_binocular','eyes_robot','eyes_cat','eyes_cartoon','mouth_smile','mouth_grin','mouth_screen','mouth_grille','mouth_beak','mouth_snout','mouth_tusk','mouth_fang','mouth_wave','mouth_speaker','mouth_mustache','mouth_tongue','limb_arm','limb_wing','limb_fin','limb_tentacle','limb_branch','limb_wheel','limb_track','limb_leg','limb_boot','limb_claw','limb_paw','limb_flipper','limb_propeller','limb_rope','accessory_hat','accessory_cap','accessory_crown','accessory_tie','accessory_bowtie','accessory_cape','accessory_backpack','accessory_toolbelt','accessory_badge','accessory_flag','accessory_microphone','accessory_sword','accessory_wand','accessory_umbrella','accessory_balloon','accessory_book','accessory_headphones','accessory_antenna','accessory_halo','accessory_lightning','texture_stripes','texture_spots','texture_stars','texture_grid','texture_circuit','texture_wood','texture_metal','texture_glass','texture_fur','texture_scales','texture_feathers','texture_cloud','texture_flame','texture_water','texture_leaf','scene_sky','scene_space','scene_ocean','scene_farm','scene_city','scene_desert','scene_forest','scene_jungle','scene_castle','scene_lab','scene_office','scene_stage','scene_road','scene_mountain','scene_beach','scene_underwater','scene_volcano','scene_snow','scene_candy','scene_dream','object_sun','object_moon','object_star','object_cloud','object_rainbow','object_tree','object_flower','object_rock','object_wave','object_anchor','object_podium','object_flag','object_keyboard','object_mouse','object_orbit','object_satellite','object_comet','object_gear','object_wire','object_spark','symbol_question','symbol_exclamation','symbol_idea','symbol_joke','symbol_music','symbol_heart','symbol_laugh','symbol_magic','symbol_money','symbol_time','symbol_map','symbol_compass','symbol_code'
+]);
+
+const SCENE_SCHEMA = `Return only compact JSON with keys: title, summary, palette, scene, body, head, eyes, mouth, primitives. palette one of blue,pink,green,gold,purple,red,gray,orange. scene/body/head/eyes/mouth/primitives must use only these primitive ids: ${SCENE_PRIMITIVES.join(', ')}. Use symbolic approximation for real people: never exact likeness; for George H W Bush use presidential elder-statesman cartoon cues like head_hair, accessory_tie, object_podium, object_flag, scene_city. For abstract requests, map the idea to visual metaphors.`;
+
+function wantsSceneSpec(text = '') {
+  return /\b(look like|make (you|him|it)|avatar|turn into|become|transform|change into|be a|be an|computer|sailboat|boat|car|truck|cow|animal|monster|dragon|funny idea|abstract|appearance)\b/i.test(text);
+}
+
+function fallbackSceneSpec(text = '') {
+  const lower = text.toLowerCase();
+  const pick = (...pairs) => pairs.find(([rx]) => rx.test(lower))?.[1];
+  const scene = pick([/boat|sail|ocean|sea/, 'scene_ocean'], [/car|road|truck/, 'scene_road'], [/cow|farm|pasture/, 'scene_farm'], [/space|alien|rocket/, 'scene_space'], [/computer|robot/, 'scene_lab'], [/funny|joke|idea|abstract/, 'scene_stage'], [/bush|president|statesman/, 'scene_city']) || 'scene_sky';
+  const body = pick([/computer|monitor/, 'body_monitor'], [/boat|sail/, 'body_boat'], [/car|truck/, 'body_car'], [/rocket/, 'body_rocket'], [/idea|abstract|funny/, 'body_lightbulb']) || 'body_blob';
+  const head = pick([/computer|robot|car/, 'head_screen'], [/cow|animal|cat|dog/, 'head_animal'], [/bush|president|statesman/, 'head_hair']) || 'head_round';
+  const eyes = pick([/computer|robot/, 'eyes_pixel'], [/car/, 'eyes_windshield'], [/funny|idea|abstract/, 'eyes_googly']) || 'eyes_cartoon';
+  const mouth = pick([/car/, 'mouth_grille'], [/computer|robot/, 'mouth_screen'], [/funny|idea|abstract/, 'mouth_grin'], [/cow|animal/, 'mouth_snout']) || 'mouth_smile';
+  const palette = pick([/pink/, 'pink'], [/green|cow|farm/, 'green'], [/gold|yellow|idea/, 'gold'], [/purple|space|alien/, 'purple'], [/red|car/, 'red'], [/gray|computer|bush|president/, 'gray']) || 'blue';
+  return { title: lower.replace(/[^a-z0-9\s-]/g, '').split(/\s+/).slice(-5).join(' ') || 'wild idea', summary: 'Fast symbolic cartoon transformation', palette, scene, body, head, eyes, mouth, primitives: [scene, body, head, eyes, mouth, 'object_spark'] };
+}
+
+function sanitizeSceneSpec(raw, text = '') {
+  const allowed = new Set(SCENE_PRIMITIVES);
+  const fallback = fallbackSceneSpec(text);
+  const clean = raw && typeof raw === 'object' ? raw : {};
+  const use = (value, fb) => allowed.has(value) ? value : fb;
+  return {
+    title: String(clean.title || fallback.title).slice(0, 48),
+    summary: String(clean.summary || fallback.summary).slice(0, 140),
+    palette: ['blue','pink','green','gold','purple','red','gray','orange'].includes(clean.palette) ? clean.palette : fallback.palette,
+    scene: use(clean.scene, fallback.scene),
+    body: use(clean.body, fallback.body),
+    head: use(clean.head, fallback.head),
+    eyes: use(clean.eyes, fallback.eyes),
+    mouth: use(clean.mouth, fallback.mouth),
+    primitives: [...new Set([...(Array.isArray(clean.primitives) ? clean.primitives : []), ...fallback.primitives].filter(x => allowed.has(x)))].slice(0, 16),
+  };
+}
+
+async function askSceneBrain(userText, sessionId = 'demo') {
+  if (!wantsSceneSpec(userText)) return null;
+  const token = await getCopilotToken();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5_000);
+  try {
+    const res = await fetch('https://api.individual.githubcopilot.com/chat/completions', {
+      method: 'POST', signal: controller.signal,
+      headers: { ...ideHeaders, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: MODEL, messages: [
+        { role: 'system', content: `You are a My Dude cartoon scene planner. ${SCENE_SCHEMA}` },
+        { role: 'user', content: userText.trim().slice(0, 900) },
+      ], max_tokens: 260, temperature: 0.35, user: `mydude-scene-${String(sessionId).slice(0, 64)}` }),
+    });
+    if (!res.ok) throw new Error(`scene HTTP ${res.status}`);
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content || '{}';
+    const match = content.match(/\{[\s\S]*\}/);
+    return sanitizeSceneSpec(JSON.parse(match ? match[0] : content), userText);
+  } catch {
+    return fallbackSceneSpec(userText);
+  } finally { clearTimeout(timer); }
+}
+
 const defaultServerConfig = Object.freeze({
   basePersona: `You are My Dude, a live cartoon avatar speaker.
 You are warm, buddy-like, funny, relaxed, and conversational.
@@ -299,12 +364,15 @@ async function handleWsMessage(socket, raw) {
   const started = Date.now();
   sendWs(socket, { type: 'thinking', model: `github-copilot/${MODEL}` });
   try {
+    const scenePromise = askSceneBrain(msg.text.trim().slice(0, 1200), msg.sessionId);
     const reply = await askBrain(msg.text.trim().slice(0, 1200), msg.sessionId, {
       instruction: msg.instruction,
       clientProfile: msg.personality && typeof msg.personality === 'object' ? msg.personality : null,
       onDelta: (delta) => sendWs(socket, { type: 'delta', text: delta, elapsedMs: Date.now() - started }),
     });
-    sendWs(socket, { type: 'reply', ...reply, elapsedMs: Date.now() - started });
+    const sceneSpec = await scenePromise;
+    if (sceneSpec) sendWs(socket, { type: 'scene', sceneSpec, elapsedMs: Date.now() - started });
+    sendWs(socket, { type: 'reply', ...reply, sceneSpec, elapsedMs: Date.now() - started });
   } catch (error) {
     sendWs(socket, { type: 'reply', ok: false, model: `github-copilot/${MODEL}`, text: fallbackReply(msg.text), elapsedMs: Date.now() - started, error: String(error.message || error) });
   }

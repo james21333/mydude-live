@@ -109,3 +109,11 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 .voice-list span { font-size: .84rem; font-weight: 800; color: #f8fafc; }
 .voice-list small { color: #cbd5e1; font-size: .72rem; }
 @media (max-width: 860px) { .voice-inventory-panel { font-size: .8rem; padding: 10px; } .voice-inventory-header { display: grid; } .voice-list { grid-template-columns: 1fr; max-height: 220px; } }
+.scene-card { padding: 18px; }
+.scene-svg { width: min(100%, 720px); height: min(100%, 620px); max-height: 100%; overflow: visible; filter: drop-shadow(0 24px 48px rgba(0,0,0,.28)); }
+.scene-character { transform-origin: 360px 420px; animation: scene-float 3.4s ease-in-out infinite; }
+.avatar-card.speaking .scene-character, .avatar-card.building .scene-character { animation: scene-talk 1.05s ease-in-out infinite; }
+.scene-label { fill: rgba(248,250,252,.86); font-size: 24px; font-weight: 900; letter-spacing: .03em; text-transform: uppercase; }
+.scene-extras text { fill: var(--scene-light); font-weight: 900; }
+@keyframes scene-float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-13px) rotate(1.2deg); } }
+@keyframes scene-talk { 0%,100% { transform: translateX(-8px) translateY(0) rotate(-2deg); } 50% { transform: translateX(8px) translateY(-16px) rotate(2deg); } }
