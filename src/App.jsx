@@ -89,6 +89,12 @@ function scoreVoiceForPlatform(voice, platform) {
   return score;
 }
 
+function isPaulinaVoiceChoice(voice) {
+  if (!voice) return false;
+  const id = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
+  return /paulina/.test(id) && (/es[-_]mx/i.test(voice.lang || '') || /es-mx|spanish.*mexico|mexico.*spanish|mexican spanish/i.test(id));
+}
+
 function pickBestVoice(voices, platform = detectVoicePlatform()) {
   return voices
     .filter(Boolean)
@@ -202,6 +208,16 @@ function colorsFromName(name) {
   };
 }
 
+function avatarThemeForVoice(voiceChoice) {
+  if (!isPaulinaVoiceChoice(voiceChoice)) return {};
+  return {
+    bot: '#f472b6',
+    eye: '#fff1f2',
+    limb: 'rgba(244,114,182,.62)',
+    panel: 'rgba(249,168,212,.28)',
+  };
+}
+
 function App() {
   const subdomain = getSubdomain();
   if (subdomain === 'demo' || window.location.search.includes('demo=1')) return <DemoApp />;
@@ -263,6 +279,7 @@ function DemoApp() {
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
+  const avatarVoiceTheme = useMemo(() => avatarThemeForVoice(voiceChoice), [voiceChoice]);
 
 
   useEffect(() => {
@@ -784,7 +801,7 @@ function DemoApp() {
     </section>
 
     <section className="stage">
-      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} />
+      <CartoonAvatar avatar={avatar} mouthOpen={mouthOpen} status={status} voiceTheme={avatarVoiceTheme} />
       <div className="voice-panel controls-below compact-controls">
         <div className="control-copy">
           <p>{message}</p>
@@ -818,9 +835,14 @@ function DemoApp() {
 }
 
 
-function CartoonAvatar({ avatar, mouthOpen, status }) {
+function CartoonAvatar({ avatar, mouthOpen, status, voiceTheme = {} }) {
   const isBuilt = Boolean(avatar);
-  const style = avatar ? { '--bot': avatar.color, '--eye': avatar.eyeColor } : {};
+  const style = {
+    '--bot': voiceTheme.bot || avatar?.color,
+    '--eye': voiceTheme.eye || avatar?.eyeColor,
+    '--limb': voiceTheme.limb,
+    '--panel': voiceTheme.panel,
+  };
   return <div className={`avatar-card ${status} ${isBuilt ? 'built' : 'unbuilt'}`} style={style}>
     <div className="character">
       <div className="antenna" />
