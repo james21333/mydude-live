@@ -46,83 +46,6 @@ function materialForText(text = '') {
   return 'glossyBlue';
 }
 function sceneLayer(shape, anchor, x, y, sx, sy, material, options = {}) { return { shape, anchor, x, y, scale: [sx, sy], material, ...options }; }
-function promptHasAny(prompt = '', terms = []) { const lower = prompt.toLowerCase(); return terms.some(term => lower.includes(term)); }
-function avatarConceptProfile(prompt = '') {
-  const lower = prompt.toLowerCase();
-  const isAnimal = promptHasAny(lower, ['animal', 'cow', 'dog', 'cat', 'fox', 'wolf', 'bear', 'mouse', 'rat', 'bunny', 'rabbit', 'lion', 'tiger', 'zebra', 'giraffe', 'horse', 'pony', 'pig', 'goat', 'ram', 'deer', 'moose', 'monkey', 'panda', 'koala', 'frog']);
-  const isBird = promptHasAny(lower, ['bird', 'duck', 'chicken', 'penguin', 'owl', 'eagle', 'parrot']);
-  const isAquatic = promptHasAny(lower, ['fish', 'shark', 'whale', 'dolphin', 'octopus', 'squid', 'seal']);
-  const isBug = promptHasAny(lower, ['bug', 'insect', 'bee', 'ant', 'spider', 'beetle', 'butterfly', 'moth', 'snail']);
-  const isMonster = promptHasAny(lower, ['monster', 'dragon', 'alien', 'dinosaur', 'unicorn', 'devil', 'ghost']);
-  const isRobot = promptHasAny(lower, ['robot', 'computer', 'monitor', 'screen', 'android', 'cyborg']);
-  const isVehicle = promptHasAny(lower, ['car', 'truck', 'bus', 'van', 'train', 'boat', 'ship', 'sail', 'rocket', 'plane', 'jet', 'submarine']);
-  const isPerson = promptHasAny(lower, ['person', 'man', 'woman', 'boy', 'girl', 'guy', 'lady', 'wizard', 'king', 'queen', 'president', 'grandma', 'grandpa', 'doctor', 'teacher', 'chef', 'astronaut', 'pirate', 'cowboy', 'artist']);
-  const isIdea = promptHasAny(lower, ['idea', 'thought', 'dream', 'joke', 'funny', 'abstract', 'magic', 'music', 'code', 'money', 'time', 'map', 'compass']);
-  return {
-    lower,
-    isAnimal,
-    isBird,
-    isAquatic,
-    isBug,
-    isMonster,
-    isRobot,
-    isVehicle,
-    isPerson,
-    isIdea,
-    wantsEars: isAnimal || isBird || promptHasAny(lower, ['ear', 'bunny', 'rabbit', 'mouse', 'fox', 'cat', 'dog', 'bear']),
-    wantsHorns: promptHasAny(lower, ['cow', 'bull', 'goat', 'ram', 'horn', 'dragon', 'devil', 'monster', 'unicorn', 'alien', 'snail']),
-    wantsAntenna: promptHasAny(lower, ['alien', 'robot', 'bug', 'insect', 'snail', 'antenna']),
-    wantsSnout: promptHasAny(lower, ['cow', 'dog', 'pig', 'bear', 'mouse', 'fox', 'cat', 'rabbit', 'bunny', 'lion', 'tiger', 'horse', 'goat', 'deer']),
-    wantsWings: promptHasAny(lower, ['wing', 'bird', 'bat', 'dragon', 'angel', 'butterfly', 'bee']),
-    wantsFins: promptHasAny(lower, ['fish', 'shark', 'whale', 'dolphin', 'seal', 'penguin']),
-    wantsTentacles: promptHasAny(lower, ['octopus', 'squid', 'jellyfish', 'tentacle']),
-    wantsSpots: promptHasAny(lower, ['cow', 'giraffe', 'leopard', 'cheetah', 'dalmatian', 'spot', 'spotted']),
-    wantsStripes: promptHasAny(lower, ['zebra', 'tiger', 'striped', 'stripe', 'bee']),
-    wantsScreenFace: isRobot || promptHasAny(lower, ['tv', 'arcade']),
-    wantsBeak: isBird,
-    wantsGlasses: promptHasAny(lower, ['glasses', 'goggles', 'nerd', 'scientist', 'teacher']),
-    wantsHat: promptHasAny(lower, ['hat', 'cap', 'wizard', 'chef', 'pirate', 'cowboy']),
-    wantsCrown: promptHasAny(lower, ['king', 'queen', 'crown', 'prince', 'princess']),
-    wantsTie: promptHasAny(lower, ['president', 'business', 'office', 'lawyer', 'teacher', 'doctor']),
-    wantsMagic: promptHasAny(lower, ['magic', 'wizard', 'wand', 'spell']),
-    wantsMusic: promptHasAny(lower, ['music', 'song', 'guitar', 'piano', 'jazz', 'singer']),
-    wantsCode: promptHasAny(lower, ['code', 'programmer', 'developer', 'hacker']),
-    wantsMoney: promptHasAny(lower, ['money', 'cash', 'coin', 'gold']),
-    wantsTime: promptHasAny(lower, ['time', 'clock', 'watch']),
-    wantsMap: promptHasAny(lower, ['map', 'travel', 'compass', 'explorer']),
-  };
-}
-function proceduralIdentityLayers(text = '', bodyMaterial = materialForText(text)) {
-  const profile = avatarConceptProfile(text);
-  const layers = [];
-  if (!profile.isVehicle && !promptHasAny(profile.lower, ['computer', 'monitor', 'screen', 'rocket', 'boat', 'ship', 'plane'])) layers.push(sceneLayer('stubbyArm','free',-3,0,.24,.28,bodyMaterial,{rotate:-12,z:5,attach:{socket:'body.leftShoulder'}}), sceneLayer('stubbyArm','free',3,0,.24,.28,bodyMaterial,{rotate:12,z:5,attach:{socket:'body.rightShoulder'}}));
-  if (profile.wantsTentacles) layers.push(sceneLayer('tentacle','free',-4,2,.26,.34,bodyMaterial,{rotate:-16,z:5,attach:{socket:'body.leftHand'}}), sceneLayer('tentacle','free',4,2,.26,.34,bodyMaterial,{rotate:16,z:5,attach:{socket:'body.rightHand'}}));
-  if (profile.wantsFins) layers.push(sceneLayer('finLimb','free',-2,2,.3,.22,bodyMaterial,{rotate:-22,z:5,attach:{socket:'body.leftShoulder'}}), sceneLayer('finLimb','free',2,2,.3,.22,bodyMaterial,{rotate:22,z:5,attach:{socket:'body.rightShoulder'}}));
-  if (profile.wantsEars) { const earShape = profile.isBird ? 'animalEar' : 'softEar'; layers.push(sceneLayer(earShape,'free',-3,6,.34,profile.isBird ? .3 : .42,bodyMaterial,{rotate:-24,z:9,attach:{socket:'head.leftEar'}}), sceneLayer(earShape,'free',3,6,.34,profile.isBird ? .3 : .42,bodyMaterial,{rotate:24,z:9,attach:{socket:'head.rightEar'}})); }
-  if (profile.wantsHorns) { const hornMaterial = profile.lower.includes('unicorn') ? 'glossyGold' : 'canvas'; layers.push(sceneLayer('softHorn','free',0,0,.18,.34,hornMaterial,{rotate:-8,z:10,attach:{socket:'head.leftHorn'}}), sceneLayer('softHorn','free',0,0,.18,.34,hornMaterial,{rotate:8,z:10,attach:{socket:'head.rightHorn'}})); }
-  if (profile.wantsAntenna) layers.push(sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:-18,z:11,attach:{socket:'head.leftHorn'}}), sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:18,z:11,attach:{socket:'head.rightHorn'}}));
-  if (profile.wantsWings) layers.push(sceneLayer('wing','free',-8,4,.42,.34,bodyMaterial,{rotate:-22,z:3,attach:{socket:'body.leftShoulder'}}), sceneLayer('wing','free',8,4,.42,.34,bodyMaterial,{rotate:22,z:3,attach:{socket:'body.rightShoulder'}}));
-  if (profile.wantsSpots) layers.push(sceneLayer('bodyPatch','free',0,0,.3,.22,'charcoalRubber',{rotate:-10,z:11,attach:{socket:'body.patchLeft'}}), sceneLayer('bodyPatch','free',0,0,.23,.16,'charcoalRubber',{rotate:8,z:11,attach:{socket:'body.patchRight'}}));
-  if (profile.wantsStripes) layers.push(sceneLayer('stripe','free',-10,-12,.42,.2,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.front'}}), sceneLayer('stripe','free',10,14,.34,.16,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.patchRight'}}));
-  if (profile.wantsGlasses) layers.push(sceneLayer('glasses','free',0,0,.52,.26,'chrome',{z:22,attach:{socket:'head.mouth'}}));
-  if (profile.wantsHat) layers.push(sceneLayer(profile.lower.includes('wizard') ? 'topHat' : 'cap','free',0,-6,.42,.26,profile.lower.includes('chef') ? 'softWhite' : 'glossyPurple',{z:12,attach:{socket:'head.leftHorn'}}));
-  if (profile.wantsCrown) layers.push(sceneLayer('crown','free',0,-4,.38,.26,'glossyGold',{z:12,attach:{socket:'head.leftHorn'}}));
-  if (profile.wantsTie) layers.push(sceneLayer(profile.lower.includes('bow') ? 'bowtie' : 'tie','free',0,14,.24,.24,'glossyRed',{z:14,attach:{socket:'body.front'}}));
-  if (profile.wantsMagic) layers.push(sceneLayer('wand','free',0,0,.32,.32,'glossyGold',{rotate:22,z:12,attach:{socket:'body.rightHand'}}));
-  if (profile.wantsMusic) layers.push(sceneLayer('musicNote','orbit',154,-132,.34,.34,'neon',{z:12}));
-  if (profile.wantsCode) layers.push(sceneLayer('codeBracket','orbit',-154,-128,.34,.34,'screenGlow',{z:12}));
-  if (profile.wantsMoney) layers.push(sceneLayer('coin','orbit',150,-138,.3,.3,'glossyGold',{z:12}));
-  if (profile.wantsTime) layers.push(sceneLayer('clock','orbit',-150,-138,.3,.3,'softWhite',{z:12}));
-  if (profile.wantsMap) layers.push(sceneLayer(profile.lower.includes('compass') ? 'compass' : 'mapPin','orbit',0,-150,.3,.3,'glossyRed',{z:12}));
-  if (profile.isRobot) layers.push(sceneLayer('screen','free',0,2,.5,.28,'screenGlow',{z:13,attach:{socket:'body.front'}}), sceneLayer('button','free',-20,28,.14,.14,'glossyRed',{z:14,attach:{socket:'body.front'}}));
-  if (profile.isVehicle) {
-    if (promptHasAny(profile.lower, ['boat', 'ship', 'sail'])) layers.push(sceneLayer('curvedSail','free',8,-20,.45,.62,'canvas',{z:12,attach:{socket:'head.rightHorn'}}));
-    else if (promptHasAny(profile.lower, ['rocket', 'plane', 'jet'])) layers.push(sceneLayer('rocket','free',0,-12,.38,.54,'glossyPurple',{z:13,attach:{socket:'body.front'}}));
-    else layers.push(sceneLayer('carBody','ground',0,-34,.7,.3,'glossyRed',{z:13}));
-  }
-  if (profile.isIdea && !profile.wantsMusic && !profile.wantsCode && !profile.wantsMoney) layers.push(sceneLayer('question','orbit',-158,-120,.36,.36,'neon',{z:12}), sceneLayer('spark','orbit',156,-150,.42,.42,'glossyGold',{z:12}));
-  return layers;
-}
 
 const SOCKET_COMPATIBILITY = Object.freeze({
   mascotBody: ['body.center'], mascotHead: ['head.center'],
@@ -168,12 +91,10 @@ function presetSceneSpec(text = '') {
 function fallbackDrawingLayers(text = '', options = {}) {
   const preset = !options.skipPreset ? matchQualityPreset(text) : null;
   if (preset?.layers?.length) return preset.layers;
-  const profile = avatarConceptProfile(text);
-  const l = profile.lower;
-  const mat = materialForText(text);
-  const eyeShape = profile.isIdea ? 'googlyEye' : profile.wantsScreenFace ? 'pixelEye' : l.includes('sleepy') ? 'sleepyEye' : 'cuteEye';
-  const mouthShape = profile.wantsScreenFace ? 'mouthScreen' : profile.isVehicle && l.includes('car') ? 'mouthGrille' : profile.wantsBeak ? 'beak' : profile.wantsSnout ? 'snout' : profile.isIdea ? 'mouthGrin' : 'mouthSmile';
-  const bodyMaterial = profile.isIdea ? 'glossyGold' : mat;
+  const l = text.toLowerCase(); const mat = materialForText(text);
+  const eyeShape = /funny|idea|abstract|silly/.test(l) ? 'googlyEye' : /computer|robot|screen/.test(l) ? 'pixelEye' : 'cuteEye';
+  const mouthShape = /computer|robot|screen/.test(l) ? 'mouthScreen' : /funny|idea|abstract|joke/.test(l) ? 'mouthGrin' : /bird|duck|chicken/.test(l) ? 'beak' : 'mouthSmile';
+  const bodyMaterial = /idea|funny|abstract|joke/.test(l) ? 'glossyGold' : mat;
   const layers = [
     sceneLayer('shadow','ground',0,6,.98,.18,'shadow',{opacity:.24,z:-10}),
     sceneLayer('mascotBody','free',0,0,.62,.6,bodyMaterial,{z:2,attach:{socket:'body.center'}}),
@@ -183,8 +104,21 @@ function fallbackDrawingLayers(text = '', options = {}) {
     sceneLayer('hoof','free',0,-4,.2,.13,'charcoalRubber',{z:6,attach:{socket:'body.rightFoot'}}),
     sceneLayer('mascotHead','free',0,0,.94,.84,bodyMaterial,{z:8,attach:{socket:'head.center'}}),
   ];
-  layers.push(...proceduralIdentityLayers(text, bodyMaterial));
-  layers.push(sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.leftEye'}}), sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.rightEye'}}), sceneLayer(mouthShape,'free',0,mouthShape === 'mouthGrin' ? 12 : 18,mouthShape === 'beak' ? .38 : mouthShape === 'snout' ? .42 : .22,mouthShape === 'beak' ? .22 : mouthShape === 'snout' ? .24 : .2,mouthShape === 'snout' ? 'warmCream' : 'charcoalRubber',{role:'mouth',z:31,attach:{socket:'head.mouth'}}));
+  if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) layers.push(sceneLayer('stubbyArm','free',-2,0,.22,.26,bodyMaterial,{rotate:-10,z:5,attach:{socket:'body.leftHand'}}), sceneLayer('stubbyArm','free',2,0,.22,.26,bodyMaterial,{rotate:10,z:5,attach:{socket:'body.rightHand'}}));
+  if (/cat|dog|bear|rabbit|bunny|animal|mouse|fox|tiger|lion|elephant/.test(l)) layers.push(sceneLayer('softEar','free',-3,6,.34,.42,bodyMaterial,{rotate:-24,z:9,attach:{socket:'head.leftEar'}}), sceneLayer('softEar','free',3,6,.34,.42,bodyMaterial,{rotate:24,z:9,attach:{socket:'head.rightEar'}}));
+  if (/dragon|unicorn|goat|horn|devil|monster/.test(l)) layers.push(sceneLayer('softHorn','free',0,0,.18,.34,'canvas',{rotate:-8,z:10,attach:{socket:'head.leftHorn'}}), sceneLayer('softHorn','free',0,0,.18,.34,'canvas',{rotate:8,z:10,attach:{socket:'head.rightHorn'}}));
+  if (/alien|robot|bug|insect/.test(l)) layers.push(sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:-18,z:10,attach:{socket:'head.leftHorn'}}), sceneLayer('antenna','free',0,0,.22,.36,'neon',{rotate:18,z:10,attach:{socket:'head.rightHorn'}}));
+  if (/cow|dog|pig|bear|mouse|fox|cat|animal/.test(l)) layers.push(sceneLayer('snout','free',0,-2,.42,.24,'warmCream',{z:24,attach:{socket:'head.mouth'}}));
+  if (/spot|cow|dog|dalmatian|pattern/.test(l)) layers.push(sceneLayer('bodyPatch','free',0,0,.3,.22,'charcoalRubber',{rotate:-10,z:11,attach:{socket:'body.patchLeft'}}), sceneLayer('bodyPatch','free',0,0,.23,.16,'charcoalRubber',{rotate:8,z:11,attach:{socket:'body.patchRight'}}));
+  if (/computer|monitor|screen/.test(l)) layers.push(sceneLayer('screen','free',0,2,.5,.28,'screenGlow',{z:13,attach:{socket:'body.front'}}), sceneLayer('button','free',-20,28,.14,.14,'glossyRed',{z:14,attach:{socket:'body.front'}}));
+  if (/car|truck|vehicle/.test(l)) layers.push(sceneLayer('carBody','ground',0,-34,.7,.3,'glossyRed',{z:13}), sceneLayer('wheel','ground',-50,-20,.25,.25,'charcoalRubber',{z:15}), sceneLayer('wheel','ground',50,-20,.25,.25,'charcoalRubber',{z:15}));
+  if (/sail|boat|ship/.test(l)) layers.push(sceneLayer('hull','ground',0,-34,.72,.26,'wood',{z:13}), sceneLayer('curvedSail','free',8,-20,.45,.62,'canvas',{z:12,attach:{socket:'head.rightHorn'}}));
+  if (/rocket|spaceship|space ship/.test(l)) layers.push(sceneLayer('rocket','free',0,-12,.38,.54,'glossyPurple',{z:13,attach:{socket:'body.front'}}));
+  if (/idea|funny|abstract|joke/.test(l)) layers.push(sceneLayer('question','orbit',-158,-120,.36,.36,'neon',{z:12}), sceneLayer('spark','orbit',156,-150,.42,.42,'glossyGold',{z:12}));
+  if (/zebra|stripe|striped/.test(l)) layers.push(sceneLayer('stripe','free',-10,-12,.42,.24,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.front'}}), sceneLayer('stripe','free',10,14,.34,.2,'charcoalRubber',{rotate:-18,z:12,attach:{socket:'body.patchRight'}}));
+  if (/skateboard|skate board/.test(l)) layers.push(sceneLayer('roundedBox','ground',0,-28,.78,.16,'wood',{z:14}), sceneLayer('wheel','ground',-58,-14,.24,.24,'charcoalRubber',{z:15}), sceneLayer('wheel','ground',58,-14,.24,.24,'charcoalRubber',{z:15}));
+  if (/dragon|bird|bat|wing/.test(l)) layers.push(sceneLayer('wing','free',-8,4,.42,.34,bodyMaterial,{rotate:-22,z:3,attach:{socket:'body.leftShoulder'}}), sceneLayer('wing','free',8,4,.42,.34,bodyMaterial,{rotate:22,z:3,attach:{socket:'body.rightShoulder'}}));
+  layers.push(sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.leftEye'}}), sceneLayer(eyeShape,'free',0,0,.24,.24,'softWhite',{role:'eye',z:20,attach:{socket:'head.rightEye'}}), sceneLayer(mouthShape,'free',0,mouthShape === 'mouthGrin' ? 12 : 18,mouthShape === 'beak' ? .38 : .38,mouthShape === 'beak' ? .22 : .2,'charcoalRubber',{role:'mouth',z:31,attach:{socket:'head.mouth'}}));
   return layers;
 }
 function sanitizeDrawingLayers(rawLayers, text = '') {
@@ -227,7 +161,7 @@ const SCENE_PRIMITIVES = Object.freeze([
 const SCENE_SCHEMA = `Return only compact JSON with keys: title, summary, palette, scene, body, head, eyes, mouth, primitives, layers. palette one of blue,pink,green,gold,purple,red,gray,orange. scene/body/head/eyes/mouth/primitives must use only these primitive ids: ${SCENE_PRIMITIVES.join(', ')}. ${DRAWING_PROMPT} Use symbolic approximation for real people: never exact likeness; for George H W Bush use presidential elder-statesman cartoon cues like gray hair, suit, tie, podium, flag, elder-statesman vibe. For abstract requests, map the idea to visual metaphors.`;
 
 function wantsSceneSpec(text = '') {
-  return /\b(look like|make (me|you|him|her|it)|make a|make an|create|draw|avatar|turn into|become|transform|change into|be a|be an|computer|sailboat|boat|car|truck|cow|animal|monster|dragon|funny idea|abstract|appearance|wizard|astronaut|person)\b/i.test(text);
+  return /\b(look like|make (you|him|it)|avatar|turn into|become|transform|change into|be a|be an|computer|sailboat|boat|car|truck|cow|animal|monster|dragon|funny idea|abstract|appearance)\b/i.test(text);
 }
 
 function fallbackSceneSpec(text = '', options = {}) {
