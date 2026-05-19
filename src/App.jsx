@@ -865,22 +865,19 @@ function DemoApp() {
     setMessage('Thinking…');
     setBuildProgress(8);
     const built = makeAvatar(prompt);
-    const fallbackReply = 'Done.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
-
-    if (BRAIN_ENABLED) {
-      startStreamingSpeakerReply(prompt, built, fallbackReply, finish);
-    } else {
-      speak(fallbackReply, { after: finish });
-    }
 
     [28, 54, 78, 100].forEach((progress, index) => {
       setTimeout(() => setBuildProgress(progress), 120 + index * 160);
     });
     setTimeout(() => {
       setAvatar(built);
-      setMessage(current => current === 'Thinking…' ? `Built: ${built.summary}` : current);
+      setMessage(`Built: ${built.summary}`);
       appendLog(`Avatar built: ${built.summary}`);
+      statusRef.current = 'listening';
+      setStatus('listening');
+      setTranscript('Listening… say something now.');
+      setDebug('avatar built — resuming listener without spoken reply');
+      startListening();
     }, 520);
   }
 
