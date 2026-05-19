@@ -1182,6 +1182,40 @@ function DemoApp() {
     speakChunk();
   }
 
+  function stopDemo() {
+    listenTokenRef.current += 1;
+    activatedRef.current = false;
+    try { recognitionRef.current?.abort?.(); } catch {}
+    recognitionRef.current = null;
+    window.speechSynthesis?.cancel?.();
+    speechRunRef.current += 1;
+    streamQueueRef.current = [];
+    streamSpeakingRef.current = false;
+    streamAfterRef.current = null;
+    clearInterval(speakingTimer.current);
+    clearTimeout(mouthCloseTimer.current);
+    cancelAnimationFrame(animationRef.current);
+    audioRef.current?.getTracks?.().forEach(track => track.stop());
+    audioRef.current = null;
+    analyserRef.current = null;
+    setActivated(false);
+    setStatus('idle');
+    statusRef.current = 'idle';
+    setTranscript('');
+    setMessage('Tap Start. I will listen, talk, and build my cartoon avatar in under one minute.');
+    setMouthPhase(0);
+    setVolume(0.18);
+    setBuildProgress(0);
+    setAvatar(null);
+    personalityRef.current = null;
+    const previousSessionId = sessionIdRef.current;
+    sessionIdRef.current = window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    resetSpeakerSession(previousSessionId);
+    setDebug('stopped — press Start');
+    setBrainStatus(BRAIN_ENABLED ? 'speaker agent: standby' : 'speaker agent: off');
+    appendLog('Demo stopped. Back at Start.');
+  }
+
   function resetDemo() {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
@@ -1233,7 +1267,7 @@ function DemoApp() {
         </div>
         {status === 'building' && <div className="progress"><span style={{ width: `${buildProgress}%` }} /></div>}
         <div className="actions">
-          {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={startListening}><Mic size={16}/> Listen</button>}
+          {!activated ? <button className="primary" onClick={activate}><Mic size={16}/> Start</button> : <button className="primary" onClick={stopDemo}>Stop</button>}
         </div>
       </div>
     </section>
