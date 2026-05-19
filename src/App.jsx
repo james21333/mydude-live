@@ -392,145 +392,6 @@ function layer(shape, anchor, x, y, sx, sy, material, options = {}) {
   return { shape, anchor, x, y, scale: [sx, sy], material, ...options };
 }
 
-function promptHasAny(prompt = '', terms = []) {
-  const lower = prompt.toLowerCase();
-  return terms.some(term => lower.includes(term));
-}
-
-function avatarConceptProfile(prompt = '') {
-  const lower = prompt.toLowerCase();
-  const isAnimal = promptHasAny(lower, ['animal', 'cow', 'dog', 'cat', 'fox', 'wolf', 'bear', 'mouse', 'rat', 'bunny', 'rabbit', 'lion', 'tiger', 'zebra', 'giraffe', 'horse', 'pony', 'pig', 'goat', 'ram', 'deer', 'moose', 'monkey', 'panda', 'koala', 'frog']);
-  const isBird = promptHasAny(lower, ['bird', 'duck', 'chicken', 'penguin', 'owl', 'eagle', 'parrot']);
-  const isAquatic = promptHasAny(lower, ['fish', 'shark', 'whale', 'dolphin', 'octopus', 'squid', 'seal']);
-  const isBug = promptHasAny(lower, ['bug', 'insect', 'bee', 'ant', 'spider', 'beetle', 'butterfly', 'moth', 'snail']);
-  const isMonster = promptHasAny(lower, ['monster', 'dragon', 'alien', 'dinosaur', 'unicorn', 'devil', 'ghost']);
-  const isRobot = promptHasAny(lower, ['robot', 'computer', 'monitor', 'screen', 'android', 'cyborg']);
-  const isVehicle = promptHasAny(lower, ['car', 'truck', 'bus', 'van', 'train', 'boat', 'ship', 'sail', 'rocket', 'plane', 'jet', 'submarine']);
-  const isPerson = promptHasAny(lower, ['person', 'man', 'woman', 'boy', 'girl', 'guy', 'lady', 'wizard', 'king', 'queen', 'president', 'grandma', 'grandpa', 'doctor', 'teacher', 'chef', 'astronaut', 'pirate', 'cowboy', 'artist']);
-  const isIdea = promptHasAny(lower, ['idea', 'thought', 'dream', 'joke', 'funny', 'abstract', 'magic', 'music', 'code', 'money', 'time', 'map', 'compass']);
-  return {
-    lower,
-    isAnimal,
-    isBird,
-    isAquatic,
-    isBug,
-    isMonster,
-    isRobot,
-    isVehicle,
-    isPerson,
-    isIdea,
-    wantsEars: isAnimal || isBird || promptHasAny(lower, ['ear', 'bunny', 'rabbit', 'mouse', 'fox', 'cat', 'dog', 'bear']),
-    wantsHorns: promptHasAny(lower, ['cow', 'bull', 'goat', 'ram', 'horn', 'dragon', 'devil', 'monster', 'unicorn', 'alien', 'snail']),
-    wantsAntenna: promptHasAny(lower, ['alien', 'robot', 'bug', 'insect', 'snail', 'antenna']),
-    wantsSnout: promptHasAny(lower, ['cow', 'dog', 'pig', 'bear', 'mouse', 'fox', 'cat', 'rabbit', 'bunny', 'lion', 'tiger', 'horse', 'goat', 'deer']),
-    wantsWings: promptHasAny(lower, ['wing', 'bird', 'bat', 'dragon', 'angel', 'butterfly', 'bee']),
-    wantsFins: promptHasAny(lower, ['fish', 'shark', 'whale', 'dolphin', 'seal', 'penguin']),
-    wantsTentacles: promptHasAny(lower, ['octopus', 'squid', 'jellyfish', 'tentacle']),
-    wantsSpots: promptHasAny(lower, ['cow', 'giraffe', 'leopard', 'cheetah', 'dalmatian', 'spot', 'spotted']),
-    wantsStripes: promptHasAny(lower, ['zebra', 'tiger', 'striped', 'stripe', 'bee']),
-    wantsScreenFace: isRobot || promptHasAny(lower, ['tv', 'arcade']),
-    wantsBeak: isBird,
-    wantsGlasses: promptHasAny(lower, ['glasses', 'goggles', 'nerd', 'scientist', 'teacher']),
-    wantsHat: promptHasAny(lower, ['hat', 'cap', 'wizard', 'chef', 'pirate', 'cowboy']),
-    wantsCrown: promptHasAny(lower, ['king', 'queen', 'crown', 'prince', 'princess']),
-    wantsTie: promptHasAny(lower, ['president', 'business', 'office', 'lawyer', 'teacher', 'doctor']),
-    wantsMagic: promptHasAny(lower, ['magic', 'wizard', 'wand', 'spell']),
-    wantsMusic: promptHasAny(lower, ['music', 'song', 'guitar', 'piano', 'jazz', 'singer']),
-    wantsCode: promptHasAny(lower, ['code', 'programmer', 'developer', 'hacker']),
-    wantsMoney: promptHasAny(lower, ['money', 'cash', 'coin', 'gold']),
-    wantsTime: promptHasAny(lower, ['time', 'clock', 'watch']),
-    wantsMap: promptHasAny(lower, ['map', 'travel', 'compass', 'explorer']),
-  };
-}
-
-function proceduralIdentityLayers(prompt = '', bodyMaterial = materialForPrompt(prompt)) {
-  const profile = avatarConceptProfile(prompt);
-  const layers = [];
-  if (!profile.isVehicle && !promptHasAny(profile.lower, ['computer', 'monitor', 'screen', 'rocket', 'boat', 'ship', 'plane'])) {
-    layers.push(
-      layer('stubbyArm', 'free', -3, 0, 0.24, 0.28, bodyMaterial, { rotate: -12, z: 5, attach: { socket: 'body.leftShoulder' } }),
-      layer('stubbyArm', 'free', 3, 0, 0.24, 0.28, bodyMaterial, { rotate: 12, z: 5, attach: { socket: 'body.rightShoulder' } }),
-    );
-  }
-  if (profile.wantsTentacles) {
-    layers.push(
-      layer('tentacle', 'free', -4, 2, 0.26, 0.34, bodyMaterial, { rotate: -16, z: 5, attach: { socket: 'body.leftHand' } }),
-      layer('tentacle', 'free', 4, 2, 0.26, 0.34, bodyMaterial, { rotate: 16, z: 5, attach: { socket: 'body.rightHand' } }),
-    );
-  }
-  if (profile.wantsFins) {
-    layers.push(
-      layer('finLimb', 'free', -2, 2, 0.3, 0.22, bodyMaterial, { rotate: -22, z: 5, attach: { socket: 'body.leftShoulder' } }),
-      layer('finLimb', 'free', 2, 2, 0.3, 0.22, bodyMaterial, { rotate: 22, z: 5, attach: { socket: 'body.rightShoulder' } }),
-    );
-  }
-  if (profile.wantsEars) {
-    const earShape = profile.isBird ? 'animalEar' : 'softEar';
-    layers.push(
-      layer(earShape, 'free', -3, 6, 0.34, profile.isBird ? 0.3 : 0.42, bodyMaterial, { rotate: -24, z: 9, attach: { socket: 'head.leftEar' } }),
-      layer(earShape, 'free', 3, 6, 0.34, profile.isBird ? 0.3 : 0.42, bodyMaterial, { rotate: 24, z: 9, attach: { socket: 'head.rightEar' } }),
-    );
-  }
-  if (profile.wantsHorns) {
-    const hornMaterial = profile.lower.includes('unicorn') ? 'glossyGold' : 'canvas';
-    layers.push(
-      layer('softHorn', 'free', 0, 0, 0.18, 0.34, hornMaterial, { rotate: -8, z: 10, attach: { socket: 'head.leftHorn' } }),
-      layer('softHorn', 'free', 0, 0, 0.18, 0.34, hornMaterial, { rotate: 8, z: 10, attach: { socket: 'head.rightHorn' } }),
-    );
-  }
-  if (profile.wantsAntenna) {
-    layers.push(
-      layer('antenna', 'free', 0, 0, 0.22, 0.36, 'neon', { rotate: -18, z: 11, attach: { socket: 'head.leftHorn' } }),
-      layer('antenna', 'free', 0, 0, 0.22, 0.36, 'neon', { rotate: 18, z: 11, attach: { socket: 'head.rightHorn' } }),
-    );
-  }
-  if (profile.wantsWings) {
-    layers.push(
-      layer('wing', 'free', -8, 4, 0.42, 0.34, bodyMaterial, { rotate: -22, z: 3, attach: { socket: 'body.leftShoulder' } }),
-      layer('wing', 'free', 8, 4, 0.42, 0.34, bodyMaterial, { rotate: 22, z: 3, attach: { socket: 'body.rightShoulder' } }),
-    );
-  }
-  if (profile.wantsSpots) {
-    layers.push(
-      layer('bodyPatch', 'free', 0, 0, 0.3, 0.22, 'charcoalRubber', { rotate: -10, z: 11, attach: { socket: 'body.patchLeft' } }),
-      layer('bodyPatch', 'free', 0, 0, 0.23, 0.16, 'charcoalRubber', { rotate: 8, z: 11, attach: { socket: 'body.patchRight' } }),
-    );
-  }
-  if (profile.wantsStripes) {
-    layers.push(
-      layer('stripe', 'free', -10, -12, 0.42, 0.2, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.front' } }),
-      layer('stripe', 'free', 10, 14, 0.34, 0.16, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.patchRight' } }),
-    );
-  }
-  if (profile.wantsGlasses) layers.push(layer('glasses', 'free', 0, 0, 0.52, 0.26, 'chrome', { z: 22, attach: { socket: 'head.mouth' } }));
-  if (profile.wantsHat) layers.push(layer(profile.lower.includes('wizard') ? 'topHat' : 'cap', 'free', 0, -6, 0.42, 0.26, profile.lower.includes('chef') ? 'softWhite' : 'glossyPurple', { z: 12, attach: { socket: 'head.leftHorn' } }));
-  if (profile.wantsCrown) layers.push(layer('crown', 'free', 0, -4, 0.38, 0.26, 'glossyGold', { z: 12, attach: { socket: 'head.leftHorn' } }));
-  if (profile.wantsTie) layers.push(layer(profile.lower.includes('bow') ? 'bowtie' : 'tie', 'free', 0, 14, 0.24, 0.24, 'glossyRed', { z: 14, attach: { socket: 'body.front' } }));
-  if (profile.wantsMagic) layers.push(layer('wand', 'free', 0, 0, 0.32, 0.32, 'glossyGold', { rotate: 22, z: 12, attach: { socket: 'body.rightHand' } }));
-  if (profile.wantsMusic) layers.push(layer('musicNote', 'orbit', 154, -132, 0.34, 0.34, 'neon', { z: 12 }));
-  if (profile.wantsCode) layers.push(layer('codeBracket', 'orbit', -154, -128, 0.34, 0.34, 'screenGlow', { z: 12 }));
-  if (profile.wantsMoney) layers.push(layer('coin', 'orbit', 150, -138, 0.3, 0.3, 'glossyGold', { z: 12 }));
-  if (profile.wantsTime) layers.push(layer('clock', 'orbit', -150, -138, 0.3, 0.3, 'softWhite', { z: 12 }));
-  if (profile.wantsMap) layers.push(layer(profile.lower.includes('compass') ? 'compass' : 'mapPin', 'orbit', 0, -150, 0.3, 0.3, 'glossyRed', { z: 12 }));
-  if (profile.isRobot) {
-    layers.push(
-      layer('screen', 'free', 0, 2, 0.5, 0.28, 'screenGlow', { z: 13, attach: { socket: 'body.front' } }),
-      layer('button', 'free', -20, 28, 0.14, 0.14, 'glossyRed', { z: 14, attach: { socket: 'body.front' } }),
-    );
-  }
-  if (profile.isVehicle) {
-    if (promptHasAny(profile.lower, ['boat', 'ship', 'sail'])) layers.push(layer('curvedSail', 'free', 8, -20, 0.45, 0.62, 'canvas', { z: 12, attach: { socket: 'head.rightHorn' } }));
-    else if (promptHasAny(profile.lower, ['rocket', 'plane', 'jet'])) layers.push(layer('rocket', 'free', 0, -12, 0.38, 0.54, 'glossyPurple', { z: 13, attach: { socket: 'body.front' } }));
-    else layers.push(layer('carBody', 'ground', 0, -34, 0.7, 0.3, 'glossyRed', { z: 13 }));
-  }
-  if (profile.isIdea && !profile.wantsMusic && !profile.wantsCode && !profile.wantsMoney) {
-    layers.push(
-      layer('question', 'orbit', -158, -120, 0.36, 0.36, 'neon', { z: 12 }),
-      layer('spark', 'orbit', 156, -150, 0.42, 0.42, 'glossyGold', { z: 12 }),
-    );
-  }
-  return layers;
-}
 
 function matchQualityPreset(prompt = '') {
   const lower = prompt.toLowerCase();
@@ -559,12 +420,11 @@ function presetSceneSpec(prompt = '') {
 function fallbackDrawingLayers(prompt = '', options = {}) {
   const preset = !options.skipPreset ? matchQualityPreset(prompt) : null;
   if (preset?.layers?.length) return preset.layers;
-  const profile = avatarConceptProfile(prompt);
-  const l = profile.lower;
+  const l = prompt.toLowerCase();
   const mat = materialForPrompt(prompt);
-  const eyeShape = profile.isIdea ? 'googlyEye' : profile.wantsScreenFace ? 'pixelEye' : l.includes('sleepy') ? 'sleepyEye' : 'cuteEye';
-  const mouthShape = profile.wantsScreenFace ? 'mouthScreen' : profile.isVehicle && l.includes('car') ? 'mouthGrille' : profile.wantsBeak ? 'beak' : profile.wantsSnout ? 'snout' : profile.isIdea ? 'mouthGrin' : 'mouthSmile';
-  const bodyMaterial = profile.isIdea ? 'glossyGold' : mat;
+  const eyeShape = /funny|idea|abstract|silly/.test(l) ? 'googlyEye' : /computer|robot|screen/.test(l) ? 'pixelEye' : 'cuteEye';
+  const mouthShape = /computer|robot|screen/.test(l) ? 'mouthScreen' : /funny|idea|abstract|joke/.test(l) ? 'mouthGrin' : /bird|duck|chicken/.test(l) ? 'beak' : 'mouthSmile';
+  const bodyMaterial = /idea|funny|abstract|joke/.test(l) ? 'glossyGold' : mat;
   const layers = [
     layer('shadow', 'ground', 0, 6, 0.98, 0.18, 'shadow', { opacity: 0.24, z: -10 }),
     layer('mascotBody', 'free', 0, 0, 0.62, 0.6, bodyMaterial, { z: 2, attach: { socket: 'body.center' } }),
@@ -574,11 +434,35 @@ function fallbackDrawingLayers(prompt = '', options = {}) {
     layer('hoof', 'free', 0, -4, 0.2, 0.13, 'charcoalRubber', { z: 6, attach: { socket: 'body.rightFoot' } }),
     layer('mascotHead', 'free', 0, 0, 0.94, 0.84, bodyMaterial, { z: 8, attach: { socket: 'head.center' } }),
   ];
-  layers.push(...proceduralIdentityLayers(prompt, bodyMaterial));
+  if (!/computer|monitor|screen|car|boat|sail|rocket/.test(l)) {
+    layers.push(
+      layer('stubbyArm', 'free', -2, 0, 0.22, 0.26, bodyMaterial, { rotate: -10, z: 5, attach: { socket: 'body.leftHand' } }),
+      layer('stubbyArm', 'free', 2, 0, 0.22, 0.26, bodyMaterial, { rotate: 10, z: 5, attach: { socket: 'body.rightHand' } }),
+    );
+  }
+  if (/cat|dog|bear|rabbit|bunny|animal|mouse|fox|tiger|lion|elephant/.test(l)) {
+    layers.push(layer('softEar', 'free', -3, 6, 0.34, 0.42, bodyMaterial, { rotate: -24, z: 9, attach: { socket: 'head.leftEar' } }), layer('softEar', 'free', 3, 6, 0.34, 0.42, bodyMaterial, { rotate: 24, z: 9, attach: { socket: 'head.rightEar' } }));
+  }
+  if (/dragon|unicorn|goat|horn|devil|monster/.test(l)) {
+    layers.push(layer('softHorn', 'free', 0, 0, 0.18, 0.34, 'canvas', { rotate: -8, z: 10, attach: { socket: 'head.leftHorn' } }), layer('softHorn', 'free', 0, 0, 0.18, 0.34, 'canvas', { rotate: 8, z: 10, attach: { socket: 'head.rightHorn' } }));
+  }
+  if (/alien|robot|bug|insect/.test(l)) {
+    layers.push(layer('antenna', 'free', 0, 0, 0.22, 0.36, 'neon', { rotate: -18, z: 10, attach: { socket: 'head.leftHorn' } }), layer('antenna', 'free', 0, 0, 0.22, 0.36, 'neon', { rotate: 18, z: 10, attach: { socket: 'head.rightHorn' } }));
+  }
+  if (/cow|dog|pig|bear|mouse|fox|cat|animal/.test(l)) layers.push(layer('snout', 'free', 0, -2, 0.42, 0.24, 'warmCream', { z: 24, attach: { socket: 'head.mouth' } }));
+  if (/spot|cow|dog|dalmatian|pattern/.test(l)) layers.push(layer('bodyPatch', 'free', 0, 0, 0.3, 0.22, 'charcoalRubber', { rotate: -10, z: 11, attach: { socket: 'body.patchLeft' } }), layer('bodyPatch', 'free', 0, 0, 0.23, 0.16, 'charcoalRubber', { rotate: 8, z: 11, attach: { socket: 'body.patchRight' } }));
+  if (/computer|monitor|screen/.test(l)) layers.push(layer('screen', 'free', 0, 2, 0.5, 0.28, 'screenGlow', { z: 13, attach: { socket: 'body.front' } }), layer('button', 'free', -20, 28, 0.14, 0.14, 'glossyRed', { z: 14, attach: { socket: 'body.front' } }));
+  if (/car|truck|vehicle/.test(l)) layers.push(layer('carBody', 'ground', 0, -34, 0.7, 0.3, 'glossyRed', { z: 13 }), layer('wheel', 'ground', -50, -20, 0.25, 0.25, 'charcoalRubber', { z: 15 }), layer('wheel', 'ground', 50, -20, 0.25, 0.25, 'charcoalRubber', { z: 15 }));
+  if (/sail|boat|ship/.test(l)) layers.push(layer('hull', 'ground', 0, -34, 0.72, 0.26, 'wood', { z: 13 }), layer('curvedSail', 'free', 8, -20, 0.45, 0.62, 'canvas', { z: 12, attach: { socket: 'head.rightHorn' } }));
+  if (/rocket|spaceship|space ship/.test(l)) layers.push(layer('rocket', 'free', 0, -12, 0.38, 0.54, 'glossyPurple', { z: 13, attach: { socket: 'body.front' } }));
+  if (/idea|funny|abstract|joke/.test(l)) layers.push(layer('question', 'orbit', -158, -120, 0.36, 0.36, 'neon', { z: 12 }), layer('spark', 'orbit', 156, -150, 0.42, 0.42, 'glossyGold', { z: 12 }));
+  if (/zebra|stripe|striped/.test(l)) layers.push(layer('stripe', 'free', -10, -12, 0.42, 0.24, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.front' } }), layer('stripe', 'free', 10, 14, 0.34, 0.2, 'charcoalRubber', { rotate: -18, z: 12, attach: { socket: 'body.patchRight' } }));
+  if (/skateboard|skate board/.test(l)) layers.push(layer('roundedBox', 'ground', 0, -28, 0.78, 0.16, 'wood', { z: 14 }), layer('wheel', 'ground', -58, -14, 0.24, 0.24, 'charcoalRubber', { z: 15 }), layer('wheel', 'ground', 58, -14, 0.24, 0.24, 'charcoalRubber', { z: 15 }));
+  if (/dragon|bird|bat|wing/.test(l)) layers.push(layer('wing', 'free', -8, 4, 0.42, 0.34, bodyMaterial, { rotate: -22, z: 3, attach: { socket: 'body.leftShoulder' } }), layer('wing', 'free', 8, 4, 0.42, 0.34, bodyMaterial, { rotate: 22, z: 3, attach: { socket: 'body.rightShoulder' } }));
   layers.push(
     layer(eyeShape, 'free', 0, 0, 0.24, 0.24, 'softWhite', { role: 'eye', z: 20, attach: { socket: 'head.leftEye' } }),
     layer(eyeShape, 'free', 0, 0, 0.24, 0.24, 'softWhite', { role: 'eye', z: 20, attach: { socket: 'head.rightEye' } }),
-    layer(mouthShape, 'free', 0, mouthShape === 'mouthGrin' ? 10 : 14, mouthShape === 'beak' ? 0.38 : mouthShape === 'snout' ? 0.42 : 0.22, mouthShape === 'beak' ? 0.22 : mouthShape === 'snout' ? 0.24 : 0.09, mouthShape === 'snout' ? 'warmCream' : 'charcoalRubber', { role: 'mouth', z: 31, attach: { socket: 'head.mouth' } }),
+    layer(mouthShape, 'free', 0, mouthShape === 'mouthGrin' ? 10 : 14, mouthShape === 'beak' ? 0.38 : 0.22, mouthShape === 'beak' ? 0.22 : 0.09, 'charcoalRubber', { role: 'mouth', z: 31, attach: { socket: 'head.mouth' } }),
   );
   return layers;
 }
