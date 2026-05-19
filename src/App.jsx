@@ -625,6 +625,7 @@ function DemoApp() {
   const streamSpeakingRef = useRef(false);
   const streamAfterRef = useRef(null);
   const personalityRef = useRef(null);
+  const speechPrimedRef = useRef(false);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
   const colors = useMemo(() => colorsFromName(avatarSeed), [avatarSeed]);
@@ -717,14 +718,19 @@ function DemoApp() {
     setActivated(true);
     setMessage('Listening now. Say anything.');
     setTranscript('Listening… say something now.');
-    setDebug('start clicked — listener starting');
-    appendLog('Live mode activated. Listener starts from the Start tap.');
-    startAudioMeter();
-    startListening();
+    setDebug('start clicked — priming mic and speech');
+    appendLog('Live mode activated. Priming mic and speech from the Start tap.');
+    await startAudioMeter();
+    primeSpeechOutput();
+    window.setTimeout(() => {
+      setDebug('start clicked — listener starting');
+      startListening();
+    }, 120);
   }
 
   async function startAudioMeter() {
     try {
+      if (audioRef.current?.getTracks?.()?.length) return true;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioRef.current = stream;
       const ctx = new AudioContext();
@@ -741,8 +747,39 @@ function DemoApp() {
         animationRef.current = requestAnimationFrame(loop);
       };
       loop();
-    } catch {
+      return true;
+    } catch (error) {
       appendLog('Mic meter unavailable until browser permission is granted.');
+      setDebug(`mic permission/setup issue: ${error?.message || 'unknown'}`);
+      return false;
+    }
+  }
+
+  function primeSpeechOutput() {
+    if (!window.speechSynthesis || speechPrimedRef.current) return;
+    speechPrimedRef.current = true;
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume?.();
+      const utterance = new SpeechSynthesisUtterance('.');
+      utterance.volume = 0.01;
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      if (voiceRef.current) {
+        utterance.voice = voiceRef.current;
+        utterance.lang = voiceRef.current.lang || 'en-US';
+      } else {
+        utterance.lang = 'en-US';
+      }
+      utterance.onend = () => {
+        try { window.speechSynthesis.cancel(); } catch {}
+      };
+      utterance.onerror = () => {
+        speechPrimedRef.current = false;
+      };
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      speechPrimedRef.current = false;
     }
   }
 
@@ -1105,6 +1142,7 @@ function DemoApp() {
       return;
     }
     window.speechSynthesis.cancel();
+    window.speechSynthesis.resume?.();
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
     const speechRun = speechRunRef.current + 1;
