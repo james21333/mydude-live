@@ -1,0 +1,1742 @@
+{
+  "version": "avatar-quality-presets-v1",
+  "presets": [
+    {
+      "id": "sailboat",
+      "match": [
+        "sailboat",
+        "sail boat",
+        "boat",
+        "ship",
+        "sailing"
+      ],
+      "title": "Sailboat Dude",
+      "summary": "A glossy cartoon sailboat avatar with a friendly face on the sail.",
+      "palette": "blue",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.55,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.26,
+          "z": -10
+        },
+        {
+          "shape": "hull",
+          "anchor": "body",
+          "x": 0,
+          "y": 92,
+          "scale": [
+            1.42,
+            0.78
+          ],
+          "material": "wood",
+          "z": 1
+        },
+        {
+          "shape": "curvedSail",
+          "anchor": "head",
+          "x": 28,
+          "y": -10,
+          "scale": [
+            1.16,
+            1.52
+          ],
+          "material": "canvas",
+          "z": 4
+        },
+        {
+          "shape": "tube",
+          "anchor": "bodyTop",
+          "x": -38,
+          "y": -46,
+          "scale": [
+            0.18,
+            1.7
+          ],
+          "rotate": -2,
+          "material": "brushedMetal",
+          "z": 3
+        },
+        {
+          "shape": "rope",
+          "anchor": "bodyFront",
+          "x": -58,
+          "y": -2,
+          "scale": [
+            0.46,
+            1.24
+          ],
+          "material": "brushedMetal",
+          "z": 8
+        },
+        {
+          "shape": "flag",
+          "anchor": "top",
+          "x": 50,
+          "y": 38,
+          "scale": [
+            0.46,
+            0.42
+          ],
+          "material": "glossyRed",
+          "z": 11
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": -6,
+          "y": -2,
+          "scale": [
+            0.26,
+            0.28
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 16,
+          "y": 0,
+          "scale": [
+            0.26,
+            0.28
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthSmile",
+          "anchor": "mouth",
+          "x": 8,
+          "y": 8,
+          "scale": [
+            0.68,
+            0.32
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "computer",
+      "match": [
+        "computer",
+        "monitor",
+        "pc",
+        "laptop",
+        "screen"
+      ],
+      "title": "Computer Buddy",
+      "summary": "A friendly glossy computer avatar with pixel eyes and a glowing screen mouth.",
+      "palette": "gray",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.55,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.28,
+          "z": -10
+        },
+        {
+          "shape": "monitor",
+          "anchor": "body",
+          "x": 0,
+          "y": 38,
+          "scale": [
+            1.28,
+            1.08
+          ],
+          "material": "chrome",
+          "z": 2
+        },
+        {
+          "shape": "screen",
+          "anchor": "face",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            1.02,
+            0.66
+          ],
+          "material": "screenGlow",
+          "z": 6
+        },
+        {
+          "shape": "keyboard",
+          "anchor": "bodyBottom",
+          "x": 0,
+          "y": 8,
+          "scale": [
+            1.12,
+            0.34
+          ],
+          "material": "charcoalRubber",
+          "z": 9
+        },
+        {
+          "shape": "wire",
+          "anchor": "bodyBack",
+          "x": 128,
+          "y": 18,
+          "scale": [
+            0.7,
+            0.7
+          ],
+          "material": "brushedMetal",
+          "z": 1
+        },
+        {
+          "shape": "pixelEye",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.28,
+            0.28
+          ],
+          "material": "screenGlow",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "pixelEye",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.28,
+            0.28
+          ],
+          "material": "screenGlow",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthScreen",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 10,
+          "scale": [
+            0.66,
+            0.28
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "car",
+      "match": [
+        "car",
+        "truck",
+        "racecar",
+        "vehicle"
+      ],
+      "title": "Car Dude",
+      "summary": "A toy-like cartoon car avatar with windshield eyes and a grille mouth.",
+      "palette": "red",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 22,
+          "scale": [
+            1.75,
+            0.3
+          ],
+          "material": "shadow",
+          "opacity": 0.3,
+          "z": -10
+        },
+        {
+          "shape": "carBody",
+          "anchor": "body",
+          "x": 0,
+          "y": 82,
+          "scale": [
+            1.48,
+            0.88
+          ],
+          "material": "glossyRed",
+          "z": 2
+        },
+        {
+          "shape": "windshield",
+          "anchor": "face",
+          "x": 0,
+          "y": 14,
+          "scale": [
+            1.05,
+            0.72
+          ],
+          "material": "blackGlass",
+          "z": 7
+        },
+        {
+          "shape": "fender",
+          "anchor": "leftFoot",
+          "x": -28,
+          "y": -10,
+          "scale": [
+            0.72,
+            0.45
+          ],
+          "material": "glossyRed",
+          "z": 8
+        },
+        {
+          "shape": "fender",
+          "anchor": "rightFoot",
+          "x": 28,
+          "y": -10,
+          "scale": [
+            0.72,
+            0.45
+          ],
+          "material": "glossyRed",
+          "z": 8
+        },
+        {
+          "shape": "wheel",
+          "anchor": "leftFoot",
+          "x": -30,
+          "y": -5,
+          "scale": [
+            0.62,
+            0.62
+          ],
+          "material": "charcoalRubber",
+          "z": 10
+        },
+        {
+          "shape": "wheel",
+          "anchor": "rightFoot",
+          "x": 30,
+          "y": -5,
+          "scale": [
+            0.62,
+            0.62
+          ],
+          "material": "charcoalRubber",
+          "z": 10
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": -6,
+          "y": 28,
+          "scale": [
+            0.2,
+            0.18
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 6,
+          "y": 28,
+          "scale": [
+            0.2,
+            0.18
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthGrille",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 46,
+          "scale": [
+            0.82,
+            0.3
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "funny_idea",
+      "match": [
+        "funny idea",
+        "idea",
+        "abstract",
+        "joke",
+        "silly concept"
+      ],
+      "title": "Funny Idea",
+      "summary": "A glowing lightbulb comedian with googly eyes, sparks, and a little microphone.",
+      "palette": "gold",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.4,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.24,
+          "z": -10
+        },
+        {
+          "shape": "lightbulb",
+          "anchor": "body",
+          "x": 0,
+          "y": 16,
+          "scale": [
+            1.16,
+            1.28
+          ],
+          "material": "glossyGold",
+          "z": 2
+        },
+        {
+          "shape": "spark",
+          "anchor": "orbit",
+          "x": -178,
+          "y": -164,
+          "scale": [
+            0.45,
+            0.45
+          ],
+          "material": "glossyGold",
+          "z": 6
+        },
+        {
+          "shape": "question",
+          "anchor": "orbit",
+          "x": 178,
+          "y": -120,
+          "scale": [
+            0.38,
+            0.38
+          ],
+          "material": "neon",
+          "z": 6
+        },
+        {
+          "shape": "microphone",
+          "anchor": "leftHand",
+          "x": 28,
+          "y": -20,
+          "scale": [
+            0.42,
+            0.72
+          ],
+          "material": "chrome",
+          "z": 12
+        },
+        {
+          "shape": "googlyEye",
+          "anchor": "leftEye",
+          "x": -8,
+          "y": 8,
+          "scale": [
+            0.28,
+            0.28
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "googlyEye",
+          "anchor": "rightEye",
+          "x": 12,
+          "y": 4,
+          "scale": [
+            0.32,
+            0.32
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthGrin",
+          "anchor": "mouth",
+          "x": 4,
+          "y": 10,
+          "scale": [
+            0.78,
+            0.36
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "elder_statesman",
+      "match": [
+        "george h w bush",
+        "bush",
+        "president",
+        "statesman",
+        "politician"
+      ],
+      "title": "Elder Statesman",
+      "summary": "A safe symbolic elder-statesman cartoon: suit, gray hair, tie, podium, and flag cue.",
+      "palette": "gray",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.48,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.28,
+          "z": -10
+        },
+        {
+          "shape": "roundedBox",
+          "anchor": "body",
+          "x": 0,
+          "y": 78,
+          "scale": [
+            1.02,
+            1.1
+          ],
+          "material": "charcoalRubber",
+          "z": 2
+        },
+        {
+          "shape": "sphere",
+          "anchor": "head",
+          "x": 0,
+          "y": -12,
+          "scale": [
+            0.9,
+            0.86
+          ],
+          "material": "warmCream",
+          "z": 5
+        },
+        {
+          "shape": "hairCap",
+          "anchor": "forehead",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            0.86,
+            0.42
+          ],
+          "material": "softWhite",
+          "z": 8
+        },
+        {
+          "shape": "tie",
+          "anchor": "bodyFront",
+          "x": 0,
+          "y": 16,
+          "scale": [
+            0.42,
+            0.82
+          ],
+          "material": "glossyRed",
+          "z": 9
+        },
+        {
+          "shape": "podium",
+          "anchor": "ground",
+          "x": 0,
+          "y": -24,
+          "scale": [
+            1.05,
+            0.52
+          ],
+          "material": "wood",
+          "z": 14
+        },
+        {
+          "shape": "flag",
+          "anchor": "right",
+          "x": -20,
+          "y": -58,
+          "scale": [
+            0.55,
+            0.55
+          ],
+          "material": "glossyBlue",
+          "z": 7
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.22,
+            0.22
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.22,
+            0.22
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthSmile",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 8,
+          "scale": [
+            0.58,
+            0.28
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "cow",
+      "match": [
+        "cow",
+        "bull",
+        "calf",
+        "farm animal"
+      ],
+      "title": "Cow Buddy",
+      "summary": "A plush Cow Buddy using the original My Dude/Buddy silhouette: oversized expressive head, compact body, tiny cow-colored mouth, centered black belly spots, attached hooves, and walking-ready legs.",
+      "palette": "green",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 8,
+          "scale": [
+            1.06,
+            0.18
+          ],
+          "material": "shadow",
+          "opacity": 0.25,
+          "z": -10
+        },
+        {
+          "shape": "stubbyArm",
+          "anchor": "free",
+          "x": -12,
+          "y": 30,
+          "scale": [
+            0.2,
+            0.3
+          ],
+          "material": "softWhite",
+          "rotate": 18,
+          "opacity": 0.96,
+          "z": 3,
+          "attach": {
+            "socket": "body.leftShoulder"
+          }
+        },
+        {
+          "shape": "stubbyArm",
+          "anchor": "free",
+          "x": 12,
+          "y": 30,
+          "scale": [
+            0.2,
+            0.3
+          ],
+          "material": "softWhite",
+          "rotate": -18,
+          "opacity": 0.96,
+          "z": 3,
+          "attach": {
+            "socket": "body.rightShoulder"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": -2,
+          "y": 6,
+          "scale": [
+            0.14,
+            0.1
+          ],
+          "material": "charcoalRubber",
+          "z": 8,
+          "attach": {
+            "socket": "body.leftHand"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": 2,
+          "y": 6,
+          "scale": [
+            0.14,
+            0.1
+          ],
+          "material": "charcoalRubber",
+          "z": 8,
+          "attach": {
+            "socket": "body.rightHand"
+          }
+        },
+        {
+          "shape": "mascotBody",
+          "anchor": "free",
+          "x": 0,
+          "y": 0,
+          "scale": [
+            0.62,
+            0.6
+          ],
+          "material": "softWhite",
+          "z": 2,
+          "attach": {
+            "socket": "body.center"
+          }
+        },
+        {
+          "shape": "stubbyLeg",
+          "anchor": "free",
+          "x": 0,
+          "y": 8,
+          "scale": [
+            0.24,
+            0.46
+          ],
+          "material": "softWhite",
+          "z": 4,
+          "attach": {
+            "socket": "body.leftHip"
+          }
+        },
+        {
+          "shape": "stubbyLeg",
+          "anchor": "free",
+          "x": 0,
+          "y": 8,
+          "scale": [
+            0.24,
+            0.46
+          ],
+          "material": "softWhite",
+          "z": 4,
+          "attach": {
+            "socket": "body.rightHip"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": 0,
+          "y": 0,
+          "scale": [
+            0.22,
+            0.14
+          ],
+          "material": "charcoalRubber",
+          "z": 6,
+          "attach": {
+            "socket": "body.leftFoot"
+          }
+        },
+        {
+          "shape": "hoof",
+          "anchor": "free",
+          "x": 0,
+          "y": 0,
+          "scale": [
+            0.22,
+            0.14
+          ],
+          "material": "charcoalRubber",
+          "z": 6,
+          "attach": {
+            "socket": "body.rightFoot"
+          }
+        },
+        {
+          "shape": "bodyPatch",
+          "anchor": "free",
+          "x": 0,
+          "y": 0,
+          "scale": [
+            0.22,
+            0.16
+          ],
+          "material": "charcoalRubber",
+          "rotate": -8,
+          "opacity": 0.9,
+          "z": 7,
+          "attach": {
+            "socket": "body.patchLeft"
+          }
+        },
+        {
+          "shape": "bodyPatch",
+          "anchor": "free",
+          "x": 0,
+          "y": 0,
+          "scale": [
+            0.2,
+            0.14
+          ],
+          "material": "charcoalRubber",
+          "rotate": 8,
+          "opacity": 0.9,
+          "z": 7,
+          "attach": {
+            "socket": "body.patchRight"
+          }
+        },
+        {
+          "shape": "mascotHead",
+          "anchor": "free",
+          "x": 0,
+          "y": -2,
+          "scale": [
+            0.96,
+            0.84
+          ],
+          "material": "softWhite",
+          "z": 8,
+          "attach": {
+            "socket": "head.center"
+          }
+        },
+        {
+          "shape": "softEar",
+          "anchor": "free",
+          "x": -8,
+          "y": 6,
+          "scale": [
+            0.32,
+            0.38
+          ],
+          "material": "warmCream",
+          "rotate": -24,
+          "z": 9,
+          "attach": {
+            "socket": "head.leftEar"
+          }
+        },
+        {
+          "shape": "softEar",
+          "anchor": "free",
+          "x": 8,
+          "y": 6,
+          "scale": [
+            0.32,
+            0.38
+          ],
+          "material": "warmCream",
+          "rotate": 24,
+          "z": 9,
+          "attach": {
+            "socket": "head.rightEar"
+          }
+        },
+        {
+          "shape": "softHorn",
+          "anchor": "free",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.16,
+            0.3
+          ],
+          "material": "canvas",
+          "rotate": -8,
+          "z": 10,
+          "attach": {
+            "socket": "head.leftHorn"
+          }
+        },
+        {
+          "shape": "softHorn",
+          "anchor": "free",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.16,
+            0.3
+          ],
+          "material": "canvas",
+          "rotate": 8,
+          "z": 10,
+          "attach": {
+            "socket": "head.rightHorn"
+          }
+        },
+        {
+          "shape": "cuteEye",
+          "anchor": "free",
+          "x": -2,
+          "y": 0,
+          "scale": [
+            0.27,
+            0.27
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20,
+          "attach": {
+            "socket": "head.leftEye"
+          }
+        },
+        {
+          "shape": "cuteEye",
+          "anchor": "free",
+          "x": 2,
+          "y": 0,
+          "scale": [
+            0.27,
+            0.27
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20,
+          "attach": {
+            "socket": "head.rightEye"
+          }
+        },
+        {
+          "shape": "snout",
+          "anchor": "free",
+          "x": 0,
+          "y": -4,
+          "scale": [
+            0.28,
+            0.15
+          ],
+          "material": "warmCream",
+          "z": 29,
+          "attach": {
+            "socket": "head.mouth"
+          }
+        },
+        {
+          "shape": "mouthSmile",
+          "anchor": "free",
+          "x": 0,
+          "y": 14,
+          "scale": [
+            0.26,
+            0.14
+          ],
+          "material": "warmCream",
+          "role": "mouth",
+          "z": 31,
+          "attach": {
+            "socket": "head.mouth"
+          }
+        }
+      ]
+    },
+    {
+      "id": "alien",
+      "match": [
+        "alien",
+        "ufo",
+        "martian",
+        "space creature"
+      ],
+      "title": "Alien Dude",
+      "summary": "A glossy purple alien with antennae, big eyes, and a tiny smile.",
+      "palette": "purple",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.45,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.26,
+          "z": -10
+        },
+        {
+          "shape": "capsule",
+          "anchor": "body",
+          "x": 0,
+          "y": 82,
+          "scale": [
+            0.95,
+            1.1
+          ],
+          "material": "glossyPurple",
+          "z": 2
+        },
+        {
+          "shape": "egg",
+          "anchor": "head",
+          "x": 0,
+          "y": -10,
+          "scale": [
+            1.04,
+            1.0
+          ],
+          "material": "glossyPurple",
+          "z": 5
+        },
+        {
+          "shape": "antenna",
+          "anchor": "forehead",
+          "x": -36,
+          "y": -28,
+          "scale": [
+            0.36,
+            0.72
+          ],
+          "material": "neon",
+          "rotate": -22,
+          "z": 7
+        },
+        {
+          "shape": "antenna",
+          "anchor": "forehead",
+          "x": 36,
+          "y": -28,
+          "scale": [
+            0.36,
+            0.72
+          ],
+          "material": "neon",
+          "rotate": 22,
+          "z": 7
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": -8,
+          "y": 0,
+          "scale": [
+            0.4,
+            0.46
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 8,
+          "y": 0,
+          "scale": [
+            0.4,
+            0.46
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthSmile",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 10,
+          "scale": [
+            0.56,
+            0.26
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "monster",
+      "match": [
+        "monster",
+        "goblin",
+        "creature",
+        "beast"
+      ],
+      "title": "Friendly Monster",
+      "summary": "A cute not-scary monster with horns, claws, spots, and a big rubber grin.",
+      "palette": "green",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 26,
+          "scale": [
+            1.55,
+            0.3
+          ],
+          "material": "shadow",
+          "opacity": 0.27,
+          "z": -10
+        },
+        {
+          "shape": "blob",
+          "anchor": "body",
+          "x": 0,
+          "y": 74,
+          "scale": [
+            1.16,
+            1.18
+          ],
+          "material": "glossyGreen",
+          "z": 2
+        },
+        {
+          "shape": "horn",
+          "anchor": "forehead",
+          "x": -44,
+          "y": 12,
+          "scale": [
+            0.32,
+            0.55
+          ],
+          "material": "canvas",
+          "rotate": -24,
+          "z": 7
+        },
+        {
+          "shape": "horn",
+          "anchor": "forehead",
+          "x": 44,
+          "y": 12,
+          "scale": [
+            0.32,
+            0.55
+          ],
+          "material": "canvas",
+          "rotate": 24,
+          "z": 7
+        },
+        {
+          "shape": "claw",
+          "anchor": "leftHand",
+          "x": 8,
+          "y": -4,
+          "scale": [
+            0.4,
+            0.42
+          ],
+          "material": "canvas",
+          "z": 8
+        },
+        {
+          "shape": "claw",
+          "anchor": "rightHand",
+          "x": -8,
+          "y": -4,
+          "scale": [
+            0.4,
+            0.42
+          ],
+          "material": "canvas",
+          "z": 8
+        },
+        {
+          "shape": "spot",
+          "anchor": "bodyFront",
+          "x": -46,
+          "y": -32,
+          "scale": [
+            0.32,
+            0.24
+          ],
+          "material": "glossyPurple",
+          "z": 9
+        },
+        {
+          "shape": "googlyEye",
+          "anchor": "leftEye",
+          "x": -4,
+          "y": 0,
+          "scale": [
+            0.34,
+            0.34
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "googlyEye",
+          "anchor": "rightEye",
+          "x": 7,
+          "y": -4,
+          "scale": [
+            0.3,
+            0.3
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthGrin",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 14,
+          "scale": [
+            0.86,
+            0.42
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "dragon",
+      "match": [
+        "dragon",
+        "wyvern"
+      ],
+      "title": "Baby Dragon",
+      "summary": "A cute dragon avatar with wings, horns, scales, and a beaky smile.",
+      "palette": "green",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 26,
+          "scale": [
+            1.65,
+            0.3
+          ],
+          "material": "shadow",
+          "opacity": 0.27,
+          "z": -10
+        },
+        {
+          "shape": "capsule",
+          "anchor": "body",
+          "x": 0,
+          "y": 84,
+          "scale": [
+            1.0,
+            1.16
+          ],
+          "material": "scale",
+          "z": 3
+        },
+        {
+          "shape": "sphere",
+          "anchor": "head",
+          "x": 0,
+          "y": -10,
+          "scale": [
+            0.92,
+            0.86
+          ],
+          "material": "scale",
+          "z": 7
+        },
+        {
+          "shape": "wing",
+          "anchor": "leftArm",
+          "x": 18,
+          "y": 10,
+          "scale": [
+            0.82,
+            0.74
+          ],
+          "material": "glossyPurple",
+          "rotate": -18,
+          "z": 2
+        },
+        {
+          "shape": "wing",
+          "anchor": "rightArm",
+          "x": -18,
+          "y": 10,
+          "scale": [
+            0.82,
+            0.74
+          ],
+          "material": "glossyPurple",
+          "rotate": 18,
+          "z": 2
+        },
+        {
+          "shape": "horn",
+          "anchor": "forehead",
+          "x": -36,
+          "y": 12,
+          "scale": [
+            0.26,
+            0.48
+          ],
+          "material": "canvas",
+          "z": 9
+        },
+        {
+          "shape": "horn",
+          "anchor": "forehead",
+          "x": 36,
+          "y": 12,
+          "scale": [
+            0.26,
+            0.48
+          ],
+          "material": "canvas",
+          "z": 9
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.25,
+            0.25
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.25,
+            0.25
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "beak",
+          "anchor": "mouth",
+          "x": 6,
+          "y": 10,
+          "scale": [
+            0.55,
+            0.34
+          ],
+          "material": "glossyGold",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "robot",
+      "match": [
+        "robot",
+        "android",
+        "bot"
+      ],
+      "title": "Robot Pal",
+      "summary": "A rounded chrome robot avatar with pixel eyes, antenna, and a screen mouth.",
+      "palette": "gray",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.45,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.28,
+          "z": -10
+        },
+        {
+          "shape": "roundedBox",
+          "anchor": "body",
+          "x": 0,
+          "y": 78,
+          "scale": [
+            1.0,
+            1.12
+          ],
+          "material": "chrome",
+          "z": 2
+        },
+        {
+          "shape": "squircle",
+          "anchor": "head",
+          "x": 0,
+          "y": -8,
+          "scale": [
+            0.98,
+            0.82
+          ],
+          "material": "chrome",
+          "z": 5
+        },
+        {
+          "shape": "antenna",
+          "anchor": "forehead",
+          "x": 0,
+          "y": -30,
+          "scale": [
+            0.35,
+            0.72
+          ],
+          "material": "screenGlow",
+          "z": 8
+        },
+        {
+          "shape": "button",
+          "anchor": "bodyFront",
+          "x": -34,
+          "y": 18,
+          "scale": [
+            0.24,
+            0.24
+          ],
+          "material": "glossyRed",
+          "z": 9
+        },
+        {
+          "shape": "button",
+          "anchor": "bodyFront",
+          "x": 34,
+          "y": 18,
+          "scale": [
+            0.24,
+            0.24
+          ],
+          "material": "glossyGreen",
+          "z": 9
+        },
+        {
+          "shape": "pixelEye",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.28,
+            0.28
+          ],
+          "material": "screenGlow",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "pixelEye",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 4,
+          "scale": [
+            0.28,
+            0.28
+          ],
+          "material": "screenGlow",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthScreen",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 10,
+          "scale": [
+            0.62,
+            0.28
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "cat",
+      "match": [
+        "cat",
+        "kitten"
+      ],
+      "title": "Cat Dude",
+      "summary": "A plush cartoon cat with ears, paws, whisker-like lines, and a tiny smile.",
+      "palette": "orange",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.4,
+            0.28
+          ],
+          "material": "shadow",
+          "opacity": 0.25,
+          "z": -10
+        },
+        {
+          "shape": "capsule",
+          "anchor": "body",
+          "x": 0,
+          "y": 82,
+          "scale": [
+            0.96,
+            1.12
+          ],
+          "material": "fur",
+          "z": 2
+        },
+        {
+          "shape": "sphere",
+          "anchor": "head",
+          "x": 0,
+          "y": -8,
+          "scale": [
+            0.94,
+            0.86
+          ],
+          "material": "fur",
+          "z": 5
+        },
+        {
+          "shape": "animalEar",
+          "anchor": "leftEar",
+          "x": 8,
+          "y": 8,
+          "scale": [
+            0.48,
+            0.58
+          ],
+          "material": "fur",
+          "rotate": -18,
+          "z": 6
+        },
+        {
+          "shape": "animalEar",
+          "anchor": "rightEar",
+          "x": -8,
+          "y": 8,
+          "scale": [
+            0.48,
+            0.58
+          ],
+          "material": "fur",
+          "rotate": 18,
+          "z": 6
+        },
+        {
+          "shape": "paw",
+          "anchor": "leftHand",
+          "x": 8,
+          "y": 0,
+          "scale": [
+            0.38,
+            0.38
+          ],
+          "material": "warmCream",
+          "z": 9
+        },
+        {
+          "shape": "paw",
+          "anchor": "rightHand",
+          "x": -8,
+          "y": 0,
+          "scale": [
+            0.38,
+            0.38
+          ],
+          "material": "warmCream",
+          "z": 9
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.25,
+            0.28
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 2,
+          "scale": [
+            0.25,
+            0.28
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthSmile",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 12,
+          "scale": [
+            0.54,
+            0.24
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    },
+    {
+      "id": "rocket",
+      "match": [
+        "rocket",
+        "spaceship",
+        "space ship"
+      ],
+      "title": "Rocket Dude",
+      "summary": "A shiny rocket avatar with a face window, fins, and a talking screen mouth.",
+      "palette": "purple",
+      "layers": [
+        {
+          "shape": "shadow",
+          "anchor": "ground",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            1.35,
+            0.26
+          ],
+          "material": "shadow",
+          "opacity": 0.25,
+          "z": -10
+        },
+        {
+          "shape": "rocket",
+          "anchor": "body",
+          "x": 0,
+          "y": 28,
+          "scale": [
+            1.02,
+            1.22
+          ],
+          "material": "glossyPurple",
+          "z": 2
+        },
+        {
+          "shape": "fin",
+          "anchor": "leftLeg",
+          "x": -30,
+          "y": 0,
+          "scale": [
+            0.5,
+            0.62
+          ],
+          "material": "glossyRed",
+          "rotate": -18,
+          "z": 4
+        },
+        {
+          "shape": "fin",
+          "anchor": "rightLeg",
+          "x": 30,
+          "y": 0,
+          "scale": [
+            0.5,
+            0.62
+          ],
+          "material": "glossyRed",
+          "rotate": 18,
+          "z": 4
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "leftEye",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            0.22,
+            0.22
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "eyeBall",
+          "anchor": "rightEye",
+          "x": 0,
+          "y": 24,
+          "scale": [
+            0.22,
+            0.22
+          ],
+          "material": "softWhite",
+          "role": "eye",
+          "z": 20
+        },
+        {
+          "shape": "mouthScreen",
+          "anchor": "mouth",
+          "x": 0,
+          "y": 30,
+          "scale": [
+            0.55,
+            0.24
+          ],
+          "material": "charcoalRubber",
+          "role": "mouth",
+          "z": 30
+        }
+      ]
+    }
+  ]
+}
