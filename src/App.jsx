@@ -715,18 +715,12 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
-    setMessage("Hey, what's up?");
-    setTranscript('Greeting… then I will listen.');
-    setDebug('start clicked — greeting first, listener next');
-    appendLog('Live mode activated. Greeting from the click before listener starts.');
-    speak("Hey, what's up?", {
-      rate: 1.02,
-      after: () => {
-        setTranscript('Listening… say something now.');
-        startListening();
-        startAudioMeter();
-      },
-    });
+    setMessage('Listening now. Say anything.');
+    setTranscript('Listening… say something now.');
+    setDebug('start clicked — listener starting');
+    appendLog('Live mode activated. Listener starts from the Start tap.');
+    startAudioMeter();
+    startListening();
   }
 
   async function startAudioMeter() {
