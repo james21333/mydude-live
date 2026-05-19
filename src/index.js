@@ -8,11 +8,9 @@ const CSS_FILES = ENTRY?.css || [];
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const hostname = url.hostname.toLowerCase();
-
     const assetResponse = await env.ASSETS?.fetch(request);
     if (assetResponse && assetResponse.status !== 404) return assetResponse;
-    return new Response(renderShell(hostname), {
+    return new Response(renderShell(url.hostname.toLowerCase()), {
       headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=60' }
     });
   }

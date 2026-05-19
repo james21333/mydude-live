@@ -20,14 +20,14 @@ h2 { margin: 0; }
 .generic-project { min-height: 78vh; display: grid; place-items: center; text-align: center; }
 .orb { width: 112px; height: 112px; margin: 0 auto 28px; border-radius: 999px; background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.95), rgba(147,197,253,.58) 18%, rgba(59,130,246,.08) 64%); box-shadow: 0 0 60px rgba(147,197,253,.72), inset 0 0 34px rgba(255,255,255,.2); animation: pulse 2.8s ease-in-out infinite; }
 .meta-card { margin: 34px auto 0; display: grid; gap: 8px; width: min(520px, 100%); }
-.demo-page { min-height: calc(100svh - 12px); height: calc(100svh - 12px); overflow: hidden; display: flex; flex-direction: column; }
+.demo-page { min-height: calc(100vh - 12px); }
 .demo-hero { position: absolute; top: 14px; left: 18px; right: 18px; z-index: 5; display: flex; justify-content: space-between; gap: 16px; align-items: center; pointer-events: none; }
 .demo-hero .status-pill, .demo-hero .eyebrow { pointer-events: auto; }
 .demo-hero.compact { min-height: 34px; }
 .status-pill { border: 1px solid rgba(255,255,255,.2); padding: 10px 14px; border-radius: 999px; background: rgba(15,23,42,.55); text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; font-weight: 900; }
 .status-pill.listening { color: #86efac; } .status-pill.speaking { color: #fef08a; } .status-pill.building { color: #f0abfc; }
-.stage { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 10px; margin-top: 0; align-items: stretch; }
-.avatar-card { display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%; min-height: 0; background: rgba(2,6,23,.45); overflow: hidden; padding: clamp(44px, 6svh, 72px) 10px clamp(112px, 17svh, 160px); }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 300px); gap: 12px; margin-top: 0; align-items: stretch; }
+.avatar-card { display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; height: min(80vh, 720px); min-height: 480px; background: rgba(2,6,23,.45); overflow: hidden; padding: 50px 10px 40px; }
 .character { display: flex; flex-direction: column; align-items: center; justify-content: center; transform-origin: 50% 100%; animation: wander 4.8s ease-in-out infinite; will-change: transform; }
 .avatar-card.listening .character { animation: wander 3.2s ease-in-out infinite; }
 .avatar-card.speaking .character, .avatar-card.building .character { animation: walkabout 1.4s ease-in-out infinite; }
@@ -48,8 +48,7 @@ h2 { margin: 0; }
 .glasses::before { content: ""; width: clamp(34px, 5vw, 56px); height: 5px; background: rgba(15,23,42,.88); position: absolute; left: 50%; transform: translateX(-50%); }
 .glasses i { width: clamp(58px, 8vw, 94px); height: clamp(46px, 6.2vw, 72px); border: 5px solid rgba(15,23,42,.9); border-radius: 16px; }
 .mouth { width: clamp(54px, 7.2vw, 84px); height: clamp(14px, 1.8vw, 23px); background: rgba(15,23,42,.86); border-radius: 0 0 999px 999px; margin: clamp(28px, 4vw, 46px) auto 0; transition: all .08s ease; }
-.mouth.mid { height: clamp(16px, 2.1vw, 25px); width: clamp(56px, 7.4vw, 86px); border-radius: 45% 45% 52% 52%; box-shadow: inset 0 -5px 0 rgba(244,114,182,.26); }
-.mouth.open { height: clamp(20px, 2.8vw, 34px); width: clamp(58px, 7.6vw, 88px); border-radius: 40% 40% 52% 52%; box-shadow: inset 0 -8px 0 rgba(244,114,182,.38); }
+.mouth.open { height: clamp(18px, 2.5vw, 30px); width: clamp(58px, 7.6vw, 88px); border-radius: 40% 40% 52% 52%; box-shadow: inset 0 -8px 0 rgba(244,114,182,.38); }
 .character-lower { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.2vw, 14px); margin-top: 6px; flex: 0 0 auto; }
 .torso { display: flex; gap: 8px; padding: clamp(8px, 1.2vw, 12px); background: linear-gradient(135deg, var(--panel, rgba(255,255,255,.2)), rgba(255,255,255,.08)); border: 1px solid rgba(255,255,255,.2); border-radius: 28px 28px 22px 22px; box-shadow: inset 0 0 24px rgba(255,255,255,.08); }
 .torso span { width: clamp(18px, 2.6vw, 32px); height: clamp(26px, 3.4vh, 42px); background: var(--panel, rgba(255,255,255,.15)); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; }
@@ -66,7 +65,7 @@ h2 { margin: 0; }
 .avatar-card.speaking .leg:nth-child(2), .avatar-card.building .leg:nth-child(2) { animation: step-right .7s ease-in-out infinite; }
 .voice-panel { display: flex; flex-direction: column; gap: 14px; justify-content: center; }
 .voice-panel.top-controls, .voice-panel.controls-below { padding: clamp(10px, 1.2vw, 16px); }
-.voice-panel.compact-controls { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 9; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 8px; border-radius: 24px; min-height: 0; max-width: 760px; margin: 0 auto; background: rgba(2,6,23,.68); border-color: rgba(255,255,255,.22); box-shadow: 0 18px 60px rgba(0,0,0,.42); backdrop-filter: blur(18px); }
+.voice-panel.compact-controls { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; border-radius: 18px; min-height: 0; }
 .control-copy { min-width: 0; display: grid; gap: 6px; }
 .voice-panel p { color: #dbeafe; font-size: .9rem; line-height: 1.32; margin: 0; }
 .progress { grid-column: 1 / -1; height: 8px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
@@ -78,7 +77,7 @@ h2 { margin: 0; }
 .listener-debug { color: #bfdbfe; background: rgba(15,23,42,.52); border: 1px solid rgba(147,197,253,.25); border-radius: 10px; padding: 6px 8px; font-size: .74rem; line-height: 1.25; }
 .listener-debug strong { color: #93c5fd; }
 .actions, .manual-builder form { display: flex; flex-wrap: wrap; gap: 8px; justify-content: stretch; }
-.actions button { flex: 1 1 72px; justify-content: center; min-height: 42px; }
+.actions button { flex: 1 1 72px; justify-content: center; }
 button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 900; font-size: .9rem; }
 .primary { background: #f8fafc; color: #0f172a; }
 .secondary, .manual-builder button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.16); }
@@ -110,78 +109,3 @@ button { border: 0; border-radius: 999px; padding: 9px 13px; display: inline-fle
 .voice-list span { font-size: .84rem; font-weight: 800; color: #f8fafc; }
 .voice-list small { color: #cbd5e1; font-size: .72rem; }
 @media (max-width: 860px) { .voice-inventory-panel { font-size: .8rem; padding: 10px; } .voice-inventory-header { display: grid; } .voice-list { grid-template-columns: 1fr; max-height: 220px; } }
-.scene-card { padding: 18px; }
-.scene-svg { width: min(100%, 720px); height: min(100%, 620px); max-height: 100%; overflow: visible; filter: drop-shadow(0 24px 48px rgba(0,0,0,.28)); }
-.scene-character { transform-origin: 360px 420px; animation: scene-float 3.4s ease-in-out infinite; }
-.avatar-card.speaking .scene-character, .avatar-card.building .scene-character { animation: scene-talk 1.05s ease-in-out infinite; }
-.scene-label { fill: rgba(248,250,252,.86); font-size: 24px; font-weight: 900; letter-spacing: .03em; text-transform: uppercase; }
-.scene-extras text { fill: var(--scene-light); font-weight: 900; }
-@keyframes scene-float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-13px) rotate(1.2deg); } }
-@keyframes scene-talk { 0%,100% { transform: translateX(-8px) translateY(0) rotate(-2deg); } 50% { transform: translateX(8px) translateY(-16px) rotate(2deg); } }
-
-/* Mobile-first My Dude stage: avatar fills the circled area, controls float at the bottom. */
-@media (max-width: 860px) {
-  body { overflow: hidden; }
-  .demo-page { width: 100vw; height: 100svh; min-height: 100svh; margin: 0; border-radius: 0; border: 0; padding: 8px; }
-  .demo-hero { left: 14px; right: 14px; top: 12px; }
-  .stage { flex: 1; height: 100%; min-height: 0; gap: 0; }
-  .avatar-card { height: 100%; min-height: 0; border-radius: 22px; padding: 58px 6px 168px; }
-  .scene-card { padding: 0; }
-  .scene-svg { width: min(100%, 96vw); height: min(100%, calc(100svh - 180px)); max-height: calc(100svh - 180px); }
-  .voice-panel.compact-controls { left: 14px; right: 14px; bottom: max(12px, env(safe-area-inset-bottom)); padding: 10px; }
-  .voice-panel p { white-space: normal; overflow: visible; text-overflow: clip; }
-  .actions button { min-height: 44px; font-size: .9rem; }
-  .actions .primary { flex-basis: 100%; }
-}
-@media (min-width: 861px) {
-  .scene-svg { width: min(100%, 760px); height: min(100%, calc(100svh - 150px)); }
-}
-/* Hard mobile full-screen stage: hide debug inventory and make the avatar own the page. */
-@media (max-width: 860px) {
-  html, body, #root { width: 100%; height: 100%; min-height: 100%; overflow: hidden; }
-  .demo-page { position: fixed; inset: 0; width: 100vw; height: 100dvh; min-height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; border-radius: 0; overflow: hidden; }
-  .stage { position: fixed; inset: 0; height: 100dvh; width: 100vw; margin: 0; display: block; }
-  .avatar-card { position: fixed; inset: 0; width: 100vw; height: 100dvh; min-height: 100dvh; border: 0; border-radius: 0; padding: 54px 0 152px; }
-  .voice-panel.compact-controls { left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); max-width: none; }
-  .voice-inventory-panel, .manual-builder, .log-panel { display: none !important; }
-}
-/* Normal mobile mode is clean: only avatar + bottom Start/Listen button. Debug panels return with ?voice=1 or ?voices=1. */
-@media (max-width: 860px) {
-  .demo-page:not(.debug-mode) .control-copy,
-  .demo-page:not(.debug-mode) .progress,
-  .demo-page:not(.debug-mode) .voice-inventory-panel,
-  .demo-page:not(.debug-mode) .manual-builder,
-  .demo-page:not(.debug-mode) .log-panel { display: none !important; }
-  .demo-page:not(.debug-mode) .voice-panel.compact-controls { padding: 10px; background: transparent; border: 0; box-shadow: none; backdrop-filter: none; }
-  .demo-page:not(.debug-mode) .actions { margin: 0; }
-  .demo-page:not(.debug-mode) .actions .primary { width: 100%; min-height: 58px; font-size: 1rem; box-shadow: 0 14px 40px rgba(0,0,0,.34); }
-  .demo-page.debug-mode .voice-inventory-panel { display: block !important; }
-}
-/* Generated avatars should read like the original Buddy: no inner scene box, much larger character. */
-.drawing-card { background: transparent; }
-.drawing-svg { overflow: visible; }
-.drawing-character-large { transform-box: fill-box; transform-origin: 50% 62%; transform: scale(3.4); }
-.avatar-card.listening .drawing-character-large { animation: generated-wander 3.2s ease-in-out infinite; }
-.avatar-card.speaking .drawing-character-large, .avatar-card.building .drawing-character-large { animation: generated-walkabout 1.4s ease-in-out infinite; }
-@keyframes generated-wander { 0%,100% { transform: scale(3.4) translateX(-5px) rotate(-1deg); } 35% { transform: scale(3.4) translateX(6px) rotate(1.2deg); } 68% { transform: scale(3.4) translateY(-4px) rotate(-.5deg); } }
-@keyframes generated-walkabout { 0%,100% { transform: scale(3.4) translateX(-8px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(3.4) translateX(8px) translateY(-8px) rotate(1.5deg); } }
-@media (max-width: 860px) {
-  .scene-svg { width: 100vw; height: calc(100dvh - 96px); max-height: calc(100dvh - 96px); }
-  .drawing-character-large { transform: scale(4); }
-  .avatar-card.listening .drawing-character-large { animation: generated-wander-mobile 3.2s ease-in-out infinite; }
-  .avatar-card.speaking .drawing-character-large, .avatar-card.building .drawing-character-large { animation: generated-walkabout-mobile 1.4s ease-in-out infinite; }
-}
-@keyframes generated-wander-mobile { 0%,100% { transform: scale(4) translateX(-4px) rotate(-1deg); } 35% { transform: scale(4) translateX(5px) rotate(1.2deg); } 68% { transform: scale(4) translateY(-3px) rotate(-.5deg); } }
-@keyframes generated-walkabout-mobile { 0%,100% { transform: scale(4) translateX(-6px) translateY(0) rotate(-1.5deg); } 50% { transform: scale(4) translateX(6px) translateY(-7px) rotate(1.5deg); } }
-/* SVG transform attribute now owns generated avatar size; animation only moves it. */
-.drawing-character { transform-box: fill-box; transform-origin: 50% 88%; }
-.avatar-card.listening .drawing-character { animation: wander 3.2s ease-in-out infinite; }
-.avatar-card.speaking .drawing-character, .avatar-card.building .drawing-character { animation: walkabout 1.4s ease-in-out infinite; }
-/* Generated SVG avatars: centered higher, slow idle only, no shaky walkabout while talking. */
-.drawing-character { transform-box: fill-box; transform-origin: 50% 88%; animation: none !important; }
-.avatar-card.listening .drawing-character,
-.avatar-card.speaking .drawing-character,
-.avatar-card.building .drawing-character { animation: none !important; }
-/* Keep the full-screen generated avatar from interfering with the mic/listen controls. */
-.stage, .avatar-card, .scene-svg, .drawing-svg { pointer-events: none; }
-.voice-panel.compact-controls, .voice-panel.compact-controls * { pointer-events: auto; }
