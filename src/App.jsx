@@ -612,6 +612,7 @@ function DemoApp() {
   const [micDevices, setMicDevices] = useState([]);
   const [selectedMicId, setSelectedMicId] = useState('');
   const [micStatus, setMicStatus] = useState('mic devices: not checked');
+  const [typedFallback, setTypedFallback] = useState('');
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const analyserRef = useRef(null);
@@ -936,9 +937,21 @@ function DemoApp() {
     }
   }
 
+  function submitTypedFallback(event) {
+    event?.preventDefault?.();
+    const text = typedFallback.trim();
+    if (!text) return;
+    setTypedFallback('');
+    setTranscript(text);
+    setMessage(`I heard: ${text}`);
+    setDebug('typed desktop fallback submitted');
+    handleUserUtterance(text);
+  }
+
   function handleUserUtterance(text) {
     appendLog(`Heard: ${text}`);
     listenTokenRef.current += 1;
+    clearTimeout(listenRestartTimerRef.current);
     try { recognitionRef.current?.abort?.(); } catch {}
     if (wantsReset(text)) {
       resetDemo();
@@ -1377,6 +1390,10 @@ function DemoApp() {
         {micDevices.map((device, index) => <option value={device.deviceId} key={device.deviceId || index}>{device.label || `Microphone ${index + 1}`}</option>)}
       </select></label>
       <div style={{ height: 8, marginTop: 6, borderRadius: 999, overflow: 'hidden', background: 'rgba(148,163,184,.35)' }}><span style={{ display: 'block', height: '100%', width: `${Math.round(volume * 100)}%`, background: '#22c55e' }} /></div>
+      <form onSubmit={submitTypedFallback} style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        <input value={typedFallback} onChange={event => setTypedFallback(event.target.value)} placeholder="Desktop fallback: type what you said" style={{ flex: 1, minWidth: 0, borderRadius: 8, border: '1px solid #64748b', padding: '7px 8px', color: '#111', background: '#fff' }} />
+        <button type="submit" style={{ borderRadius: 8, border: 0, padding: '7px 10px', background: '#22c55e', color: '#052e16', fontWeight: 800 }}>Send</button>
+      </form>
       <div><strong>Brain:</strong> {BRAIN_ENABLED ? brainStatus : 'off'}</div>
       <div><strong>URL:</strong> {window.location.href}</div>
     </aside>}
