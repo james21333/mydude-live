@@ -632,6 +632,10 @@ function DemoApp() {
   const streamQueueRef = useRef([]);
   const streamSpeakingRef = useRef(false);
   const streamAfterRef = useRef(null);
+  const speakerSocketRef = useRef(null);
+  const speechStartedAtRef = useRef(0);
+  const bargeInFramesRef = useRef(0);
+  const bargeInCooldownRef = useRef(0);
   const personalityRef = useRef(null);
 
   const avatarSeed = avatar?.prompt || 'voice-orb';
@@ -728,6 +732,30 @@ function DemoApp() {
     analyserRef.current = null;
   }
 
+  function stopSpeakingAndListen(reason = 'voice interruption') {
+    if (!activatedRef.current || statusRef.current !== 'speaking') return;
+    const now = performance.now();
+    if (now - bargeInCooldownRef.current < 1200) return;
+    bargeInCooldownRef.current = now;
+    bargeInFramesRef.current = 0;
+    speechRunRef.current += 1;
+    streamQueueRef.current = [];
+    streamSpeakingRef.current = false;
+    streamAfterRef.current = null;
+    try { speakerSocketRef.current?.close?.(); } catch {}
+    speakerSocketRef.current = null;
+    window.speechSynthesis?.cancel?.();
+    clearInterval(speakingTimer.current);
+    clearTimeout(mouthCloseTimer.current);
+    setMouthPhase(0);
+    statusRef.current = 'listening';
+    setStatus('listening');
+    setMessage('I stopped talking. Listening now.');
+    setDebug(`${reason} — speech stopped, listener restarting`);
+    appendLog('User interrupted while I was speaking; returned to listener.');
+    resumeListening();
+  }
+
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
@@ -816,6 +844,14 @@ function DemoApp() {
         analyser.getByteFrequencyData(data);
         const avg = data.reduce((sum, v) => sum + v, 0) / data.length / 255;
         setVolume(Math.max(0.08, Math.min(1, avg * 2.8)));
+        if (statusRef.current === 'speaking' && activatedRef.current) {
+          const speakingLongEnough = performance.now() - speechStartedAtRef.current > 650;
+          const loudEnoughForBargeIn = avg > 0.075;
+          bargeInFramesRef.current = speakingLongEnough && loudEnoughForBargeIn ? bargeInFramesRef.current + 1 : 0;
+          if (bargeInFramesRef.current >= 4) stopSpeakingAndListen('user started talking');
+        } else {
+          bargeInFramesRef.current = 0;
+        }
         animationRef.current = requestAnimationFrame(loop);
       };
       loop();
@@ -982,6 +1018,7 @@ function DemoApp() {
     setStatus('speaking');
     setMessage('Thinking…');
     setBuildProgress(0);
+    startAudioMeter();
     const fallbackReply = '';
     const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListening(); };
     if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
@@ -993,6 +1030,7 @@ function DemoApp() {
     setStatus('building');
     setMessage('Thinking…');
     setBuildProgress(8);
+    startAudioMeter();
     const built = makeAvatar(prompt);
     const fallbackReply = 'Done.';
     const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListening(); };
@@ -1017,6 +1055,8 @@ function DemoApp() {
     setBrainStatus('speaker agent: connecting');
     statusRef.current = 'speaking';
     setStatus('speaking');
+    speechStartedAtRef.current = performance.now();
+    bargeInFramesRef.current = 0;
     streamQueueRef.current = [];
     streamSpeakingRef.current = false;
     streamAfterRef.current = after;
@@ -1062,6 +1102,7 @@ function DemoApp() {
 
     try {
       const socket = new WebSocket(BRIDGE_WS_URL);
+      speakerSocketRef.current = socket;
       socket.onopen = () => setBrainStatus('speaker agent: connected');
       socket.onmessage = (event) => {
         let payload;
@@ -1107,6 +1148,7 @@ function DemoApp() {
           streamQueueRef.current = [];
           streamSpeakingRef.current = false;
           streamAfterRef.current = null;
+          if (speakerSocketRef.current === socket) speakerSocketRef.current = null;
           setBrainStatus(`speaker agent: final speech in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
           if (display) {
             setMessage(display);
@@ -1124,6 +1166,9 @@ function DemoApp() {
         settled = true;
         window.clearTimeout(timeout);
         finishWithoutFallbackSpeech('speaker agent: connection error, returning to listener');
+      };
+      socket.onclose = () => {
+        if (speakerSocketRef.current === socket) speakerSocketRef.current = null;
       };
     } catch {
       if (!settled) {
@@ -1172,6 +1217,8 @@ function DemoApp() {
     const chunk = streamQueueRef.current.shift();
     if (!chunk) return;
     streamSpeakingRef.current = true;
+    speechStartedAtRef.current = performance.now();
+    bargeInFramesRef.current = 0;
     if (chunk.type === 'pause') {
       setMouthPhase(0);
       window.setTimeout(() => {
@@ -1253,6 +1300,8 @@ function DemoApp() {
     clearTimeout(mouthCloseTimer.current);
     const speechRun = speechRunRef.current + 1;
     speechRunRef.current = speechRun;
+    speechStartedAtRef.current = performance.now();
+    bargeInFramesRef.current = 0;
     const speechPlan = options.speechPlan || compileSpeechPlan(text, options);
     const chunks = speechPlan.chunks.length ? speechPlan.chunks : [{ type: 'speak', text: plainSpeechText(text), ...DEFAULT_PROSODY }];
     setStatus('speaking');
@@ -1282,6 +1331,8 @@ function DemoApp() {
         return;
       }
       const utterance = new SpeechSynthesisUtterance(chunk.text);
+      speechStartedAtRef.current = performance.now();
+      bargeInFramesRef.current = 0;
       utterance.rate = chunk.rate || options.rate || 1.08;
       utterance.pitch = chunk.pitch || 1.08;
       utterance.volume = chunk.volume ?? 1;
@@ -1328,6 +1379,8 @@ function DemoApp() {
     streamQueueRef.current = [];
     streamSpeakingRef.current = false;
     streamAfterRef.current = null;
+    try { speakerSocketRef.current?.close?.(); } catch {}
+    speakerSocketRef.current = null;
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
     stopAudioMeter();
@@ -1356,6 +1409,8 @@ function DemoApp() {
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     speechRunRef.current += 1;
+    try { speakerSocketRef.current?.close?.(); } catch {}
+    speakerSocketRef.current = null;
     clearInterval(speakingTimer.current);
     setAvatar(null);
     personalityRef.current = null;
