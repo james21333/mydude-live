@@ -719,6 +719,13 @@ function DemoApp() {
     mouthCloseTimer.current = setTimeout(() => setMouthPhase(0), MOUTH_CLOSE_MS);
   }
 
+  function stopAudioMeter() {
+    cancelAnimationFrame(animationRef.current);
+    audioRef.current?.getTracks?.().forEach(track => track.stop());
+    audioRef.current = null;
+    analyserRef.current = null;
+  }
+
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
@@ -737,8 +744,17 @@ function DemoApp() {
       setTranscript('Listening… say something now.');
       setDebug('start clicked — desktop Chrome mic permission first');
       appendLog('Live mode activated. Desktop Chrome mic permission primed before listener start.');
-      await startAudioMeter();
-      startListening({ desktopChrome: true });
+      const meterStarted = await startAudioMeter();
+      if (meterStarted) {
+        window.setTimeout(() => {
+          if (!activatedRef.current) return;
+          stopAudioMeter();
+          setMicStatus('meter released before Web Speech start');
+          startListening({ desktopChrome: true });
+        }, 450);
+      } else {
+        startListening({ desktopChrome: true });
+      }
       return;
     }
 
@@ -775,7 +791,7 @@ function DemoApp() {
 
   async function startAudioMeter(deviceId = selectedMicId) {
     try {
-      audioRef.current?.getTracks?.().forEach(track => track.stop());
+      stopAudioMeter();
       const audioConstraint = deviceId ? { deviceId: { exact: deviceId } } : true;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
       audioRef.current = stream;
@@ -1293,10 +1309,7 @@ function DemoApp() {
     streamAfterRef.current = null;
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
-    cancelAnimationFrame(animationRef.current);
-    audioRef.current?.getTracks?.().forEach(track => track.stop());
-    audioRef.current = null;
-    analyserRef.current = null;
+    stopAudioMeter();
     setActivated(false);
     setStatus('idle');
     statusRef.current = 'idle';
