@@ -15,7 +15,7 @@ const ACTIVE_PROJECTS = [
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const params = new URLSearchParams(window.location.search);
 const BRAIN_ENABLED = params.get('brain') !== '0';
-const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(params.get('voices')) || ['1', 'true'].includes(params.get('voice'));
+const VOICE_DEBUG_ENABLED = ['1', 'true'].includes(params.get('voices')) || ['1', 'true'].includes(params.get('voice')) || ['1', 'true'].includes(params.get('debug'));
 const BRIDGE_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'ws://127.0.0.1:8787/speak'
   : 'wss://bridge.mydude.live/speak';
@@ -1297,7 +1297,15 @@ function DemoApp() {
     setLog(items => [item, ...items].slice(0, 5));
   }
 
-  return <main className={`demo-page ${VOICE_DEBUG_ENABLED ? 'debug-mode' : ''}`} style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
+  return <main className={`demo-page ${VOICE_DEBUG_ENABLED ? 'debug-mode' : ''}`} data-debug-mode={VOICE_DEBUG_ENABLED ? 'on' : 'off'} style={{ '--start': colors.start, '--mid': colors.mid, '--end': colors.end, '--accent': colors.accent }}>
+    {VOICE_DEBUG_ENABLED && <aside style={{ position: 'fixed', top: 8, left: 8, right: 8, zIndex: 99999, padding: 12, borderRadius: 14, background: 'rgba(2,6,23,.96)', color: '#fff', border: '2px solid #22c55e', boxShadow: '0 18px 60px rgba(0,0,0,.55)', fontSize: 13, lineHeight: 1.35, pointerEvents: 'auto' }}>
+      <strong style={{ color: '#86efac' }}>DEBUG MODE ON</strong>
+      <div><strong>Mic:</strong> {debug}</div>
+      <div><strong>Transcript:</strong> {transcript || 'waiting for voice...'}</div>
+      <div><strong>Voice:</strong> {voiceStatus}</div>
+      <div><strong>Brain:</strong> {BRAIN_ENABLED ? brainStatus : 'off'}</div>
+      <div><strong>URL:</strong> {window.location.href}</div>
+    </aside>}
     <section className="demo-hero compact">
       <p className="eyebrow"><Sparkles size={16}/> My Dude</p>
       <div className={`status-pill ${status}`}>{status}</div>
