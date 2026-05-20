@@ -625,6 +625,7 @@ function DemoApp() {
   const statusRef = useRef('idle');
   const listenTokenRef = useRef(0);
   const listenRestartTimerRef = useRef(null);
+  const listenerOptionsRef = useRef({});
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const voiceRef = useRef(null);
   const speechRunRef = useRef(0);
@@ -741,6 +742,7 @@ function DemoApp() {
     }
 
     if (platform === 'mac' && isChromeBrowser()) {
+      listenerOptionsRef.current = { desktopChrome: true };
       setMessage('Listening now. Say anything.');
       setTranscript('Listening… say something now.');
       setDebug('start clicked — desktop Chrome mic permission first');
@@ -759,6 +761,7 @@ function DemoApp() {
       return;
     }
 
+    listenerOptionsRef.current = {};
     setMessage("Hey, what's up?");
     setTranscript('Greeting… then I will listen.');
     setDebug('start clicked — greeting first, listener next');
@@ -767,7 +770,7 @@ function DemoApp() {
       rate: 1.02,
       after: () => {
         setTranscript('Listening… say something now.');
-        startListening();
+        resumeListening();
         startAudioMeter();
       },
     });
@@ -832,7 +835,12 @@ function DemoApp() {
     await startAudioMeter(deviceId);
   }
 
+  function resumeListening() {
+    startListening(listenerOptionsRef.current || {});
+  }
+
   function startListening(options = {}) {
+    listenerOptionsRef.current = options;
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
     clearTimeout(listenRestartTimerRef.current);
@@ -975,7 +983,7 @@ function DemoApp() {
     setMessage('Thinking…');
     setBuildProgress(0);
     const fallbackReply = '';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListening(); };
     if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
     else finish();
   }
@@ -987,7 +995,7 @@ function DemoApp() {
     setBuildProgress(8);
     const built = makeAvatar(prompt);
     const fallbackReply = 'Done.';
-    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
+    const finish = () => { statusRef.current = 'listening'; setStatus('listening'); resumeListening(); };
 
     if (BRAIN_ENABLED) {
       startStreamingSpeakerReply(prompt, built, fallbackReply, finish);
@@ -1333,6 +1341,7 @@ function DemoApp() {
     setBuildProgress(0);
     setAvatar(null);
     personalityRef.current = null;
+    listenerOptionsRef.current = {};
     const previousSessionId = sessionIdRef.current;
     sessionIdRef.current = window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     resetSpeakerSession(previousSessionId);
@@ -1360,7 +1369,7 @@ function DemoApp() {
     setMessage('Reset complete. I am listening.');
     setDebug('reset — starting listener');
     appendLog('Demo reset. Avatar and conversation vibe cleared.');
-    speak('Reset complete. I am listening.', { after: startListening });
+    speak('Reset complete. I am listening.', { after: resumeListening });
   }
 
   function resetSpeakerSession(sessionId) {
