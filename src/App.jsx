@@ -620,6 +620,7 @@ function DemoApp() {
   const activatedRef = useRef(false);
   const statusRef = useRef('idle');
   const listenTokenRef = useRef(0);
+  const listenRestartTimerRef = useRef(null);
   const sessionIdRef = useRef(window.crypto?.randomUUID?.() || `mydude-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const voiceRef = useRef(null);
   const speechRunRef = useRef(0);
@@ -677,6 +678,7 @@ function DemoApp() {
     cancelAnimationFrame(animationRef.current);
     clearInterval(speakingTimer.current);
     clearTimeout(mouthCloseTimer.current);
+    clearTimeout(listenRestartTimerRef.current);
     audioRef.current?.getTracks?.().forEach(track => track.stop());
   }, []);
 
@@ -780,6 +782,7 @@ function DemoApp() {
   function startListening(options = {}) {
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
+    clearTimeout(listenRestartTimerRef.current);
     window.speechSynthesis?.cancel?.();
     speechRunRef.current += 1;
     clearInterval(speakingTimer.current);
@@ -793,7 +796,7 @@ function DemoApp() {
     }
     try { recognitionRef.current?.abort?.(); } catch {}
     const recognition = new SpeechRecognition();
-    recognition.continuous = options.desktopChrome ? false : true;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.onstart = () => {
@@ -835,18 +838,26 @@ function DemoApp() {
       setStatus('idle');
     };
     recognition.onend = () => {
-      setDebug('listener ended');
+      const isDesktopChrome = Boolean(options.desktopChrome);
+      setDebug(isDesktopChrome ? 'listener ended — waiting before retry' : 'listener ended');
       if (listenToken !== listenTokenRef.current || recognitionRef.current !== recognition) return;
       if (activatedRef.current && !['building', 'speaking'].includes(statusRef.current)) {
-        window.setTimeout(() => {
+        const restartDelay = isDesktopChrome ? 2200 : 350;
+        listenRestartTimerRef.current = window.setTimeout(() => {
           if (listenToken !== listenTokenRef.current || recognitionRef.current !== recognition) return;
+          if (!activatedRef.current || ['building', 'speaking'].includes(statusRef.current)) return;
+          if (isDesktopChrome) {
+            setDebug('desktop listener retrying after silence');
+            startListening(options);
+            return;
+          }
           try {
             recognition.start();
             setDebug('listener restarted');
           } catch (error) {
             setDebug(`restart blocked: ${error.message || 'unknown'}`);
           }
-        }, 250);
+        }, restartDelay);
       }
     };
     recognitionRef.current = recognition;
@@ -1234,6 +1245,7 @@ function DemoApp() {
     try { recognitionRef.current?.abort?.(); } catch {}
     recognitionRef.current = null;
     window.speechSynthesis?.cancel?.();
+    clearTimeout(listenRestartTimerRef.current);
     speechRunRef.current += 1;
     streamQueueRef.current = [];
     streamSpeakingRef.current = false;
@@ -1263,6 +1275,8 @@ function DemoApp() {
   }
 
   function resetDemo() {
+    listenTokenRef.current += 1;
+    clearTimeout(listenRestartTimerRef.current);
     recognitionRef.current?.stop?.();
     window.speechSynthesis?.cancel?.();
     speechRunRef.current += 1;
