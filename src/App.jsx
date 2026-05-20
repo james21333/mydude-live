@@ -609,6 +609,9 @@ function DemoApp() {
   const [voiceInventory, setVoiceInventory] = useState([]);
   const [voiceChoice, setVoiceChoice] = useState(null);
   const [voiceStatus, setVoiceStatus] = useState('voice: loading browser voices');
+  const [micDevices, setMicDevices] = useState([]);
+  const [selectedMicId, setSelectedMicId] = useState('');
+  const [micStatus, setMicStatus] = useState('mic devices: not checked');
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const analyserRef = useRef(null);
@@ -753,12 +756,36 @@ function DemoApp() {
     });
   }
 
-  async function startAudioMeter() {
+  async function refreshMicDevices() {
+    try {
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        setMicStatus('mic devices: enumerateDevices unavailable');
+        return [];
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter(device => device.kind === 'audioinput');
+      setMicDevices(inputs);
+      setMicStatus(inputs.length ? `mic devices: ${inputs.length} input(s)` : 'mic devices: none exposed');
+      return inputs;
+    } catch (error) {
+      setMicStatus(`mic devices error: ${error.message || 'unknown'}`);
+      return [];
+    }
+  }
+
+  async function startAudioMeter(deviceId = selectedMicId) {
     try {
       audioRef.current?.getTracks?.().forEach(track => track.stop());
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioConstraint = deviceId ? { deviceId: { exact: deviceId } } : true;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
       audioRef.current = stream;
-      const ctx = new AudioContext();
+      await refreshMicDevices();
+      const track = stream.getAudioTracks?.()[0];
+      const label = track?.label || 'default/unnamed mic';
+      setMicStatus(`meter active: ${label}`);
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContextCtor();
+      if (ctx.state === 'suspended') await ctx.resume?.();
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
@@ -773,10 +800,19 @@ function DemoApp() {
       };
       loop();
       return true;
-    } catch {
-      appendLog('Mic meter unavailable until browser permission is granted.');
+    } catch (error) {
+      const reason = error?.name || error?.message || 'unknown';
+      setMicStatus(`meter unavailable: ${reason}`);
+      appendLog(`Mic meter unavailable: ${reason}`);
       return false;
     }
+  }
+
+  async function changeMicDevice(event) {
+    const deviceId = event.target.value;
+    setSelectedMicId(deviceId);
+    setMicStatus('switching mic…');
+    await startAudioMeter(deviceId);
   }
 
   function startListening(options = {}) {
@@ -806,8 +842,13 @@ function DemoApp() {
       setMessage('Listening now. Say anything.');
       setDebug('listener started — waiting for speech');
     };
-    recognition.onspeechstart = () => setDebug('speech detected');
+    recognition.onaudiostart = () => setDebug('audio capture started');
+    recognition.onaudioend = () => setDebug('audio capture ended');
     recognition.onsoundstart = () => setDebug('sound detected');
+    recognition.onsoundend = () => setDebug('sound ended');
+    recognition.onspeechstart = () => setDebug('speech detected');
+    recognition.onspeechend = () => setDebug('speech ended');
+    recognition.onnomatch = () => setDebug('listener no-match');
     recognition.onresult = (event) => {
       let finalText = '';
       let interim = '';
@@ -1317,6 +1358,12 @@ function DemoApp() {
       <div><strong>Mic:</strong> {debug}</div>
       <div><strong>Transcript:</strong> {transcript || 'waiting for voice...'}</div>
       <div><strong>Voice:</strong> {voiceStatus}</div>
+      <div><strong>Mic meter:</strong> {micStatus} · level {Math.round(volume * 100)}%</div>
+      <label style={{ display: 'block', marginTop: 6 }}><strong>Input:</strong> <select value={selectedMicId} onChange={changeMicDevice} style={{ maxWidth: '100%', marginLeft: 6, color: '#111', background: '#fff' }}>
+        <option value="">Chrome default microphone</option>
+        {micDevices.map((device, index) => <option value={device.deviceId} key={device.deviceId || index}>{device.label || `Microphone ${index + 1}`}</option>)}
+      </select></label>
+      <div style={{ height: 8, marginTop: 6, borderRadius: 999, overflow: 'hidden', background: 'rgba(148,163,184,.35)' }}><span style={{ display: 'block', height: '100%', width: `${Math.round(volume * 100)}%`, background: '#22c55e' }} /></div>
       <div><strong>Brain:</strong> {BRAIN_ENABLED ? brainStatus : 'off'}</div>
       <div><strong>URL:</strong> {window.location.href}</div>
     </aside>}
