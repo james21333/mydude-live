@@ -50,7 +50,8 @@ function scoreVoiceForPlatform(voice, platform) {
   const name = voice.name || '';
   const lang = voice.lang || '';
   const id = `${name} ${lang}`.toLowerCase();
-  const isGoogleEnglishUk = /google/.test(id) && (/en[-_]gb/i.test(lang) || /english.*(united kingdom|uk)|uk english|english uk/i.test(id));
+  const isEnglishUk = /en[-_]gb/i.test(lang) || /english.*(united kingdom|uk)|uk english|english uk/i.test(id);
+  const isGoogleEnglishUk = /google/.test(id) && isEnglishUk;
 
   if (isGoogleEnglishUk) return 10000;
 
@@ -58,6 +59,7 @@ function scoreVoiceForPlatform(voice, platform) {
   if (!isEnglish) return -1000;
 
   let score = 0;
+  if (isEnglishUk) score += 240;
   if (/en[-_]us/i.test(lang)) score += 24;
   if (/en[-_]gb/i.test(lang)) score += 16;
   if (/en[-_]au/i.test(lang)) score += 10;
@@ -715,6 +717,26 @@ function DemoApp() {
   async function activate() {
     activatedRef.current = true;
     setActivated(true);
+
+    const platform = detectVoicePlatform();
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    const refreshedVoice = pickBestVoice(voices, platform);
+    if (refreshedVoice) {
+      voiceRef.current = refreshedVoice;
+      setVoiceChoice({ name: refreshedVoice.name, lang: refreshedVoice.lang, localService: refreshedVoice.localService, default: refreshedVoice.default, platform, manual: false });
+      setVoiceStatus(`voice: ${refreshedVoice.name} (${refreshedVoice.lang || 'unknown'})`);
+    }
+
+    if (platform === 'mac' && isChromeBrowser()) {
+      setMessage('Listening now. Say anything.');
+      setTranscript('Listening… say something now.');
+      setDebug('start clicked — desktop Chrome listener starts immediately');
+      appendLog('Live mode activated. Desktop Chrome listener started directly from Start.');
+      startListening();
+      startAudioMeter();
+      return;
+    }
+
     setMessage("Hey, what's up?");
     setTranscript('Greeting… then I will listen.');
     setDebug('start clicked — greeting first, listener next');
@@ -805,7 +827,7 @@ function DemoApp() {
       setDebug(`listener error: ${error}`);
       appendLog(`Speech listener error: ${error}`);
       if (error === 'not-allowed' || error === 'service-not-allowed') {
-        setMessage('Chrome is blocking microphone/speech. Click the lock icon in the address bar and allow Microphone, then press Listen.');
+        setMessage('Chrome is blocking microphone/speech. Click the lock icon in the address bar and allow Microphone, then press Start again.');
       }
       setStatus('idle');
     };
@@ -829,7 +851,7 @@ function DemoApp() {
       recognition.start();
     } catch (error) {
       setDebug(`start failed: ${error.message || 'unknown'}`);
-      setMessage('Chrome did not start the listener. Press Listen again.');
+      setMessage('Chrome did not start the listener. Press Stop, then Start again.');
       setStatus('idle');
     }
   }
