@@ -730,10 +730,10 @@ function DemoApp() {
     if (platform === 'mac' && isChromeBrowser()) {
       setMessage('Listening now. Say anything.');
       setTranscript('Listening… say something now.');
-      setDebug('start clicked — desktop Chrome listener starts immediately');
-      appendLog('Live mode activated. Desktop Chrome listener started directly from Start.');
-      startListening();
-      startAudioMeter();
+      setDebug('start clicked — desktop Chrome mic permission first');
+      appendLog('Live mode activated. Desktop Chrome mic permission primed before listener start.');
+      await startAudioMeter();
+      startListening({ desktopChrome: true });
       return;
     }
 
@@ -753,6 +753,7 @@ function DemoApp() {
 
   async function startAudioMeter() {
     try {
+      audioRef.current?.getTracks?.().forEach(track => track.stop());
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioRef.current = stream;
       const ctx = new AudioContext();
@@ -769,12 +770,14 @@ function DemoApp() {
         animationRef.current = requestAnimationFrame(loop);
       };
       loop();
+      return true;
     } catch {
       appendLog('Mic meter unavailable until browser permission is granted.');
+      return false;
     }
   }
 
-  function startListening() {
+  function startListening(options = {}) {
     const listenToken = listenTokenRef.current + 1;
     listenTokenRef.current = listenToken;
     window.speechSynthesis?.cancel?.();
@@ -790,7 +793,7 @@ function DemoApp() {
     }
     try { recognitionRef.current?.abort?.(); } catch {}
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = options.desktopChrome ? false : true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.onstart = () => {
@@ -849,6 +852,15 @@ function DemoApp() {
     recognitionRef.current = recognition;
     try {
       recognition.start();
+      if (options.desktopChrome) {
+        window.setTimeout(() => {
+          if (listenToken !== listenTokenRef.current || recognitionRef.current !== recognition) return;
+          if (statusRef.current === 'listening') return;
+          setDebug('desktop Chrome listener did not confirm start — retrying');
+          try { recognition.abort?.(); } catch {}
+          window.setTimeout(() => startListening(options), 120);
+        }, 900);
+      }
     } catch (error) {
       setDebug(`start failed: ${error.message || 'unknown'}`);
       setMessage('Chrome did not start the listener. Press Stop, then Start again.');
@@ -881,10 +893,10 @@ function DemoApp() {
     setStatus('speaking');
     setMessage('Thinking…');
     setBuildProgress(0);
-    const fallbackReply = 'I hear you.';
+    const fallbackReply = '';
     const finish = () => { statusRef.current = 'listening'; setStatus('listening'); startListening(); };
     if (BRAIN_ENABLED) startStreamingSpeakerReply(prompt, null, fallbackReply, finish);
-    else speak(fallbackReply, { after: finish });
+    else finish();
   }
 
   function buildAvatar(prompt) {
@@ -942,12 +954,21 @@ function DemoApp() {
       enqueueSpeech(chunk, speechRun);
     };
 
+    const finishWithoutFallbackSpeech = (statusText) => {
+      setBrainStatus(statusText);
+      if (fallback) {
+        setMessage(fallback);
+        speak(fallback, { after });
+      } else {
+        setMessage('Listening now. Say anything.');
+        after?.();
+      }
+    };
+
     const timeout = window.setTimeout(() => {
       if (settled || firstSpoken) return;
       settled = true;
-      setBrainStatus('speaker agent: timeout, using instant fallback');
-      setMessage(fallback);
-      speak(fallback, { after });
+      finishWithoutFallbackSpeech('speaker agent: timeout, returning to listener');
     }, 4500);
 
     try {
@@ -997,10 +1018,15 @@ function DemoApp() {
           streamQueueRef.current = [];
           streamSpeakingRef.current = false;
           streamAfterRef.current = null;
-          setMessage(display);
-          appendLog(`Speaker agent: ${display}`);
           setBrainStatus(`speaker agent: final speech in ${payload.elapsedMs || Math.round(performance.now() - started)}ms`);
-          speak(display, { after });
+          if (display) {
+            setMessage(display);
+            appendLog(`Speaker agent: ${display}`);
+            speak(display, { after });
+          } else {
+            setMessage('Listening now. Say anything.');
+            after?.();
+          }
           try { socket.close(); } catch {}
         }
       };
@@ -1008,15 +1034,13 @@ function DemoApp() {
         if (settled) return;
         settled = true;
         window.clearTimeout(timeout);
-        setBrainStatus('speaker agent: connection error, using Phase 1 line');
-        speak(fallback, { after });
+        finishWithoutFallbackSpeech('speaker agent: connection error, returning to listener');
       };
     } catch {
       if (!settled) {
         settled = true;
         window.clearTimeout(timeout);
-        setBrainStatus('speaker agent: unavailable, using Phase 1 line');
-        speak(fallback, { after });
+        finishWithoutFallbackSpeech('speaker agent: unavailable, returning to listener');
       }
     }
   }
