@@ -569,6 +569,8 @@ function inferMouth(text = '') { const l=text.toLowerCase(); if(/computer|screen
 
 function App() {
   const subdomain = getSubdomain();
+  const testMatch = window.location.pathname.match(/^\/test([123])\/?$/);
+  if ((subdomain === 'demo' || window.location.search.includes('demo=1')) && testMatch) return <AvatarTestPage testNumber={Number(testMatch[1])} />;
   if (subdomain === 'demo' || window.location.search.includes('demo=1')) return <DemoApp />;
   if (!subdomain) return <RootLanding />;
   return <ProjectPage subdomain={subdomain} />;
@@ -592,6 +594,193 @@ function ProjectPage({ subdomain }) {
     <p className="lede">Generated autonomously by OpenClaw.</p>
     <div className="meta-card"><span>Hostname-routed app</span><strong>{subdomain}.{ROOT_DOMAIN}</strong></div>
   </main>;
+}
+
+
+const DEFAULT_AVATAR_TEST_PROMPT = 'Create a cute blue My Dude style robot avatar. Image only. It should have a rounded glossy blue head, glowing friendly eyes, a small antenna, simple body, arms, legs, and CSS states for idle, listening, and speaking.';
+
+function AvatarTestPage({ testNumber }) {
+  if (testNumber === 1) return <AvatarRuntimeMarkupTest />;
+  if (testNumber === 2) return <AvatarTrustedBundleTest />;
+  return <AvatarCompiledArtifactTest />;
+}
+
+function AvatarTestShell({ eyebrow, title, summary, children }) {
+  return <main className="avatar-test-page">
+    <header className="avatar-test-header">
+      <p className="eyebrow"><Sparkles size={16}/> {eyebrow}</p>
+      <h1>{title}</h1>
+      <p className="lede">{summary}</p>
+      <a className="test-back-link" href="/">Back to stable demo root</a>
+    </header>
+    {children}
+  </main>;
+}
+
+function AvatarRuntimeMarkupTest() {
+  const [prompt, setPrompt] = useState(DEFAULT_AVATAR_TEST_PROMPT);
+  const [htmlCss, setHtmlCss] = useState(() => runtimeAvatarDocument(DEFAULT_AVATAR_TEST_PROMPT));
+  const srcDoc = normalizeRuntimeAvatarDocument(htmlCss);
+  return <AvatarTestShell
+    eyebrow="Test 1 · runtime markup/CSS"
+    title="Prompt → LLM returns avatar markup/CSS → browser renders it"
+    summary="This page tests the risky/flexible path: an LLM can return self-contained avatar HTML/CSS, then the browser renders it in a sandboxed iframe. No app rebuild is required for each avatar."
+  >
+    <section className="avatar-test-grid">
+      <div className="avatar-test-panel">
+        <label>Prompt to type into the tester/LLM</label>
+        <textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={7} />
+        <button className="primary" type="button" onClick={() => setHtmlCss(runtimeAvatarDocument(prompt))}>Generate sample LLM-style answer</button>
+        <p className="test-note">Real version: this button would call an LLM. For this isolated test branch, it creates the same kind of self-contained HTML/CSS answer locally so we can test the browser rendering contract first.</p>
+        <label>LLM returned avatar HTML/CSS</label>
+        <textarea value={htmlCss} onChange={event => setHtmlCss(event.target.value)} rows={14} spellCheck="false" />
+      </div>
+      <AvatarIframePreview title="Runtime markup/CSS preview" srcDoc={srcDoc} />
+    </section>
+  </AvatarTestShell>;
+}
+
+function AvatarTrustedBundleTest() {
+  const [prompt, setPrompt] = useState(DEFAULT_AVATAR_TEST_PROMPT);
+  const [state, setState] = useState('idle');
+  useEffect(() => {
+    const states = ['idle', 'listening', 'speaking'];
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index = (index + 1) % states.length;
+      setState(states[index]);
+    }, 1800);
+    return () => window.clearInterval(timer);
+  }, []);
+  return <AvatarTestShell
+    eyebrow="Test 2 · trusted React/CSS bundle"
+    title="Cody/LLM writes React JSX + CSS → GitHub commit → Vite bundle"
+    summary="This page tests the original Blue Dude production pattern: the avatar is authored into trusted app source code, then compiled by Vite. It is the safest runtime path but requires a build/commit/deploy cycle."
+  >
+    <section className="avatar-test-grid">
+      <div className="avatar-test-panel">
+        <label>Prompt used to author this source-coded avatar</label>
+        <textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={8} />
+        <p className="test-note">The prompt does not execute in the browser. It documents the source-generation request that Cody/LLM would use before committing JSX/CSS to GitHub.</p>
+        <div className="state-buttons">
+          {['idle', 'listening', 'speaking'].map(item => <button type="button" className={state === item ? 'primary' : 'secondary'} onClick={() => setState(item)} key={item}>{item}</button>)}
+        </div>
+      </div>
+      <div className="avatar-render-panel trusted-render-panel">
+        <TrustedBundleAvatar state={state} />
+        <p className="test-note">Rendered by normal React JSX + CSS from this branch.</p>
+      </div>
+    </section>
+  </AvatarTestShell>;
+}
+
+function AvatarCompiledArtifactTest() {
+  const [prompt, setPrompt] = useState(DEFAULT_AVATAR_TEST_PROMPT);
+  const artifact = useMemo(() => buildValidatedAvatarArtifact(prompt), [prompt]);
+  return <AvatarTestShell
+    eyebrow="Test 3 · compiled artifact loader"
+    title="Prompt → React/CSS artifact validated/built → client loads compiled avatar"
+    summary="This page tests the middle path: generated avatar code is treated as an artifact, validated before use, saved, and then loaded by the client. For this branch the artifact is produced locally, but the shape matches a server-side build pipeline."
+  >
+    <section className="avatar-test-grid">
+      <div className="avatar-test-panel">
+        <label>Prompt for artifact generation</label>
+        <textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={8} />
+        <p className="test-note">Real version: server runs lint/build/sandbox checks, saves a compiled artifact, and the browser loads only passing artifacts.</p>
+        <pre className="artifact-meta">{JSON.stringify(artifact.meta, null, 2)}</pre>
+      </div>
+      <AvatarIframePreview title="Compiled artifact preview" srcDoc={artifact.document} />
+    </section>
+  </AvatarTestShell>;
+}
+
+function AvatarIframePreview({ title, srcDoc }) {
+  return <div className="avatar-render-panel">
+    <iframe title={title} sandbox="allow-same-origin" srcDoc={srcDoc} />
+  </div>;
+}
+
+function normalizeRuntimeAvatarDocument(input = '') {
+  const source = String(input || '').trim();
+  if (!source) return runtimeAvatarDocument(DEFAULT_AVATAR_TEST_PROMPT);
+  if (/<!doctype html|<html[\s>]/i.test(source)) return source;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#061021;color:white;font-family:system-ui}</style></head><body>${source}</body></html>`;
+}
+
+function runtimeAvatarDocument(prompt = '') {
+  const title = titleFromPrompt(prompt).replace(/\b\w/g, letter => letter.toUpperCase());
+  const palette = /purple/i.test(prompt) ? ['#a78bfa', '#6d28d9'] : /green/i.test(prompt) ? ['#34d399', '#047857'] : /pink/i.test(prompt) ? ['#f472b6', '#be185d'] : ['#38bdf8', '#2563eb'];
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at top, #1e3a8a, #020617 62%); font-family: Inter, system-ui, sans-serif; color: white; overflow: hidden; }
+    .avatar-root { width: min(420px, 86vw); aspect-ratio: .76; display: grid; place-items: center; animation: idleFloat 3.4s ease-in-out infinite; }
+    .bot { position: relative; display: grid; justify-items: center; filter: drop-shadow(0 30px 45px rgba(0,0,0,.38)); }
+    .antenna { width: 5px; height: 34px; border-radius: 999px; background: rgba(255,255,255,.55); position: relative; }
+    .antenna::before { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 999px; left: 50%; top: -13px; transform: translateX(-50%); background: #93c5fd; box-shadow: 0 0 32px #93c5fd; }
+    .head { width: 280px; aspect-ratio: 1.08; border-radius: 34% 34% 42% 42%; background: linear-gradient(135deg, ${palette[0]}, ${palette[1]} 68%, rgba(255,255,255,.18)); border: 2px solid rgba(255,255,255,.28); box-shadow: inset 0 0 44px rgba(255,255,255,.22), 0 26px 70px rgba(0,0,0,.32); position: relative; animation: breathe 3s ease-in-out infinite; }
+    .shine { position: absolute; width: 34%; height: 18%; left: 16%; top: 13%; background: rgba(255,255,255,.24); border-radius: 999px; transform: rotate(-18deg); }
+    .eyes { display: flex; gap: 58px; justify-content: center; padding-top: 82px; }
+    .eyes span { width: 42px; height: 50px; background: #e0f2fe; border-radius: 45%; box-shadow: 0 0 28px rgba(224,242,254,.72); animation: blink 5s infinite; }
+    .mouth { width: 76px; height: 20px; background: rgba(15,23,42,.9); border-radius: 0 0 999px 999px; margin: 38px auto 0; animation: mouthTalk 1.2s ease-in-out infinite; box-shadow: inset 0 -6px 0 rgba(244,114,182,.22); }
+    .body-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+    .arm { width: 28px; height: 58px; border-radius: 999px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.18); animation: armWave 1.4s ease-in-out infinite; transform-origin: top center; }
+    .torso { display: flex; gap: 8px; padding: 10px; border-radius: 26px 26px 20px 20px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); }
+    .torso span { width: 26px; height: 36px; border-radius: 14px; background: rgba(255,255,255,.18); }
+    .legs { display: flex; gap: 38px; margin-top: 5px; }
+    .leg { width: 28px; height: 36px; border-radius: 14px 14px 22px 22px; background: rgba(255,255,255,.17); }
+    .label { position: fixed; left: 16px; right: 16px; bottom: 14px; text-align: center; color: #bfdbfe; font-weight: 800; letter-spacing: .04em; }
+    @keyframes idleFloat { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-10px) } }
+    @keyframes breathe { 0%,100%{ transform: scale(1) rotate(-1deg) } 50%{ transform: scale(1.025) rotate(1deg) } }
+    @keyframes blink { 0%,92%,100%{ transform: scaleY(1) } 95%{ transform: scaleY(.12) } }
+    @keyframes mouthTalk { 0%,100%{ height:20px; width:76px } 45%{ height:42px; width:86px; border-radius:45% } 70%{ height:28px; width:80px } }
+    @keyframes armWave { 0%,100%{ transform: rotate(8deg) } 50%{ transform: rotate(-8deg) } }
+  </style>
+</head>
+<body>
+  <div class="avatar-root speaking">
+    <div class="bot">
+      <div class="antenna"></div>
+      <div class="head"><div class="shine"></div><div class="eyes"><span></span><span></span></div><div class="mouth"></div></div>
+      <div class="body-row"><div class="arm"></div><div class="torso"><span></span><span></span><span></span></div><div class="arm"></div></div>
+      <div class="legs"><div class="leg"></div><div class="leg"></div></div>
+    </div>
+  </div>
+  <div class="label">${title || 'Runtime Avatar'}</div>
+</body>
+</html>`;
+}
+
+function TrustedBundleAvatar({ state }) {
+  return <div className={`trusted-avatar ${state}`}>
+    <div className="trusted-bot">
+      <div className="trusted-antenna" />
+      <div className="trusted-head">
+        <div className="trusted-shine" />
+        <div className="trusted-eyes"><span/><span/></div>
+        <div className="trusted-mouth" />
+      </div>
+      <div className="trusted-lower"><div className="trusted-arm left"/><div className="trusted-torso"><span/><span/><span/></div><div className="trusted-arm right"/></div>
+      <div className="trusted-legs"><div/><div/></div>
+    </div>
+  </div>;
+}
+
+function buildValidatedAvatarArtifact(prompt = '') {
+  const document = runtimeAvatarDocument(prompt);
+  const unsafe = /<script|on\w+=|javascript:|<iframe|<object|<embed/i.test(document);
+  return {
+    document: unsafe ? runtimeAvatarDocument('Safe fallback blue robot avatar') : document,
+    meta: {
+      pipeline: 'test3 compiled-artifact simulation',
+      promptChars: prompt.length,
+      validation: unsafe ? 'failed unsafe markup; served fallback' : 'passed static sanitizer checks',
+      allowedRuntime: 'sandboxed iframe, HTML/CSS only, no JS',
+      savedForm: 'compiled artifact document string',
+    },
+  };
 }
 
 function DemoApp() {
