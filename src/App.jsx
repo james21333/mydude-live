@@ -1058,7 +1058,7 @@ function DemoApp() {
     setBrainStatus('speaker agent: connecting');
     statusRef.current = 'speaking';
     setStatus('speaking');
-    speechStartedAtRef.current = performance.now();
+    speechStartedAtRef.current = Number.POSITIVE_INFINITY;
     bargeInFramesRef.current = 0;
     streamQueueRef.current = [];
     streamSpeakingRef.current = false;
@@ -1220,7 +1220,7 @@ function DemoApp() {
     const chunk = streamQueueRef.current.shift();
     if (!chunk) return;
     streamSpeakingRef.current = true;
-    speechStartedAtRef.current = performance.now();
+    speechStartedAtRef.current = Number.POSITIVE_INFINITY;
     bargeInFramesRef.current = 0;
     if (chunk.type === 'pause') {
       setMouthPhase(0);
@@ -1242,6 +1242,7 @@ function DemoApp() {
     }
     const pulseMouth = () => pulseMouthFrame(false, 90);
     const startMouthPulse = () => {
+      speechStartedAtRef.current = performance.now();
       const pulseMs = mouthPulseMsForText(chunk.text, utterance.rate || 1);
       pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
@@ -1268,7 +1269,6 @@ function DemoApp() {
     };
     utterance.onend = done;
     utterance.onerror = done;
-    startMouthPulse();
     watchdog = window.setTimeout(done, estimateUtteranceMs(chunk.text, utterance.rate || 1) + 1800);
     window.speechSynthesis.speak(utterance);
   }
@@ -1303,7 +1303,7 @@ function DemoApp() {
     clearTimeout(mouthCloseTimer.current);
     const speechRun = speechRunRef.current + 1;
     speechRunRef.current = speechRun;
-    speechStartedAtRef.current = performance.now();
+    speechStartedAtRef.current = Number.POSITIVE_INFINITY;
     bargeInFramesRef.current = 0;
     const speechPlan = options.speechPlan || compileSpeechPlan(text, options);
     const chunks = speechPlan.chunks.length ? speechPlan.chunks : [{ type: 'speak', text: plainSpeechText(text), ...DEFAULT_PROSODY }];
@@ -1312,6 +1312,7 @@ function DemoApp() {
 
     const pulseMouth = () => pulseMouthFrame(false, 90);
     const startMouthPulse = (text = '', rate = 1) => {
+      speechStartedAtRef.current = performance.now();
       const pulseMs = mouthPulseMsForText(text, rate);
       pulseMouthFrame(true);
       clearInterval(speakingTimer.current);
@@ -1334,7 +1335,7 @@ function DemoApp() {
         return;
       }
       const utterance = new SpeechSynthesisUtterance(chunk.text);
-      speechStartedAtRef.current = performance.now();
+      speechStartedAtRef.current = Number.POSITIVE_INFINITY;
       bargeInFramesRef.current = 0;
       utterance.rate = chunk.rate || options.rate || 1.08;
       utterance.pitch = chunk.pitch || 1.08;
@@ -1363,7 +1364,6 @@ function DemoApp() {
       };
       utterance.onend = () => finishChunk();
       utterance.onerror = () => finishChunk(80);
-      startMouthPulse(chunk.text, utterance.rate || 1);
       watchdog = window.setTimeout(() => finishChunk(), estimateUtteranceMs(chunk.text, utterance.rate || 1) + 1800);
       window.speechSynthesis.speak(utterance);
     };
